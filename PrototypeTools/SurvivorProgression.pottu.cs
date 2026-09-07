@@ -1,0 +1,286 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BonkSurvivor
+{
+    public sealed partial class SurvivorGame
+    {
+        public enum Weapon { Sword, Bow, Lightning }
+        public bool Selecting { get; private set; }
+        public int PendingChoices { get; private set; }
+        public int Area { get; private set; }
+        public int Silver { get; private set; }
+        public int LegacyHealth { get; private set; }
+        public int EarnedSilver { get; private set; }
+        public bool BossDefeated { get; private set; }
+        public bool BossActive => boss != null;
+        public int WeaponCount => weaponLevels.Count;
+        public IReadOnlyList<int> Choices => choices;
+        public float Size { get; private set; } = 1;
+        public int Quantity { get; private set; } = 1;
+        public float CritChance { get; private set; }
+        public float Armor { get; private set; }
+        readonly Dictionary<Weapon, int> weaponLevels = new Dictionary<Weapon, int>();
+        readonly List<int> choices = new List<int>();
+        readonly List<Landmark> landmarks = new List<Landmark>();
+        readonly List<Flash> flashes = new List<Flash>();
+        Enemy boss;
+        float areaStarted, curse = 1, bossAttackTimer;
+        int bossKills;
+        bool rewardPaid;
+        string interactionHint = "";
+        const string SaveKey = "BonkSurvivor.Prototype.v1.";
+        sealed class Landmark { public Transform body; public int kind; public bool used; }
+        sealed class Flash { public Transform body; public float life; }
+        static readonly string[] UpgradeNames = {
+            "Pannu / BONK", "Bow / Jousi", "Lightning / Salamasauva",
+            "Damage Tome", "Cooldown Tome", "Quantity Tome", "Size Tome", "Precision Tome", "Armor Tome", "Movement Tome"
+        };
+        static readonly string[] UpgradeDetails = {
+            "Uusi ase tai +1 asetaso. Leveä pannunheilautus. Asetaso kasvattaa pannua.",
+            "Uusi ase tai +1 asetaso. Nuolet läpäisevät vihollisia.",
+            "Uusi ase tai +1 asetaso. Salama ketjuttuu lähellä oleviin kohteisiin.",
+            "+20 % vahinkoa kaikille aseille.", "+20 % hyökkäysnopeutta kaikille aseille.",
+            "+1 nuoli, salamakohde tai pannun lisäisku (enintään 6).", "+20 % pannun kantamaa ja nuolten osumakokoa.",
+            "+10 prosenttiyksikköä kriittisen osuman mahdollisuuteen (max 70 %).", "+2 panssaria. Vähentää osumavahinkoa.", "+12 % liikkumisnopeutta."
+        };
+
+        void ResetProgression()
+        {
+            foreach (var p in landmarks) if (p.body) Destroy(p.body.gameObject);
+            foreach (var f in flashes) if (f.body) Destroy(f.body.gameObject);
+            landmarks.Clear(); flashes.Clear(); weaponLevels.Clear(); choices.Clear();
+            Silver = PlayerPrefs.GetInt(SaveKey + "Silver", 0);
+            LegacyHealth = Mathf.Clamp(PlayerPrefs.GetInt(SaveKey + "Health", 0), 0, 10);
+            maxHealth += LegacyHealth * 10; Health = maxHealth;
+            Size = 1; Quantity = 1; CritChance = Armor = 0;
+            Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3;
+            EarnedSilver = 0; rewardPaid = false; BossDefeated = false; PendingChoices = 0; Selecting = true;
+            CreateLandmarks();
+        }
+
+        public bool SelectStarter(int index)
+        {
+            if (!Selecting || index < 0 || index > 2) return false;
+            weaponLevels[(Weapon)index] = 1; Selecting = false;
+            notice = "Etsi arkkuja ja pyhäkkö. Portaali avautuu 90 sekunnissa."; noticeUntil = Elapsed + 7;
+            return true;
+        }
+
+        void CreateLandmarks()
+        {
+            AddLandmark(0, new Vector3(10, .8f, 9), eliteMaterial);
+            AddLandmark(0, new Vector3(-18, .8f, 12), eliteMaterial);
+            AddLandmark(0, new Vector3(20, .8f, -15), eliteMaterial);
+            AddLandmark(1, new Vector3(-12, 1, -12), enemyMaterial);
+            AddLandmark(2, new Vector3(0, 1.5f, 25), xpMaterial);
+        }
+
+        void AddLandmark(int kind, Vector3 pos, Material material)
+        {
+            var t = Shape(kind == 0 ? "Arkku" : kind == 1 ? "Riskipyhäkkö" : "Bossiportaali", kind == 2 ? PrimitiveType.Cylinder : PrimitiveType.Cube,
+                pos, kind == 2 ? new Vector3(3, 1.5f, 3) : new Vector3(1.5f, 1.5f, 1.5f), material, world);
+            landmarks.Add(new Landmark { body = t, kind = kind });
+        }
+
+        void RollChoices()
+        {
+            choices.Clear(); var pool = new List<int>();
+            for (int i = 0; i < UpgradeNames.Length; i++)
+                if ((i != 5 || Quantity < 6) && (i != 7 || CritChance < .699f)) pool.Add(i);
+            for (int i = 0; i < 3; i++) { int n = Random.Range(0, pool.Count); choices.Add(pool[n]); pool.RemoveAt(n); }
+        }
+
+        public bool ChooseUpgrade(int slot)
+        {
+            if (Finished || Selecting || PendingChoices <= 0 || slot < 0 || slot >= choices.Count) return false;
+            ApplyUpgrade(choices[slot]); PendingChoices--;
+            if (PendingChoices > 0) RollChoices(); else choices.Clear();
+            return true;
+        }
+
+        void ApplyUpgrade(int id)
+        {
+            if (id < 3) { var w = (Weapon)id; weaponLevels[w] = weaponLevels.TryGetValue(w, out int level) ? level + 1 : 1; }
+            else switch (id)
+            {
+                case 3: damage *= 1.2f; break; case 4: attackRate *= 1.2f; break;
+                case 5: Quantity = Mathf.Min(6, Quantity + 1); break; case 6: Size *= 1.2f; break;
+                case 7: CritChance = Mathf.Min(.7f, CritChance + .1f); break; case 8: Armor += 2; break; case 9: moveSpeed *= 1.12f; break;
+            }
+            notice = UpgradeNames[id] + " saatu!"; noticeUntil = Elapsed + 4;
+        }
+
+        void TickProgression(float dt)
+        {
+            for (int i = flashes.Count - 1; i >= 0; i--)
+            { flashes[i].life -= dt; if (flashes[i].life <= 0) { Destroy(flashes[i].body.gameObject); flashes.RemoveAt(i); } }
+            interactionHint = "";
+            foreach (var p in landmarks)
+            {
+                if (p.used) continue;
+                if (Vector3.Distance(player.position, p.body.position) > 3.5f) continue;
+                interactionHint = LandmarkHint(p.kind);
+                if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.eKey.wasPressedThisFrame)
+                    Interact(p);
+                break;
+            }
+            if (boss != null)
+            {
+                bossAttackTimer -= dt;
+                if (bossAttackTimer <= 0)
+                {
+                    bossAttackTimer = 3;
+                    if (Vector3.Distance(player.position, boss.body.position) < 5)
+                    { ReceiveDamage(22); }
+                    var ring = Shape("Boss shockwave", PrimitiveType.Cylinder, boss.body.position - Vector3.up * .7f, new Vector3(10,.04f,10), enemyMaterial, world);
+                    flashes.Add(new Flash { body = ring, life = .3f });
+                }
+            }
+        }
+
+        string LandmarkHint(int kind)
+        {
+            if (kind == 0) return "[E] Arkku: 12 kultaa → satunnainen Tome tai asepäivitys";
+            if (kind == 1) return "[E] Pyhäkkö: +30 % vahinko, vihollisten HP ja nopeus +20 %";
+            if (BossDefeated) return "[E] Portaali: jatka seuraavalle alueelle";
+            if (boss != null) return "Voita bossi avataksesi portaalin.";
+            return Elapsed - areaStarted < 90 ? "Portaali avautuu: " + Mathf.CeilToInt(90 - Elapsed + areaStarted) + " s" : "[E] Kutsu alueen bossi";
+        }
+
+        bool Interact(Landmark p)
+        {
+            if (p.used || Selecting || PendingChoices > 0 || ShopOpen || Finished || Vector3.Distance(player.position, p.body.position) > 3.5f) return false;
+            if (p.kind == 0)
+            {
+                if (Coins < 12) return false;
+                Coins -= 12; ApplyUpgrade(Random.Range(0, UpgradeNames.Length)); p.used = true;
+            }
+            else if (p.kind == 1)
+            {
+                damage *= 1.3f; curse *= 1.2f;
+                foreach (var e in enemies) { e.health *= 1.2f; e.speed *= 1.2f; }
+                p.used = true; notice = "Pyhäkkö aktivoitu: voima ja vaara kasvavat."; noticeUntil = Elapsed + 5;
+            }
+            else if (BossDefeated) { AdvanceArea(); return true; }
+            else if (boss == null && Elapsed - areaStarted >= 90)
+            {
+                boss = new Enemy { body = Shape("Alueen vartija", PrimitiveType.Capsule, player.position + Vector3.forward * 10,
+                    new Vector3(2.6f, 2.6f, 2.6f), eliteMaterial, world), health = 600 * Area * curse, speed = 2.4f * curse, elite = true };
+                enemies.Add(boss); bossAttackTimer = 3;
+            }
+            else return false;
+            if (p.used) p.body.localScale *= .35f;
+            return true;
+        }
+
+        void AdvanceArea()
+        {
+            Area++; areaStarted = Elapsed; BossDefeated = false;
+            foreach (var e in enemies) Destroy(e.body.gameObject); enemies.Clear();
+            foreach (var b in bolts) Destroy(b.body.gameObject); bolts.Clear();
+            foreach (var d in drops) Destroy(d.body.gameObject); drops.Clear();
+            foreach (var p in landmarks) Destroy(p.body.gameObject); landmarks.Clear();
+            CreateLandmarks(); player.position = Vector3.up; Health = maxHealth;
+            notice = "ALUE " + Area + " — viholliset vahvistuvat. Buildisi säilyy."; noticeUntil = Elapsed + 6;
+        }
+
+        void FinishRun()
+        {
+            Finished = true; ShopOpen = false;
+            if (rewardPaid) return;
+            EarnedSilver = Kills / 5 + bossKills * 20; Silver += EarnedSilver;
+            PlayerPrefs.SetInt(SaveKey + "Silver", Silver); PlayerPrefs.Save(); rewardPaid = true;
+        }
+
+        public bool BuyLegacyHealth()
+        {
+            int cost = 20 + LegacyHealth * 10;
+            if ((!Selecting && !Finished) || LegacyHealth >= 10 || Silver < cost) return false;
+            Silver -= cost; LegacyHealth++;
+            PlayerPrefs.SetInt(SaveKey + "Silver", Silver); PlayerPrefs.SetInt(SaveKey + "Health", LegacyHealth); PlayerPrefs.Save();
+            if (Selecting) { maxHealth += 10; Health += 10; }
+            return true;
+        }
+
+        void AttackWeapons()
+        {
+            Enemy nearest = null; float best = 24 * 24;
+            foreach (var e in enemies) { float d = (e.body.position - player.position).sqrMagnitude; if (d < best) { best = d; nearest = e; } }
+            if (nearest == null) return;
+            Vector3 aim = (nearest.body.position - player.position).normalized;
+            if (weaponLevels.TryGetValue(Weapon.Sword, out int sword))
+            {
+                float reach = 4 * Size;
+                if (best < reach * reach) pottu.Swing(aim);
+                for (int i = enemies.Count - 1; i >= 0; i--)
+                {
+                    var e = enemies[i]; var delta = e.body.position - player.position;
+                    if (delta.sqrMagnitude < reach * reach && Vector3.Dot(aim, delta.normalized) > -.25f)
+                        Hit(e, damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1)));
+                }
+                if (best < reach * reach) { slashTimer = .16f; slash.rotation = Quaternion.LookRotation(aim); }
+            }
+            if (weaponLevels.TryGetValue(Weapon.Bow, out int bow))
+                for (int i = 0; i < Quantity; i++)
+                {
+                    Vector3 direction = Quaternion.Euler(0, (i - (Quantity - 1) / 2f) * 9, 0) * aim;
+                    var t = Shape("Piercing arrow", PrimitiveType.Cube, player.position, new Vector3(.13f,.13f,.85f) * Size, boltMaterial, world);
+                    t.rotation = Quaternion.LookRotation(direction);
+                    bolts.Add(new Bolt { body = t, direction = direction, life = 1.3f, power = damage * (1 + .25f * (bow - 1)) });
+                }
+            if (weaponLevels.TryGetValue(Weapon.Lightning, out int lightning))
+            {
+                var candidates = new List<Enemy>(enemies); Vector3 origin = player.position;
+                for (int i = 0; i < Quantity + 1; i++)
+                {
+                    Enemy target = null; float distance = (i == 0 ? 16 : 8); distance *= distance;
+                    foreach (var e in candidates) { float sq = (e.body.position - origin).sqrMagnitude; if (sq < distance) { distance = sq; target = e; } }
+                    if (target == null) break;
+                    var end = target.body.position;
+                    var t = Shape("Chain lightning", PrimitiveType.Cube, (origin + end) / 2, new Vector3(.12f,.12f,Vector3.Distance(origin,end)), xpMaterial, world);
+                    t.rotation = Quaternion.LookRotation(end - origin); flashes.Add(new Flash { body = t, life = .18f });
+                    candidates.Remove(target); Hit(target, damage * 1.1f * (1 + .25f * (lightning - 1))); origin = end;
+                }
+            }
+        }
+
+        void DrawProgression()
+        {
+            string weapons = ""; foreach (var w in weaponLevels) weapons += (w.Key == Weapon.Sword ? "Pannu" : w.Key.ToString()) + " " + w.Value + "   ";
+            GUI.Label(new Rect(24,192,780,32), "ALUE " + Area + "  •  " + weapons, textStyle);
+            GUI.Label(new Rect(24,226,820,30), "Arkut: kultainen  •  Pyhäkkö: punainen  •  Portaali: sininen pohjoisessa", textStyle);
+            if (!Selecting && PendingChoices == 0 && !Finished && !ShopOpen)
+            {
+                GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
+                if (boss != null) GUI.Label(new Rect(440,80,600,35), "ALUEEN VARTIJA  •  HP " + Mathf.CeilToInt(boss.health), titleStyle);
+                else GUI.Label(new Rect(850,190,410,55), BossDefeated ? "Bossi voitettu — palaa portaaliin" : "Bossiportaali: " + Mathf.Max(0, Mathf.CeilToInt(90 - Elapsed + areaStarted)) + " s", textStyle);
+            }
+            if (!Selecting && PendingChoices == 0) return;
+            GUI.color = new Color(0,0,0,.93f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
+            GUI.Label(new Rect(90,90,1100,55), Selecting ? "VALITSE ALOITUSASE" : "TASO " + Level + " / VALITSE PÄIVITYS", titleStyle);
+            GUI.Label(new Rect(90,150,1100,55), Selecting ? "Aloita yhdellä aseella. Kerää XP:tä, kokoa buildi ja voita alueen bossi." : "Peli on tauolla. Valitse yksi kolmesta. Odottavia valintoja: " + PendingChoices, textStyle);
+            for (int i = 0; i < 3; i++)
+            {
+                int id = Selecting ? i : choices[i];
+                GUI.Box(new Rect(90+i*370,230,350,250), GUIContent.none);
+                GUI.Label(new Rect(110+i*370,250,310,45), UpgradeNames[id], textStyle);
+                GUI.Label(new Rect(110+i*370,310,310,95), UpgradeDetails[id], textStyle);
+                if (GUI.Button(new Rect(110+i*370,420,310,42), "Valitse", buttonStyle))
+                { if (Selecting) SelectStarter(i); else ChooseUpgrade(i); break; }
+            }
+            if (Selecting) DrawLegacy(90, 540);
+        }
+
+        void DrawLegacy(float x, float y)
+        {
+            GUI.Label(new Rect(x,y,800,30), "SILVER " + Silver + "  •  Pysyvä kestävyys " + LegacyHealth + "/10 (+" + LegacyHealth * 10 + " HP)", textStyle);
+            GUI.enabled = Silver >= 20 + LegacyHealth * 10 && LegacyHealth < 10;
+            if (GUI.Button(new Rect(x,y+38,510,44), "+10 pysyvää HP:tä / " + (20 + LegacyHealth * 10) + " Silver", buttonStyle)) BuyLegacyHealth();
+            GUI.enabled = true;
+        }
+    }
+}
+
+
+

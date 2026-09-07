@@ -1,0 +1,31 @@
+var g = UnityEngine.Object.FindFirstObjectByType<BonkSurvivor.SurvivorGame>();
+var checks = new System.Collections.Generic.List<string>();
+void Check(bool ok, string label) { if (!ok) throw new System.Exception(label); checks.Add(label); }
+void Set(string property, object value) { typeof(BonkSurvivor.SurvivorGame).GetProperty(property).GetSetMethod(true).Invoke(g, new object[] { value }); }
+g.ResetRun();
+g.GrantExperience(21);
+Check(g.Level == 3 && g.Experience == 0 && g.damage == 24 && g.maxHealth == 110 && UnityEngine.Mathf.Abs(g.attackRate - 1.45f) < .001f, "Multiple levels and third-level speed bonus");
+Check(!g.BuyUpgrade(0), "Shop rejects purchases outside shop");
+Set("ShopOpen", true);
+Check(!g.BuyUpgrade(0), "Cannot buy without gold");
+Set("Coins", 100);
+Check(!g.BuyUpgrade(-1) && !g.BuyUpgrade(5), "Invalid upgrade rejected");
+Check(g.BuyUpgrade(0) && g.Coins == 92 && g.UpgradeCost(0) == 14 && UnityEngine.Mathf.Abs(g.attackRate - 1.7f) < .001f, "Attack speed purchase, debit and price scaling");
+Check(g.BuyUpgrade(1) && g.damage == 31, "Damage purchase");
+Check(g.BuyUpgrade(2) && g.moveSpeed > 8, "Movement purchase");
+Check(g.BuyUpgrade(3) && g.pickupRadius > 3.5f, "Pickup radius purchase");
+Check(!g.BuyUpgrade(4), "Full-health healing rejected");
+Set("Health", 10f);
+Check(g.BuyUpgrade(4) && g.Health == 55, "Healing purchase");
+float elapsed = g.Elapsed;
+g.SendMessage("Update");
+Check(g.Elapsed == elapsed, "Shop pauses simulation");
+Set("Finished", true);
+Check(!g.BuyUpgrade(0), "Finished run rejects purchases");
+g.ResetRun();
+Check(g.Level == 1 && g.Coins == 0 && g.Health == 100 && g.EnemyCount == 0 && g.UpgradeCost(0) == 8 && !g.Finished && !g.ShopOpen, "Restart clears progression and enemies");
+Set("Elapsed", 301f);
+g.SendMessage("Update");
+Check(g.Finished && g.Health > 0, "Survival victory");
+g.ResetRun();
+return checks;

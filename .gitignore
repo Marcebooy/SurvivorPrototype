@@ -37,3 +37,9 @@ sysinfo.txt
 
 # Packages (lockfile ok, cache not)
 [Pp]ackages/*.log
+
+# Launcher build output
+Launcher/bin/
+Launcher/obj/
+Launcher/publish/
+!Launcher/Launcher.csproj

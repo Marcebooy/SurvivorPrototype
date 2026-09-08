@@ -358,7 +358,7 @@ namespace BonkSurvivor
 
         void DrawLegacy(float x, float y)
         {
-            GUI.Label(new Rect(x,y,800,30), "SILVER " + Silver + "  •  Pysyvä kestävyys " + LegacyHealth + "/10 (+" + LegacyHealth * 10 + " HP)", textStyle);
+            GUI.Label(new Rect(x,y,900,30), "SILVER " + Silver + "  •  Account Lv. " + AccountLevel + "  •  Pysyvä kestävyys " + LegacyHealth + "/10 (+" + LegacyHealth * 10 + " HP)", textStyle);
             GUI.enabled = Silver >= 20 + LegacyHealth * 10 && LegacyHealth < 10;
             if (GUI.Button(new Rect(x,y+38,510,44), "+10 pysyvää HP:tä / " + (20 + LegacyHealth * 10) + " Silver", buttonStyle)) BuyLegacyHealth();
             GUI.enabled = true;

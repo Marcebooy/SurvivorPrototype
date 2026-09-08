@@ -59,7 +59,7 @@ namespace BonkSurvivor
         float spawnTimer, attackTimer, invulnerability, slashTimer;
         string notice = "Selviä viisi minuuttia!";
         float noticeUntil = 5f;
-        GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle, hudNameStyle, cardTextStyle;
+        GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle, hudNameStyle, cardTextStyle, badgeStyle, cardNameStyle;
         bool settingsOpen;
         int fpsCap = 60;
         float masterVolume = 1f;
@@ -391,12 +391,17 @@ namespace BonkSurvivor
                 centerButtonStyle = new GUIStyle(buttonStyle) { alignment = TextAnchor.MiddleCenter };
                 hudNameStyle = new GUIStyle(titleStyle) { fontSize = 21 };
                 cardTextStyle = new GUIStyle(textStyle) { fontSize = 13 };
+                badgeStyle = new GUIStyle(textStyle) { fontSize = 13, fontStyle = FontStyle.Bold, wordWrap = false, alignment = TextAnchor.MiddleRight };
+                // Smaller than hudNameStyle and clipped so long names (NECROMANCER, METSÄSTÄJÄ) never
+                // overflow into the Mastery badge in the top-right corner of DrawCharacterCard.
+                cardNameStyle = new GUIStyle(hudNameStyle) { fontSize = 17, clipping = TextClipping.Clip };
             }
             titleStyle.normal.textColor = Color.white; textStyle.normal.textColor = Color.white;
             buttonStyle.normal.textColor = Color.white; buttonStyle.hover.textColor = Color.white;
             centerTitleStyle.normal.textColor = Color.white; centerTextStyle.normal.textColor = Color.white;
             centerButtonStyle.normal.textColor = Color.white; centerButtonStyle.hover.textColor = Color.white;
             hudNameStyle.normal.textColor = Color.white; cardTextStyle.normal.textColor = Color.white;
+            badgeStyle.normal.textColor = new Color(1f, .85f, .3f); cardNameStyle.normal.textColor = Color.white;
             GUI.matrix = Matrix4x4.Scale(new Vector3(Screen.width / 1280f, Screen.height / 720f, 1));
             if (NetworkClientMode) { DrawNetworkClientHud(); return; }
             if (AtMainMenu) { DrawMainMenu(); return; }

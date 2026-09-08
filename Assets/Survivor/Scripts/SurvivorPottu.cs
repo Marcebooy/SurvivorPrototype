@@ -121,7 +121,9 @@ namespace BonkSurvivor
         void DrawCharacterCard(float x, float y, float width, float height, PlayerCharacter character, string name, string description)
         {
             GUI.Box(new Rect(x,y,width,height),GUIContent.none);
-            GUI.Label(new Rect(x+14,y+10,width-28,30),name,hudNameStyle);
+            GUI.Label(new Rect(x+14,y+10,width-84,30),name,cardNameStyle);
+            int masteryLevel = MasteryLevelFor(character);
+            if (masteryLevel > 0) GUI.Label(new Rect(x+width-84,y+14,70,22),"M " + masteryLevel,badgeStyle);
             GUI.Label(new Rect(x+14,y+46,width-28,height-92),description,cardTextStyle);
             if(GUI.Button(new Rect(x+14,y+height-38,width-28,32),"Valitse",buttonStyle)) SelectCharacter(character);
         }

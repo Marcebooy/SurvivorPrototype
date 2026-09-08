@@ -47,22 +47,25 @@ namespace BonkSurvivor
         public int BloodHealthGained => bloodHealthGained;
         public int AdvancedProjectileCount => advancedShots.Count;
         public int AdvancedZoneCount => advancedZones.Count;
-        public int LastDiceRoll {get;private set;}
-        readonly float[] advancedTimers=new float[21];
-        readonly List<AdvancedShot> advancedShots=new List<AdvancedShot>();
-        readonly List<AdvancedZone> advancedZones=new List<AdvancedZone>();
-        readonly Dictionary<Enemy,Chill> chilled=new Dictionary<Enemy,Chill>();
+        public int LastDiceRoll { get => current.LastDiceRoll; private set => current.LastDiceRoll = value; }
+        float[] advancedTimers => current.AdvancedTimers;
+        List<AdvancedShot> advancedShots => current.AdvancedShots;
+        List<AdvancedZone> advancedZones => current.AdvancedZones;
+        Dictionary<Enemy,Chill> chilled => current.Chilled;
         readonly List<Enemy> chillKeys=new List<Enemy>();
-        int shieldCharges,scytheCharge,bloodKills,bloodHealthGained;
+        int shieldCharges { get => current.ShieldCharges; set => current.ShieldCharges = value; }
+        int scytheCharge { get => current.ScytheCharge; set => current.ScytheCharge = value; }
+        int bloodKills { get => current.BloodKills; set => current.BloodKills = value; }
+        int bloodHealthGained { get => current.BloodHealthGained; set => current.BloodHealthGained = value; }
         Material advancedGold,advancedIce,advancedPoison,advancedVoid,advancedSteel;
-        sealed class Chill {public float slow,freeze;}
-        sealed class AdvancedShot
+        internal sealed class Chill {public float slow,freeze;}
+        internal sealed class AdvancedShot
         {
             public Weapon kind;public Transform body;public Vector3 direction;public Enemy target;
             public float power,speed,radius,age,life;public int bounces;public bool returning;
             public HashSet<Enemy> hit=new HashSet<Enemy>();
         }
-        sealed class AdvancedZone
+        internal sealed class AdvancedZone
         {
             public Weapon kind;public Transform body;public Enemy target;public Vector3 direction;
             public float power,radius,life,age,tick;
@@ -151,7 +154,7 @@ namespace BonkSurvivor
         void SpawnImpact(Vector3 pos,Weapon w,float scale=1f)
         {
             var prefab=ImpactEffectFor(w);if(!prefab)return;
-            var fx=Instantiate(prefab,pos,Quaternion.identity,world);
+            var fx=Instantiate(prefab,pos,Quaternion.identity,MapEffectRoot);
             float final=scale*ImpactBaseScale(w);
             if(!Mathf.Approximately(final,1f))fx.transform.localScale*=final;
             Destroy(fx,1.4f);
@@ -305,7 +308,7 @@ namespace BonkSurvivor
                             var e=enemies[j];var delta=e.body.position-z.body.position;delta.y=0;
                             if(delta.sqrMagnitude>z.radius*z.radius)continue;
                             if(z.kind==Weapon.BlackHole || z.kind==Weapon.Tornado)
-                                e.body.position+=delta.normalized*(z.kind==Weapon.BlackHole ? -1 : 1)*dt*4*(e==boss ? .2f : 1);
+                                e.body.position=MoveOnMap(e.body.position,delta.normalized*(z.kind==Weapon.BlackHole ? -1 : 1)*dt*4*(e==boss ? .2f : 1),e==boss ? 1.3f : .65f);
                             if(z.tick<=0)
                             {if(z.kind==Weapon.Frostwalker)ChillEnemy(e);Hit(e,z.power*(z.kind==Weapon.Frostwalker ? .18f : .35f));}
                         }

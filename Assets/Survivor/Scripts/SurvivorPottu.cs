@@ -7,10 +7,10 @@ namespace BonkSurvivor
     public sealed partial class SurvivorGame
     {
         public enum PlayerCharacter { Pottu, Velho, Ritari, Necromancer, Berserker, Golem, Hunter, Ninja, Paladin }
-        public PlayerCharacter SelectedCharacter { get; private set; } = PlayerCharacter.Pottu;
-        bool awaitingCharacterChoice;
-        ICharacterVisual characterVisual;
-        Transform visualRoot;
+        public PlayerCharacter SelectedCharacter { get => current.SelectedCharacter; private set => current.SelectedCharacter = value; }
+        bool awaitingCharacterChoice { get => current.AwaitingCharacterChoice; set => current.AwaitingCharacterChoice = value; }
+        ICharacterVisual characterVisual { get => current.CharacterVisual; set => current.CharacterVisual = value; }
+        Transform visualRoot { get => current.VisualRoot; set => current.VisualRoot = value; }
         float dodgeLeft, dodgeCooldown, hurtFlash;
         Vector3 dodgeDirection;
         public bool IsDodging => dodgeLeft > 0;
@@ -37,7 +37,7 @@ namespace BonkSurvivor
 
         void BuildPottu()
         {
-            player=new GameObject("Player").transform; player.SetParent(world,false); player.position=Vector3.up;
+            hostState.Body=new GameObject("Player").transform; hostState.Body.SetParent(world,false); hostState.Body.position=Vector3.up;
             BuildCharacterVisual(PlayerCharacter.Pottu);
         }
         void BuildCharacterVisual(PlayerCharacter character)
@@ -138,8 +138,7 @@ namespace BonkSurvivor
             if(dodgePressed) TryDodge(move);
             bool rolling=IsDodging;
             var motion=rolling ? dodgeDirection*(18f*Mathf.Min(dt,dodgeLeft)) : move*(moveSpeed*dt);
-            var next=player.position+motion; next.y=0;
-            player.position=Vector3.ClampMagnitude(next,arenaRadius-1)+Vector3.up;
+            player.position=MoveOnMap(player.position, motion, .65f); player.position=new Vector3(player.position.x,1,player.position.z);
             if(!rolling && move.sqrMagnitude>.01f) player.rotation=Quaternion.Slerp(player.rotation,Quaternion.LookRotation(move),dt*14);
             dodgeLeft=Mathf.Max(0,dodgeLeft-dt);
             float roll=IsDodging ? 1-dodgeLeft/.38f : -1;
@@ -188,5 +187,3 @@ namespace BonkSurvivor
         }
     }
 }
-
-

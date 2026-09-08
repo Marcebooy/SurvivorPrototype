@@ -20,19 +20,26 @@ namespace BonkSurvivor
         public GameObject voidImpactEffect;   // VFX_Zap_07_Black - pimeys/tyhjiö
         public GameObject boltImpactEffect;   // VFX_Zap_05_Purple - yleinen taika-/ammusosuma
         [Header("Starting balance")]
-        public float moveSpeed = 8f;
-        public float damage = 18f;
-        public float attackRate = 1.3f;
-        public float pickupRadius = 3.5f;
+        // These per-player stats now live on `Combatant` (see Combatant.cs) so a connected friend
+        // can have their own independent copy; these properties forward to whichever Combatant is
+        // "current" (always hostState during the host's own code, briefly swapped to a friend's
+        // Combatant while TickNetworkCoop runs their weapons/progression - see SurvivorGameNetwork.cs).
+        public float moveSpeed { get => current.MoveSpeed; set => current.MoveSpeed = value; }
+        public float damage { get => current.Damage; set => current.Damage = value; }
+        public float attackRate { get => current.AttackRate; set => current.AttackRate = value; }
+        public float pickupRadius { get => current.PickupRadius; set => current.PickupRadius = value; }
         // Runs now end on death; portals advance between areas.
         public float arenaRadius = 60f;
-        public float maxHealth = 100f;
-        public float Health { get; private set; }
-        public int Level { get; private set; } = 1;
-        public int Coins { get; private set; }
-        public int Kills { get; private set; }
-        public int Experience { get; private set; }
+        public float maxHealth { get => current.MaxHealth; set => current.MaxHealth = value; }
+        public float Health { get => current.Health; private set => current.Health = value; }
+        public int Level { get => current.Level; private set => current.Level = value; }
+        public int Coins { get => current.Coins; private set => current.Coins = value; }
+        public int Kills { get => current.Kills; private set => current.Kills = value; }
+        public int Experience { get => current.Experience; private set => current.Experience = value; }
         public int NextLevel => 8 + (Level - 1) * 5;
+        readonly Combatant hostState = new Combatant();
+        Combatant current;
+        void Awake() { current = hostState; }
         public float Elapsed { get; private set; }
         public bool ShopOpen { get; private set; }
         public bool Finished { get; private set; }
@@ -44,7 +51,8 @@ namespace BonkSurvivor
         readonly List<Bolt> bolts = new List<Bolt>();
         readonly List<Material> materials = new List<Material>();
         readonly int[] purchases = new int[5];
-        Transform player, world, slash;
+        Transform player => current.Body;
+        Transform world, slash;
         Camera followCamera;
         Material enemyMaterial, eliteMaterial, xpMaterial, boltMaterial, healthMaterial;
         float spawnTimer, attackTimer, invulnerability, slashTimer;
@@ -55,7 +63,7 @@ namespace BonkSurvivor
         int fpsCap = 60;
         float masterVolume = 1f;
         string joinCodeInputField = "";
-        sealed class Enemy { public Transform body; public float health, speed; public bool elite; public Animator animator; }
+        internal sealed class Enemy { public Transform body; public float health, speed; public bool elite; public Animator animator; }
         sealed class Drop { public Transform body; public int value; public bool isHealth; }
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); }
 
@@ -87,7 +95,7 @@ namespace BonkSurvivor
             PlayerPrefs.SetFloat(SaveKey + "MasterVolume", masterVolume); PlayerPrefs.Save();
         }
 
-        void StartGame() { AtMainMenu = false; ResetRun(); }
+        void StartGame() { if(!string.IsNullOrWhiteSpace(mapSeedInput) && !int.TryParse(mapSeedInput,out _)) return; AtMainMenu = false; ResetRun(); }
         void ExitToMainMenu() { FinishRun(); AtMainMenu = true; ShopOpen = false; }
 
         static void QuitGame()
@@ -117,27 +125,12 @@ namespace BonkSurvivor
         void BuildWorld()
         {
             world = new GameObject("Runtime arena").transform; world.SetParent(transform);
-            var ground = MakeMaterial(new Color(.09f, .18f, .21f));
-            var stone = MakeMaterial(new Color(.17f, .3f, .33f));
-            var cyan = MakeMaterial(new Color(.2f, .95f, .85f));
             enemyMaterial = MakeMaterial(new Color(.95f, .28f, .28f));
             eliteMaterial = MakeMaterial(new Color(1f, .6f, .16f));
             xpMaterial = MakeMaterial(new Color(.3f, .8f, 1f));
             healthMaterial = MakeMaterial(new Color(1f, .25f, .4f));
             boltMaterial = MakeMaterial(new Color(1f, .9f, .35f));
-            Shape("Arena", PrimitiveType.Cylinder, new Vector3(0, -.3f, 0), new Vector3(arenaRadius * 2 + 4, .3f, arenaRadius * 2 + 4), ground, world);
-            int pillarCount = Mathf.RoundToInt(48f * arenaRadius / 38f);
-            for (int i = 0; i < pillarCount; i++)
-            {
-                float a = i * Mathf.PI * 2 / pillarCount;
-                var p = new Vector3(Mathf.Cos(a), 0, Mathf.Sin(a)) * (arenaRadius + 1.2f);
-                Shape("Boundary pillar", PrimitiveType.Cube, p + Vector3.up, new Vector3(.7f, 2, .7f), i % 4 == 0 ? cyan : stone, world);
-            }
-            int floorExtent = Mathf.CeilToInt(arenaRadius);
-            for (int x = -floorExtent; x <= floorExtent; x += 6)
-            for (int z = -floorExtent; z <= floorExtent; z += 6)
-                if (new Vector2(x,z).magnitude < arenaRadius - 2)
-                    Shape("Floor marker", PrimitiveType.Cube, new Vector3(x, .015f, z), new Vector3(.14f, .025f, .14f), stone, world);
+            GenerateProceduralMap(81427, false);
             BuildPottu();
             slash = Shape("Auto melee pulse", PrimitiveType.Cylinder, Vector3.zero, new Vector3(6, .035f, 6), boltMaterial, world);
             BuildSwipe(); slash.gameObject.SetActive(false);
@@ -154,6 +147,8 @@ namespace BonkSurvivor
 
         public void ResetRun()
         {
+            if (NetworkClientMode) return;
+            ClearMapCombat();
             foreach (var e in enemies) Destroy(e.body.gameObject);
             foreach (var d in drops) Destroy(d.body.gameObject);
             foreach (var b in bolts) Destroy(b.body.gameObject);
@@ -163,7 +158,9 @@ namespace BonkSurvivor
             Health = maxHealth; Level = 1; Coins = Kills = Experience = 0; Elapsed = 0;
             ShopOpen = Finished = false; spawnTimer = attackTimer = invulnerability = slashTimer = 0;
             player.position = Vector3.up; slash.gameObject.SetActive(false);
-            ResetProgression(); ResetPottu(); notice = "Valitse aloitusase"; noticeUntil = 5; UpdateCamera(true);
+            ResetProgression(); ResetPottu(); player.position = MapSpawn + Vector3.up;
+            notice = "Valitse aloitusase"; noticeUntil = 5; UpdateCamera(true);
+            SurvivorNetwork.Instance?.BroadcastMap();
         }
 
         void Update()
@@ -185,6 +182,7 @@ namespace BonkSurvivor
                 }
                 return;
             }
+            if (MapTransitionPending) { TickMapTransition(Time.deltaTime); return; }
             if (ShopOpen || Selecting || PendingChoices > 0) return;
             float dt = Time.deltaTime; Elapsed += dt;
             TickNetworkCoop(dt);
@@ -208,19 +206,25 @@ namespace BonkSurvivor
             {
                 SpawnEnemy(); spawnTimer = Mathf.Max(.09f, .8f - Elapsed / 200f - (Area - 1) * .05f);
             }
+            MapLayout?.UpdateNavigation(player.position);
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
                 if(i>=enemies.Count) continue;
-                var e = enemies[i]; var delta = player.position - e.body.position; delta.y = 0;
-                e.body.position += delta.normalized * (e.speed * EnemyMoveMultiplier(e) * dt);
+                var e = enemies[i];
+                var targetPos = NearestCombatantPosition(e.body.position);
+                var delta = targetPos - e.body.position; delta.y = 0;
+                float bodyRadius = e == boss ? 1.3f : .65f;
+                var direction = MapLayout == null ? delta.normalized : MapLayout.PursuitDirection(e.body.position, targetPos, bodyRadius);
+                e.body.position = MoveOnMap(e.body.position, direction * (e.speed * EnemyMoveMultiplier(e) * dt), bodyRadius);
                 if (delta.sqrMagnitude > .01f) e.body.rotation = Quaternion.Slerp(e.body.rotation, Quaternion.LookRotation(delta.normalized), dt * 10);
                 if (e.animator) e.animator.SetFloat("Speed", e.speed);
-                if (delta.sqrMagnitude < 1.7f && invulnerability <= 0)
+                var hostDelta = player.position - e.body.position; hostDelta.y = 0;
+                if (hostDelta.sqrMagnitude < 1.7f && invulnerability <= 0)
                 {
                     ReceiveDamage(e.elite ? 26 : 13);
                     if(!enemies.Contains(e)) continue;
                     if (e.animator) e.animator.SetTrigger("Attack");
-                    e.body.position -= delta.normalized * 1.5f;
+                    e.body.position = MoveOnMap(e.body.position, -hostDelta.normalized * 1.5f, bodyRadius);
                     if (Health <= 0) { FinishRun(); return; }
                 }
             }
@@ -257,7 +261,15 @@ namespace BonkSurvivor
         {
             var offset = Random.insideUnitCircle.normalized * Random.Range(18f, 25f);
             var p = player.position + new Vector3(offset.x, 0, offset.y); p.y = 0;
-            p = Vector3.ClampMagnitude(p, arenaRadius); p.y = 0;
+            p = ResolveMapPosition(p, 1f); p.y = 0;
+            // Near a corner an outward spawn can project back onto the player.
+            for (int attempt = 0; attempt < 12 && (p - player.position).sqrMagnitude < 16f * 16f; attempt++)
+            {
+                offset = Random.insideUnitCircle.normalized * Random.Range(18f, 25f);
+                var candidate = ResolveMapPosition(player.position + new Vector3(offset.x, 0, offset.y), 1f);
+                candidate.y = 0;
+                if ((candidate - player.position).sqrMagnitude > (p - player.position).sqrMagnitude) p = candidate;
+            }
             bool elite = Elapsed > 20 && Random.value < .24f;
             Transform body; Animator animator = null;
             if (undeadEnemyPrefab)
@@ -311,9 +323,9 @@ namespace BonkSurvivor
         void Hit(Enemy e, float amount)
         {
             bool critical = Random.value < CritChance; if (critical) amount *= 2; HitFeedback(e, amount, critical); e.health -= amount;
-            if (e.health > 0) { e.body.position += (e.body.position - player.position).normalized * .6f; return; }
+            if (e.health > 0) { e.body.position = MoveOnMap(e.body.position, (e.body.position - player.position).normalized * .6f, e == boss ? 1.3f : .65f); return; }
             AdvancedKill(e);
-            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; notice = "Bossi voitettu! Seuraava alue avautuu..."; noticeUntil = Elapsed + 8; }
+            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;
@@ -438,6 +450,7 @@ namespace BonkSurvivor
             if (GUI.Button(new Rect(490,340,300,56), "PELAA  [ENTER]", centerButtonStyle)) StartGame();
             if (GUI.Button(new Rect(490,406,300,50), "ASETUKSET", centerButtonStyle)) settingsOpen = true;
             if (GUI.Button(new Rect(490,466,300,50), "LOPETA", centerButtonStyle)) QuitGame();
+            DrawMapSeedMenu();
             DrawMultiplayerPanel();
             GUI.Label(new Rect(240,650,800,30), "WASD liiku   •   SPACE kierähdä   •   E tutki   •   TAB kauppa", centerTextStyle);
         }
@@ -488,13 +501,9 @@ namespace BonkSurvivor
             if (GUI.Button(new Rect(490,500,300,50), "TAKAISIN", centerButtonStyle)) settingsOpen = false;
         }
 
-        void OnDestroy() { if (swipeMesh) Destroy(swipeMesh); foreach (var m in materials) if (m) Destroy(m); }
+        void OnDestroy() { if (swipeMesh) Destroy(swipeMesh); foreach (var mesh in mapMeshes) if (mesh) Destroy(mesh); foreach (var m in materials) if (m) Destroy(m); }
     }
 }
-
-
-
-
 
 
 

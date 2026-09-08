@@ -5,51 +5,48 @@ using UnityEngine.InputSystem;
 
 namespace BonkSurvivor
 {
-    // Stage 1 multiplayer: the joining friend's body. Simple placeholder capsule, fixed
-    // (non-leveling) melee, no shop/loadout of its own yet - see the multiplayer plan in AGENTS.md.
+    // Stage 2 multiplayer: the joining friend's body. Has its own real Combatant (character,
+    // weapons, XP/level) simulated host-side exactly like the host's own player - see
+    // SurvivorGame.TickNetworkCoop and the FriendXxx() helpers in SurvivorGameNetwork.cs.
     public sealed class RemotePlayerNet : NetworkBehaviour
     {
-        public const float MaxHealth = 80f;
         const float MoveSpeed = 8f;
-        const float MeleeRadius = 3.5f;
-        const float MeleeDamage = 16f;
-        const float MeleeInterval = 1f;
-        const float HitInvulnerability = .45f;
 
         public static readonly List<RemotePlayerNet> Active = new List<RemotePlayerNet>();
         public static RemotePlayerNet Local { get; private set; }
 
-        public readonly NetworkVariable<float> Health = new NetworkVariable<float>(MaxHealth);
+        // Host-only: the friend's actual game state (weapons, XP, level, stats). Not networked
+        // directly - the NetworkVariables below mirror just the numbers the client's HUD needs.
+        [System.NonSerialized] public SurvivorGame.Combatant FriendState;
+
+        public readonly NetworkVariable<float> Health = new NetworkVariable<float>(100f);
+        public readonly NetworkVariable<float> MaxHealthNet = new NetworkVariable<float>(100f);
+        public readonly NetworkVariable<int> Level = new NetworkVariable<int>(1);
+        public readonly NetworkVariable<int> Coins = new NetworkVariable<int>();
+        public readonly NetworkVariable<int> PendingChoices = new NetworkVariable<int>();
+        public readonly NetworkVariable<int> Choice0 = new NetworkVariable<int>(-1);
+        public readonly NetworkVariable<int> Choice1 = new NetworkVariable<int>(-1);
+        public readonly NetworkVariable<int> Choice2 = new NetworkVariable<int>(-1);
+        public readonly NetworkVariable<bool> Selecting = new NetworkVariable<bool>(true);
+        public readonly NetworkVariable<bool> AwaitingCharacterChoice = new NetworkVariable<bool>(true);
+        public readonly NetworkVariable<int> SelectedCharacter = new NetworkVariable<int>();
+
         public Vector3 Position => transform.position;
         public bool IsAlive => Health.Value > 0;
-        public float MeleeRadiusSqr => MeleeRadius * MeleeRadius;
-        public float MeleeDamageAmount => MeleeDamage;
 
-        float meleeTimer, invulnerability;
-        Material bodyMat;
+        SurvivorGame map;
 
         public override void OnNetworkSpawn()
         {
-            BuildVisual();
+            map = Object.FindFirstObjectByType<SurvivorGame>();
             Active.Add(this);
-            if (IsOwner) Local = this;
+            if (IsOwner) { Local = this; if (map) transform.position = map.MapSpawn; }
         }
 
         public override void OnNetworkDespawn()
         {
             Active.Remove(this);
             if (Local == this) Local = null;
-        }
-
-        void BuildVisual()
-        {
-            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            body.name = "Kaverin hahmo";
-            body.transform.SetParent(transform, false);
-            body.transform.localPosition = Vector3.up;
-            Object.Destroy(body.GetComponent<Collider>());
-            bodyMat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(.3f, .95f, .55f) };
-            body.GetComponent<Renderer>().sharedMaterial = bodyMat;
         }
 
         void Update()
@@ -65,30 +62,29 @@ namespace BonkSurvivor
             if (Gamepad.current != null && Gamepad.current.leftStick.ReadValue().sqrMagnitude > .05f) input = Gamepad.current.leftStick.ReadValue();
             input = Vector2.ClampMagnitude(input, 1);
             var move = new Vector3(input.x, 0, input.y);
-            transform.position += move * (MoveSpeed * Time.deltaTime);
+            var motion = move * (MoveSpeed * Time.deltaTime);
+            transform.position = map ? map.MoveOnMap(transform.position, motion) : transform.position + motion;
             if (move.sqrMagnitude > .01f) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(move), Time.deltaTime * 14);
         }
 
-        public override void OnDestroy() { if (bodyMat) Object.Destroy(bodyMat); base.OnDestroy(); }
-
-        // Host-only bookkeeping below - driven from SurvivorGame's network coop tick.
-        public void TickServer(float dt)
+        // Client -> host: menu choices. The client renders the picker UI from shared static data
+        // (character roster / upgrade names) - only the pick itself needs to cross the network.
+        [Rpc(SendTo.Server)]
+        public void RequestCharacterRpc(int character)
         {
-            if (invulnerability > 0) invulnerability -= dt;
-            meleeTimer -= dt;
+            if (map && FriendState != null) map.FriendSelectCharacter(FriendState, (SurvivorGame.PlayerCharacter)character);
         }
 
-        public bool TryConsumeMeleeTick()
+        [Rpc(SendTo.Server)]
+        public void RequestStarterRpc(int weaponIndex)
         {
-            if (meleeTimer > 0) return false;
-            meleeTimer = MeleeInterval; return true;
+            if (map && FriendState != null) map.FriendSelectStarter(FriendState, weaponIndex);
         }
 
-        public void ApplyDamage(float amount)
+        [Rpc(SendTo.Server)]
+        public void RequestUpgradeRpc(int slot)
         {
-            if (!IsServer || !IsAlive || invulnerability > 0) return;
-            Health.Value = Mathf.Max(0, Health.Value - amount);
-            invulnerability = HitInvulnerability;
+            if (map && FriendState != null) map.FriendChooseUpgrade(FriendState, slot);
         }
     }
 }

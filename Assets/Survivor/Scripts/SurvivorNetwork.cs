@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Collections;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -37,6 +38,7 @@ namespace BonkSurvivor
             transport = GetComponent<UnityTransport>();
             networkManager.OnClientConnectedCallback += OnClientConnected;
             networkManager.OnClientDisconnectCallback += OnClientDisconnected;
+            networkManager.OnClientStarted += RegisterMapMessages;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 #endif
@@ -44,6 +46,12 @@ namespace BonkSurvivor
 
         void OnDestroy()
         {
+            if(networkManager)
+            {
+                networkManager.OnClientConnectedCallback -= OnClientConnected;
+                networkManager.OnClientDisconnectCallback -= OnClientDisconnected;
+                networkManager.OnClientStarted -= RegisterMapMessages;
+            }
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 #endif
@@ -67,9 +75,42 @@ namespace BonkSurvivor
         void OnClientConnected(ulong clientId)
         {
             if (!networkManager.IsServer || clientId == NetworkManager.ServerClientId || !remotePlayerPrefab) return;
-            var instance = Instantiate(remotePlayerPrefab, Vector3.up, Quaternion.identity);
+            var game=FindFirstObjectByType<SurvivorGame>();
+            var instance = Instantiate(remotePlayerPrefab, game ? game.MapSpawn : Vector3.zero, Quaternion.identity);
+            var rp = instance.GetComponent<RemotePlayerNet>();
+            if (game && rp) rp.FriendState = game.CreateFriendCombatant(instance.transform);
             instance.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
+            SendMap(clientId);
             StatusMessage = "Kaveri liittyi peliin!";
+        }
+
+        const string MapMessage = "Survivor.Map.v1";
+        void RegisterMapMessages() => networkManager.CustomMessagingManager.RegisterNamedMessageHandler(MapMessage, ReceiveMap);
+
+        void ReceiveMap(ulong sender, FastBufferReader reader)
+        {
+            if(networkManager.IsServer || sender!=NetworkManager.ServerClientId) return;
+            reader.ReadValueSafe(out int version); reader.ReadValueSafe(out int seed);
+            reader.ReadValueSafe(out int area); reader.ReadValueSafe(out int runSeed);
+            if(version!=ProceduralMapLayout.GeneratorVersion) { StatusMessage="Karttageneraattorin versiot eroavat. Päivitä peli."; Disconnect(); return; }
+            FindFirstObjectByType<SurvivorGame>()?.ApplyNetworkMap(seed, area, runSeed);
+        }
+
+        void SendMap(ulong clientId)
+        {
+            var game=FindFirstObjectByType<SurvivorGame>(); if(!game) return;
+            using(var writer=new FastBufferWriter(16,Allocator.Temp))
+            {
+                writer.WriteValueSafe(ProceduralMapLayout.GeneratorVersion); writer.WriteValueSafe(game.CurrentMapSeed);
+                writer.WriteValueSafe(Mathf.Max(1,game.Area)); writer.WriteValueSafe(game.RunSeed);
+                networkManager.CustomMessagingManager.SendNamedMessage(MapMessage,clientId,writer,NetworkDelivery.ReliableSequenced);
+            }
+        }
+
+        public void BroadcastMap()
+        {
+            if(!networkManager || !networkManager.IsServer || !networkManager.IsListening) return;
+            foreach(var id in networkManager.ConnectedClientsIds) if(id!=NetworkManager.ServerClientId) SendMap(id);
         }
 
         void OnClientDisconnected(ulong clientId)

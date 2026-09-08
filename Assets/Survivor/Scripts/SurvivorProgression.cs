@@ -6,8 +6,8 @@ namespace BonkSurvivor
     public sealed partial class SurvivorGame
     {
         public enum Weapon { Sword, Bow, Lightning, Chunkers, Flamewalker, Bone, Firestaff, Aura, Shotgun, Revolver, Aegis, Bananarang, Axe, SpaceNoodle, Sniper, Rocket, Mines, WirelessDagger, Frostwalker, Tornado, Dexecutioner, BloodMagic, BlackHole, PoisonFlask, Katana, DragonBreath, Dice, HeroSword, CorruptedSword, Scythe }
-        public bool Selecting { get; private set; }
-        public int PendingChoices { get; private set; }
+        public bool Selecting { get => current.Selecting; private set => current.Selecting = value; }
+        public int PendingChoices { get => current.PendingChoices; private set => current.PendingChoices = value; }
         public int Area { get; private set; }
         public int Silver { get; private set; }
         public int LegacyHealth { get; private set; }
@@ -18,14 +18,14 @@ namespace BonkSurvivor
         public int WeaponCount => weaponLevels.Count;
         public int TomeCount => tomeLevels.Count;
         public IReadOnlyList<int> Choices => choices;
-        public float Size { get; private set; } = 1;
-        public int Quantity { get; private set; } = 1;
-        public float CritChance { get; private set; }
-        public float Armor { get; private set; }
-        readonly Dictionary<Weapon, int> weaponLevels = new Dictionary<Weapon, int>();
-        readonly Dictionary<int, int> tomeLevels = new Dictionary<int, int>();
+        public float Size { get => current.Size; private set => current.Size = value; }
+        public int Quantity { get => current.Quantity; private set => current.Quantity = value; }
+        public float CritChance { get => current.CritChance; private set => current.CritChance = value; }
+        public float Armor { get => current.Armor; private set => current.Armor = value; }
+        Dictionary<Weapon, int> weaponLevels => current.WeaponLevels;
+        Dictionary<int, int> tomeLevels => current.TomeLevels;
         const int MaxWeaponKinds = 5, MaxTomeKinds = 5;
-        readonly List<int> choices = new List<int>();
+        List<int> choices => current.Choices;
         readonly List<Landmark> landmarks = new List<Landmark>();
         readonly List<Flash> flashes = new List<Flash>();
         Enemy boss;
@@ -70,6 +70,7 @@ namespace BonkSurvivor
             Size = 1; Quantity = 1; CritChance = Armor = 0;
             Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
             EarnedSilver = 0; rewardPaid = false; BossDefeated = false; PendingChoices = 0; Selecting = true; awaitingCharacterChoice = true;
+            BeginMapRun();
             CreateLandmarks();
         }
 
@@ -83,6 +84,15 @@ namespace BonkSurvivor
 
         void CreateLandmarks()
         {
+            if (MapLayout != null)
+            {
+                var rooms = new List<int>();
+                for(int i=1;i<MapLayout.Rooms.Count;i++) if(i!=MapLayout.BossRoom) rooms.Add(i);
+                for(int i=0;i<3;i++) AddLandmark(0, MapLayout.Center(MapLayout.Rooms[rooms[i]]) + Vector3.up*.8f, eliteMaterial);
+                AddLandmark(1, MapLayout.Center(MapLayout.Rooms[rooms[3]]) + Vector3.up, enemyMaterial);
+                AddLandmark(2, MapLayout.BossPosition + Vector3.up*1.5f, xpMaterial);
+                return;
+            }
             float k = arenaRadius / 38f;
             AddLandmark(0, new Vector3(10 * k, .8f, 9 * k), eliteMaterial);
             AddLandmark(0, new Vector3(-18 * k, .8f, 12 * k), eliteMaterial);
@@ -190,14 +200,13 @@ namespace BonkSurvivor
                     flashes.Add(new Flash { body = ring, life = .3f });
                 }
             }
-            if (BossDefeated && bossDefeatedAt >= 0 && Elapsed - bossDefeatedAt > 2f) AdvanceArea();
         }
 
         string LandmarkHint(int kind)
         {
             if (kind == 0) return "[E] Arkku: 12 kultaa → satunnainen Tome tai asepäivitys";
             if (kind == 1) return "[E] Pyhäkkö: +30 % vahinko, vihollisten HP ja nopeus +20 %";
-            if (BossDefeated) return "[E] Portaali: jatka seuraavalle alueelle";
+            if (BossDefeated) return "Seuraava kartta generoidaan...";
             if (boss != null) return "Voita bossi avataksesi portaalin.";
             return Elapsed - areaStarted < 90 ? "Portaali avautuu: " + Mathf.CeilToInt(90 - Elapsed + areaStarted) + " s" : "[E] Kutsu alueen bossi";
         }
@@ -219,10 +228,10 @@ namespace BonkSurvivor
             else if (BossDefeated) { AdvanceArea(); return true; }
             else if (boss == null && Elapsed - areaStarted >= 90)
             {
-                boss = new Enemy { body = Shape("Alueen vartija", PrimitiveType.Capsule, player.position + Vector3.forward * 10,
+                boss = new Enemy { body = Shape("Vartija " + Area, PrimitiveType.Capsule, ResolveMapPosition((MapLayout == null ? player.position : MapLayout.BossPosition + Vector3.up) + Vector3.forward * 8, 1.8f),
                     new Vector3(2.6f, 2.6f, 2.6f), eliteMaterial, world), health = 900 * Area * curse, speed = 3.2f * curse, elite = true };
                 enemies.Add(boss); bossAttackTimer = 3;
-                notice = "Alueen vartija ilmestyi! Uusia vihollisia ei enää tule — voita bossi ja palaa portaalille."; noticeUntil = Elapsed + 6;
+                notice = "Kartan " + Area + " vartija ilmestyi! Voitto vie seuraavaan karttaan."; noticeUntil = Elapsed + 6;
             }
             else return false;
             if (p.used) p.body.localScale *= .35f;
@@ -231,13 +240,14 @@ namespace BonkSurvivor
 
         void AdvanceArea()
         {
-            ClearArsenal(false);
-            Area++; areaStarted = Elapsed; BossDefeated = false; bossTimerExpired = false;
-            foreach (var e in enemies) Destroy(e.body.gameObject); enemies.Clear();
-            foreach (var b in bolts) Destroy(b.body.gameObject); bolts.Clear();
-            foreach (var d in drops) Destroy(d.body.gameObject); drops.Clear();
-            foreach (var p in landmarks) Destroy(p.body.gameObject); landmarks.Clear();
-            CreateLandmarks(); player.position = Vector3.up; Health = maxHealth;
+            if (!MapTransitionPending || NetworkClientMode) return;
+            ClearMapCombat();
+            Area++; areaStarted = Elapsed; BossDefeated = false; bossTimerExpired = false; bossDefeatedAt = -1;
+            GenerateProceduralMap(NextMapSeed(CurrentMapSeed), true);
+            CreateLandmarks(); player.position = MapSpawn + Vector3.up; Health = maxHealth;
+            spawnTimer=1.5f; invulnerability=2f; dodgeLeft=dodgeCooldown=0; ShopOpen=false;
+            UpdateCamera(true);
+            SurvivorNetwork.Instance?.BroadcastMap();
             notice = "ALUE " + Area + " — viholliset vahvistuvat. Buildisi säilyy."; noticeUntil = Elapsed + 6;
         }
 
@@ -305,7 +315,7 @@ namespace BonkSurvivor
                     foreach (var e in candidates) { float sq = (e.body.position - origin).sqrMagnitude; if (sq < distance) { distance = sq; target = e; } }
                     if (target == null) break;
                     var end = target.body.position;
-                    if (lightningZapEffect) Destroy(Instantiate(lightningZapEffect, end, Quaternion.identity, world), 2f);
+                    if (lightningZapEffect) Destroy(Instantiate(lightningZapEffect, end, Quaternion.identity, MapEffectRoot), 2f);
                     candidates.Remove(target); Hit(target, damage * 1.1f * (1 + .25f * (lightning - 1))); origin = end;
                 }
             }
@@ -317,10 +327,11 @@ namespace BonkSurvivor
             {
                 string weapons = LoadoutSummary();
                 GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  Aseet " + WeaponCount + "/5  •  Tomet " + TomeCount + "/5  •  " + weapons, textStyle);
-                GUI.Label(new Rect(24,254,900,30), "Arkut: kultainen  •  Pyhäkkö: punainen  •  Portaali: sininen pohjoisessa", textStyle);
+                GUI.Label(new Rect(24,254,900,30), "Arkut: keltainen  •  Pyhäkkö: punainen  •  Bossihuone: sininen kartalla", textStyle);
+                DrawDungeonMap();
                 GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
                 if (boss != null) GUI.Label(new Rect(440,80,600,35), "ALUEEN VARTIJA  •  HP " + Mathf.CeilToInt(boss.health), titleStyle);
-                else GUI.Label(new Rect(850,190,410,55), BossDefeated ? "Bossi voitettu — palaa portaaliin" : "Bossiportaali: " + Mathf.Max(0, Mathf.CeilToInt(90 - Elapsed + areaStarted)) + " s", textStyle);
+                else GUI.Label(new Rect(850,190,410,55), BossDefeated ? "Uusi kartta generoidaan..." : "Bossiportaali: " + Mathf.Max(0, Mathf.CeilToInt(90 - Elapsed + areaStarted)) + " s", textStyle);
             }
             if (!Selecting && PendingChoices == 0) return;
             GUI.color = new Color(0,0,0,.93f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
@@ -353,8 +364,5 @@ namespace BonkSurvivor
         }
     }
 }
-
-
-
 
 

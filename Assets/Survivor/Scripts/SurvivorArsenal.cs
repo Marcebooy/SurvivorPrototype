@@ -5,27 +5,28 @@ namespace BonkSurvivor
 {
     public sealed partial class SurvivorGame
     {
-        public float EffectDuration { get; private set; } = 1;
-        public float ProjectileSpeed { get; private set; } = 1;
+        public float EffectDuration { get => current.EffectDuration; private set => current.EffectDuration = value; }
+        public float ProjectileSpeed { get => current.ProjectileSpeed; private set => current.ProjectileSpeed = value; }
         public int ArsenalProjectileCount => shots.Count;
         public int FlameCount => flames.Count;
         public int OrbitCount => rocks.Count;
-        readonly List<ArsenalShot> shots=new List<ArsenalShot>();
-        readonly List<FlamePatch> flames=new List<FlamePatch>();
-        readonly List<Transform> rocks=new List<Transform>();
-        readonly float[] weaponTimers=new float[6];
+        List<ArsenalShot> shots => current.Shots;
+        List<FlamePatch> flames => current.Flames;
+        List<Transform> rocks => current.Rocks;
+        float[] weaponTimers => current.WeaponTimers;
         Material fireMat, boneMat, rockMat, auraMat;
-        LineRenderer auraRing;
-        Transform auraEffect;
-        float orbitAngle, orbitTick;
-        int starterPage;
-        sealed class ArsenalShot
+        LineRenderer auraRing { get => current.AuraRing; set => current.AuraRing = value; }
+        Transform auraEffect { get => current.AuraEffect; set => current.AuraEffect = value; }
+        float orbitAngle { get => current.OrbitAngle; set => current.OrbitAngle = value; }
+        float orbitTick { get => current.OrbitTick; set => current.OrbitTick = value; }
+        int starterPage { get => current.StarterPage; set => current.StarterPage = value; }
+        internal sealed class ArsenalShot
         {
             public Transform body; public Weapon kind; public Vector3 direction;
             public float life,power,speed,radius; public int bounces;
             public HashSet<Enemy> hit=new HashSet<Enemy>();
         }
-        sealed class FlamePatch { public Transform body; public float life,tick,power,radius; }
+        internal sealed class FlamePatch { public Transform body; public float life,tick,power,radius; }
 
         static int WeaponUpgradeId(int index) => index<3 ? index : index<9 ? index+7 : index+9;
         static string WeaponLabel(Weapon w) => UpgradeNames[WeaponUpgradeId((int)w)].Split('/')[0].Trim();
@@ -110,6 +111,13 @@ namespace BonkSurvivor
                 {
                     for(int side=-1;side<=1;side+=2)
                     { var end=Shape("Bone end",PrimitiveType.Sphere,body.position,Vector3.one*.3f,boneMat,world); end.SetParent(body,true); end.localPosition=new Vector3(0,0,side*.5f); }
+                }
+                // Fireball VFX is a looping flame/aura effect, not a one-shot burst - parent it to the
+                // projectile so it's visible for the whole flight, not just at the impact explosion.
+                if(w==Weapon.Firestaff && fireImpactEffect)
+                {
+                    var trail=Instantiate(fireImpactEffect,body.position,Quaternion.identity,body);
+                    trail.transform.localScale=Vector3.one*ImpactBaseScale(Weapon.Firestaff)*Size;
                 }
                 float speed=(w==Weapon.Firestaff ? 14 : w==Weapon.Bone ? 18 : 27)*ProjectileSpeed;
                 shots.Add(new ArsenalShot { body=body,kind=w,direction=direction,speed=speed,

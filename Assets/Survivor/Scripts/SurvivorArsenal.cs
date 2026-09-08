@@ -16,6 +16,7 @@ namespace BonkSurvivor
         readonly float[] weaponTimers=new float[6];
         Material fireMat, boneMat, rockMat, auraMat;
         LineRenderer auraRing;
+        Transform auraEffect;
         float orbitAngle, orbitTick;
         int starterPage;
         sealed class ArsenalShot
@@ -26,16 +27,18 @@ namespace BonkSurvivor
         }
         sealed class FlamePatch { public Transform body; public float life,tick,power,radius; }
 
-        static int WeaponUpgradeId(int index) => index<3 ? index : index+7;
+        static int WeaponUpgradeId(int index) => index<3 ? index : index<9 ? index+7 : index+9;
         static string WeaponLabel(Weapon w) => UpgradeNames[WeaponUpgradeId((int)w)].Split('/')[0].Trim();
         public int WeaponLevel(Weapon w) => weaponLevels.TryGetValue(w,out int n) ? n : 0;
 
         void ClearArsenal(bool resetStats)
         {
+            ClearAdvanced(resetStats);
             foreach(var s in shots) if(s.body) Destroy(s.body.gameObject); shots.Clear();
             foreach(var f in flames) if(f.body) Destroy(f.body.gameObject); flames.Clear();
             foreach(var r in rocks) if(r) Destroy(r.gameObject); rocks.Clear();
             if(auraRing) Destroy(auraRing.gameObject); auraRing=null;
+            if(auraEffect) Destroy(auraEffect.gameObject); auraEffect=null;
             System.Array.Clear(weaponTimers,0,weaponTimers.Length); orbitAngle=orbitTick=0;
             if(resetStats) { EffectDuration=ProjectileSpeed=1; starterPage=0; }
         }
@@ -69,7 +72,7 @@ namespace BonkSurvivor
                     weaponTimers[i]=interval/Mathf.Max(.1f,attackRate);
                 }
             }
-            TickOrbits(dt); TickShots(dt); TickFlames(dt);
+            TickOrbits(dt); TickShots(dt); TickFlames(dt); TickAdvanced(dt);
         }
 
         void CastArsenal(Weapon w,int level)
@@ -89,6 +92,7 @@ namespace BonkSurvivor
                     auraRing=new GameObject("Healing green? No: damage aura",typeof(LineRenderer)).GetComponent<LineRenderer>();
                     auraRing.transform.SetParent(world,false); auraRing.sharedMaterial=auraMat; auraRing.loop=true; auraRing.positionCount=48; auraRing.widthMultiplier=.08f;
                 }
+                if(!auraEffect && auraEffectPrefab) auraEffect=Instantiate(auraEffectPrefab,world).transform;
                 AreaHit(player.position,3.2f*Size,power*.42f); return;
             }
             if(w==Weapon.Chunkers) return; // Continuous orbit has its own contact cadence.
@@ -147,6 +151,11 @@ namespace BonkSurvivor
             }
             if(auraRing)
                 for(int i=0;i<48;i++) { float a=i*Mathf.PI*2/48; auraRing.SetPosition(i, new Vector3(player.position.x+Mathf.Cos(a)*3.2f*Size,.16f,player.position.z+Mathf.Sin(a)*3.2f*Size)); }
+            if(auraEffect)
+            {
+                auraEffect.position=new Vector3(player.position.x,.02f,player.position.z);
+                float ringScale=4.5f*Size; auraEffect.localScale=new Vector3(ringScale,1f,ringScale);
+            }
         }
 
         void TickShots(float dt)
@@ -196,8 +205,8 @@ namespace BonkSurvivor
 
         void DrawStarterPages()
         {
-            GUI.Label(new Rect(90,90,1100,50),"POTUN ASEKAAPPI  /  "+(starterPage+1)+" / 3",titleStyle);
-            GUI.Label(new Rect(90,150,1100,55),"Valitse yksi aloitusase. Kaikki yhdeksän löytyvät myös tasopäivityksistä ja arkuista.",textStyle);
+            GUI.Label(new Rect(90,90,1100,50),"POTUN ASEKAAPPI  /  "+(starterPage+1)+" / " + ((TotalWeaponCount+2)/3),titleStyle);
+            GUI.Label(new Rect(90,150,1100,55),"Valitse yksi aloitusase. Kaikki 30 asetta löytyvät myös tasopäivityksistä ja arkuista.",textStyle);
             for(int i=0;i<3;i++)
             {
                 int weapon=starterPage*3+i, id=WeaponUpgradeId(weapon);
@@ -206,9 +215,10 @@ namespace BonkSurvivor
                 GUI.Label(new Rect(110+i*370,305,310,110),UpgradeDetails[id],textStyle);
                 if(GUI.Button(new Rect(110+i*370,428,310,42),"Aloita tällä",buttonStyle)) {SelectStarter(weapon);break;}
             }
-            if(GUI.Button(new Rect(90,494,220,38),"← Edelliset",buttonStyle)) starterPage=(starterPage+2)%3;
-            if(GUI.Button(new Rect(980,494,220,38),"Seuraavat →",buttonStyle)) starterPage=(starterPage+1)%3;
+            if(GUI.Button(new Rect(90,494,220,38),"← Edelliset",buttonStyle)) starterPage=(starterPage+(TotalWeaponCount+2)/3-1)%((TotalWeaponCount+2)/3);
+            if(GUI.Button(new Rect(980,494,220,38),"Seuraavat →",buttonStyle)) starterPage=(starterPage+1)%((TotalWeaponCount+2)/3);
             DrawLegacy(90,550);
         }
     }
 }
+

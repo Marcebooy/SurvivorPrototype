@@ -7,6 +7,11 @@ namespace BonkSurvivor
     // Self-contained first playable. Only runs in the dedicated prototype scene.
     public sealed partial class SurvivorGame : MonoBehaviour
     {
+        [Header("Enemy model")]
+        public GameObject undeadEnemyPrefab;
+        [Header("VFX")]
+        public GameObject lightningZapEffect;
+        public GameObject auraEffectPrefab;
         [Header("Starting balance")]
         public float moveSpeed = 8f;
         public float damage = 18f;
@@ -34,7 +39,7 @@ namespace BonkSurvivor
         readonly int[] purchases = new int[5];
         Transform player, world, slash;
         Camera followCamera;
-        Material enemyMaterial, eliteMaterial, xpMaterial, boltMaterial;
+        Material enemyMaterial, eliteMaterial, xpMaterial, boltMaterial, healthMaterial;
         float spawnTimer, attackTimer, invulnerability, slashTimer;
         string notice = "Selviä viisi minuuttia!";
         float noticeUntil = 5f;
@@ -42,8 +47,8 @@ namespace BonkSurvivor
         bool settingsOpen;
         int fpsCap = 60;
         float masterVolume = 1f;
-        sealed class Enemy { public Transform body; public float health, speed; public bool elite; }
-        sealed class Drop { public Transform body; public int value; }
+        sealed class Enemy { public Transform body; public float health, speed; public bool elite; public Animator animator; }
+        sealed class Drop { public Transform body; public int value; public bool isHealth; }
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); }
 
         void Start() { LoadHighscore(); LoadSettings(); BuildWorld(); }
@@ -110,6 +115,7 @@ namespace BonkSurvivor
             enemyMaterial = MakeMaterial(new Color(.95f, .28f, .28f));
             eliteMaterial = MakeMaterial(new Color(1f, .6f, .16f));
             xpMaterial = MakeMaterial(new Color(.3f, .8f, 1f));
+            healthMaterial = MakeMaterial(new Color(1f, .25f, .4f));
             boltMaterial = MakeMaterial(new Color(1f, .9f, .35f));
             Shape("Arena", PrimitiveType.Cylinder, new Vector3(0, -.3f, 0), new Vector3(arenaRadius * 2 + 4, .3f, arenaRadius * 2 + 4), ground, world);
             int pillarCount = Mathf.RoundToInt(48f * arenaRadius / 38f);
@@ -194,11 +200,16 @@ namespace BonkSurvivor
             }
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
+                if(i>=enemies.Count) continue;
                 var e = enemies[i]; var delta = player.position - e.body.position; delta.y = 0;
-                e.body.position += delta.normalized * (e.speed * dt);
+                e.body.position += delta.normalized * (e.speed * EnemyMoveMultiplier(e) * dt);
+                if (delta.sqrMagnitude > .01f) e.body.rotation = Quaternion.Slerp(e.body.rotation, Quaternion.LookRotation(delta.normalized), dt * 10);
+                if (e.animator) e.animator.SetFloat("Speed", e.speed);
                 if (delta.sqrMagnitude < 1.7f && invulnerability <= 0)
                 {
                     ReceiveDamage(e.elite ? 26 : 13);
+                    if(!enemies.Contains(e)) continue;
+                    if (e.animator) e.animator.SetTrigger("Attack");
                     e.body.position -= delta.normalized * 1.5f;
                     if (Health <= 0) { FinishRun(); return; }
                 }
@@ -215,7 +226,12 @@ namespace BonkSurvivor
                 var d = drops[i]; float distance = Vector3.Distance(d.body.position, player.position);
                 d.body.Rotate(0, 100 * dt, 0);
                 if (distance < pickupRadius) d.body.position = Vector3.MoveTowards(d.body.position, player.position, 15 * dt);
-                if (distance < 1.1f) { GrantExperience(d.value); Coins += d.value; Destroy(d.body.gameObject); drops.RemoveAt(i); }
+                if (distance < 1.1f)
+                {
+                    if (d.isHealth) { Health = Mathf.Min(maxHealth, Health + d.value); notice = "+" + d.value + " HP"; noticeUntil = Elapsed + 2; }
+                    else { GrantExperience(d.value); Coins += d.value; }
+                    Destroy(d.body.gameObject); drops.RemoveAt(i);
+                }
             }
         }
 
@@ -231,10 +247,31 @@ namespace BonkSurvivor
         {
             var offset = Random.insideUnitCircle.normalized * Random.Range(18f, 25f);
             var p = player.position + new Vector3(offset.x, 0, offset.y); p.y = 0;
-            p = Vector3.ClampMagnitude(p, arenaRadius); p.y = 1;
+            p = Vector3.ClampMagnitude(p, arenaRadius); p.y = 0;
             bool elite = Elapsed > 20 && Random.value < .24f;
+            Transform body; Animator animator = null;
+            if (undeadEnemyPrefab)
+            {
+                var instance = Instantiate(undeadEnemyPrefab, p, Quaternion.identity, world);
+                instance.name = elite ? "Brute" : "Chaser";
+                instance.transform.localScale = Vector3.one * (elite ? 2.8f : 2f);
+                animator = instance.GetComponent<Animator>();
+                if (animator) animator.applyRootMotion = false;
+                if (elite)
+                {
+                    var renderer = instance.GetComponentInChildren<SkinnedMeshRenderer>();
+                    if (renderer)
+                    {
+                        var tint = new MaterialPropertyBlock();
+                        tint.SetColor("_BaseColor", new Color(1f, .5f, .15f));
+                        renderer.SetPropertyBlock(tint);
+                    }
+                }
+                body = instance.transform;
+            }
+            else body = Shape(elite ? "Brute" : "Chaser", PrimitiveType.Capsule, p + Vector3.up, Vector3.one * (elite ? 1.3f : .8f), elite ? eliteMaterial : enemyMaterial, world);
             enemies.Add(new Enemy {
-                body = Shape(elite ? "Brute" : "Chaser", PrimitiveType.Capsule, p, Vector3.one * (elite ? 1.3f : .8f), elite ? eliteMaterial : enemyMaterial, world),
+                body = body, animator = animator,
                 health = (elite ? 130 : 34) * (1 + Elapsed / 200) * curse * (1 + .45f * (Area - 1)), speed = ((elite ? 3.4f : 4.6f) + Mathf.Min(3, Elapsed / 70)) * curse, elite = elite
             });
         }
@@ -260,11 +297,14 @@ namespace BonkSurvivor
         {
             bool critical = Random.value < CritChance; if (critical) amount *= 2; HitFeedback(e, amount, critical); e.health -= amount;
             if (e.health > 0) { e.body.position += (e.body.position - player.position).normalized * .6f; return; }
+            AdvancedKill(e);
             if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; notice = "Bossi voitettu! Seuraava alue avautuu..."; noticeUntil = Elapsed + 8; }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;
             else drops.Add(new Drop { body = Shape("XP + gold", PrimitiveType.Cube, new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .4f, xpMaterial, world), value = value });
+            if (Random.value < .01f)
+                drops.Add(new Drop { body = Shape("Health pickup", PrimitiveType.Sphere, new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .45f, healthMaterial, world), value = 25, isHealth = true });
             enemies.Remove(e); Destroy(e.body.gameObject); Kills++;
         }
 
@@ -404,6 +444,7 @@ namespace BonkSurvivor
         void OnDestroy() { if (swipeMesh) Destroy(swipeMesh); foreach (var m in materials) if (m) Destroy(m); }
     }
 }
+
 
 
 

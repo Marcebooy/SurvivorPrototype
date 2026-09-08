@@ -148,6 +148,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1a2b0c0aee470a41ab012f2474e7863, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BonkSurvivor.SurvivorGame
+  undeadEnemyPrefab: {fileID: 165424, guid: 9f4313a771e05c64d8da7ae6bd19a19f, type: 3}
+  lightningZapEffect: {fileID: 5627696518775099638, guid: 390cc74915d4a054bbd897e1885047a4, type: 3}
+  auraEffectPrefab: {fileID: 2625151389859878584, guid: a4455f555861b0a4db14ccd6173074ff, type: 3}
   moveSpeed: 8
   damage: 18
   attackRate: 1.3

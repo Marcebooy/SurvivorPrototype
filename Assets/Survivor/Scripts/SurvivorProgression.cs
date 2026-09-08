@@ -5,7 +5,7 @@ namespace BonkSurvivor
 {
     public sealed partial class SurvivorGame
     {
-        public enum Weapon { Sword, Bow, Lightning, Chunkers, Flamewalker, Bone, Firestaff, Aura, Shotgun }
+        public enum Weapon { Sword, Bow, Lightning, Chunkers, Flamewalker, Bone, Firestaff, Aura, Shotgun, Revolver, Aegis, Bananarang, Axe, SpaceNoodle, Sniper, Rocket, Mines, WirelessDagger, Frostwalker, Tornado, Dexecutioner, BloodMagic, BlackHole, PoisonFlask, Katana, DragonBreath, Dice, HeroSword, CorruptedSword, Scythe }
         public bool Selecting { get; private set; }
         public int PendingChoices { get; private set; }
         public int Area { get; private set; }
@@ -35,25 +35,25 @@ namespace BonkSurvivor
         const string SaveKey = "BonkSurvivor.Prototype.v1.";
         sealed class Landmark { public Transform body; public int kind; public bool used; }
         sealed class Flash { public Transform body; public float life; }
-        static readonly string[] UpgradeNames = {
+        static readonly string[] UpgradeNames = WithAdvancedNames(new string[] {
             "Pannu / BONK", "Bow / Jousi", "Lightning / Salamasauva",
             "Damage Tome", "Cooldown Tome", "Quantity Tome", "Size Tome", "Precision Tome", "Armor Tome", "Movement Tome", "Kiertokivet / Chunkers", "Tulijälki / Flamewalker", "Pomppuluu / Bone", "Tulipallo / Firestaff", "Aura", "Haulikko / Shotgun", "Duration Tome", "Projectile Speed Tome"
-        };
-        static readonly string[] UpgradeDetails = {
+        });
+        static readonly string[] UpgradeDetails = WithAdvancedDetails(new string[] {
             "Uusi ase tai +1 asetaso. Leveä pannunheilautus. Asetaso kasvattaa pannua.",
             "Uusi ase tai +1 asetaso. Nuolet läpäisevät vihollisia.",
             "Uusi ase tai +1 asetaso. Salama ketjuttuu lähellä oleviin kohteisiin.",
-            "+20 % vahinkoa kaikille aseille.", "+20 % hyökkäysnopeutta kaikille aseille.",
-            "+1 ammus, kiertokivi, salamakohde tai pannun lisäisku. Max 6. Ei vaikuta auraan tai tulijälkeen.", "+20 % aseiden osuma- ja aluekokoa; kiertokivien kiertorata kasvaa.",
-            "+10 prosenttiyksikköä kriittisen osuman mahdollisuuteen (max 70 %).", "+2 panssaria. Vähentää osumavahinkoa.", "+12 % liikkumisnopeutta.",
+            "+1 % vahinkoa kaikille aseille.", "+1 % hyökkäysnopeutta kaikille aseille.",
+            "+1 ammus, kiertokivi, salamakohde tai pannun lisäisku. Max 6. Ei vaikuta auraan tai tulijälkeen.", "+1 % aseiden osuma- ja aluekokoa; kiertokivien kiertorata kasvaa.",
+            "+1 prosenttiyksikkö kriittisen osuman mahdollisuuteen (max 70 %).", "+2 panssaria. Vähentää osumavahinkoa.", "+1 % liikkumisnopeutta.",
             "Kivet kiertävät Pottua ja murskaavat. Quantity: lisää kiviä. Size: koko ja kiertorata.",
             "Jättää polttavia alueita. Damage: vahinko. Size: alue. Duration: kesto.",
             "Luu kimpoaa seuraavaan viholliseen. Asetaso lisää vahinkoa ja kimpoiluja. Quantity: lisää luita.",
             "Tulipallo räjähtää aluevahingoksi. Quantity: lisää palloja. Size: suurempi räjähdys.",
             "Vahinkokehä Potun ympärillä. Size: säde. Cooldown: nopeampi syke. Quantity ei vaikuta.",
             "Lyhyen kantaman hauliparvi. Quantity: lisää hauleja. Asetaso kasvattaa vahinkoa.",
-            "+25 % tulijäljen kestoa.", "+20 % ammusten ja kiertokivien nopeutta."
-        };
+            "+1 % tulijälkien, erikoisammusten, miinojen ja alueiden kestoa.", "+1 % ammusten ja kiertokivien nopeutta."
+        });
 
         void ResetProgression()
         {
@@ -72,7 +72,7 @@ namespace BonkSurvivor
 
         public bool SelectStarter(int index)
         {
-            if (!Selecting || index < 0 || index > 8) return false;
+            if (!Selecting || index < 0 || index >= TotalWeaponCount) return false;
             weaponLevels[(Weapon)index] = 1; Selecting = false;
             notice = "Etsi arkkuja ja pyhäkkö. Portaali avautuu 90 sekunnissa."; noticeUntil = Elapsed + 7;
             return true;
@@ -114,13 +114,14 @@ namespace BonkSurvivor
         void ApplyUpgrade(int id)
         {
             if (id < 0 || id >= UpgradeNames.Length) return;
-            if (id >= 10 && id <= 15) { var w=(Weapon)(id-7); bool alreadyOwned=WeaponLevel(w)>0; weaponLevels[w]=WeaponLevel(w)+1; if (alreadyOwned) GrantWeaponBonus(); }
+            if (id >= 18) { var w=(Weapon)(id-9); bool owned=WeaponLevel(w)>0; weaponLevels[w]=WeaponLevel(w)+1; if(owned) GrantWeaponBonus(); }
+            else if (id >= 10 && id <= 15) { var w=(Weapon)(id-7); bool alreadyOwned=WeaponLevel(w)>0; weaponLevels[w]=WeaponLevel(w)+1; if (alreadyOwned) GrantWeaponBonus(); }
             else if (id < 3) { var w = (Weapon)id; bool alreadyOwned = weaponLevels.TryGetValue(w, out int level); weaponLevels[w] = alreadyOwned ? level + 1 : 1; if (alreadyOwned) GrantWeaponBonus(); }
             else switch (id)
             {
-                case 3: damage *= 1.2f; break; case 4: attackRate *= 1.2f; break;
-                case 5: Quantity = Mathf.Min(6, Quantity + 1); break; case 6: Size *= 1.2f; break;
-                case 7: CritChance = Mathf.Min(.7f, CritChance + .1f); break; case 8: Armor += 2; break; case 9: moveSpeed *= 1.12f; break; case 16: EffectDuration *= 1.25f; break; case 17: ProjectileSpeed *= 1.2f; break;
+                case 3: damage *= 1.01f; break; case 4: attackRate *= 1.01f; break;
+                case 5: Quantity = Mathf.Min(6, Quantity + 1); break; case 6: Size *= 1.01f; break;
+                case 7: CritChance = Mathf.Min(.7f, CritChance + .01f); break; case 8: Armor += 2; break; case 9: moveSpeed *= 1.01f; break; case 16: EffectDuration *= 1.01f; break; case 17: ProjectileSpeed *= 1.01f; break;
             }
             notice = UpgradeNames[id] + " saatu!"; noticeUntil = Elapsed + 4;
         }
@@ -278,8 +279,7 @@ namespace BonkSurvivor
                     foreach (var e in candidates) { float sq = (e.body.position - origin).sqrMagnitude; if (sq < distance) { distance = sq; target = e; } }
                     if (target == null) break;
                     var end = target.body.position;
-                    var t = Shape("Chain lightning", PrimitiveType.Cube, (origin + end) / 2, new Vector3(.12f,.12f,Vector3.Distance(origin,end)), xpMaterial, world);
-                    t.rotation = Quaternion.LookRotation(end - origin); flashes.Add(new Flash { body = t, life = .18f });
+                    if (lightningZapEffect) Destroy(Instantiate(lightningZapEffect, end, Quaternion.identity, world), 2f);
                     candidates.Remove(target); Hit(target, damage * 1.1f * (1 + .25f * (lightning - 1))); origin = end;
                 }
             }
@@ -289,7 +289,7 @@ namespace BonkSurvivor
         {
             if (!Selecting && PendingChoices == 0 && !Finished && !ShopOpen)
             {
-                string weapons = ""; foreach (var w in weaponLevels) weapons += WeaponLabel(w.Key) + " " + w.Value + "   ";
+                string weapons = LoadoutSummary();
                 GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  " + weapons, textStyle);
                 GUI.Label(new Rect(24,254,900,30), "Arkut: kultainen  •  Pyhäkkö: punainen  •  Portaali: sininen pohjoisessa", textStyle);
                 GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
@@ -322,6 +322,7 @@ namespace BonkSurvivor
         }
     }
 }
+
 
 
 

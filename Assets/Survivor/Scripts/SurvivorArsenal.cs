@@ -180,6 +180,7 @@ namespace BonkSurvivor
                         AreaHit(s.body.position,s.radius,s.power);
                         var pulse=Shape("Fireball explosion",PrimitiveType.Sphere,s.body.position,Vector3.one*s.radius,fireMat,world);
                         flashes.Add(new Flash {body=pulse,life=.14f}); s.life=0;
+                        SpawnImpact(s.body.position,Weapon.Firestaff,s.radius);
                     }
                     else
                     {

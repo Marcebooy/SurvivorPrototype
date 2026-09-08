@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,6 +13,12 @@ namespace BonkSurvivor
         [Header("VFX")]
         public GameObject lightningZapEffect;
         public GameObject auraEffectPrefab;
+        public GameObject slashEffect;        // FX_Orange_Slash_1 - terä-/lähitaisteluaseet
+        public GameObject fireImpactEffect;   // FX_Fireball - räjähtävät/tuliaseet
+        public GameObject poisonImpactEffect; // FX_Green_Hit - myrkky
+        public GameObject frostImpactEffect;  // VFX_Zap_06_White - jää
+        public GameObject voidImpactEffect;   // VFX_Zap_07_Black - pimeys/tyhjiö
+        public GameObject boltImpactEffect;   // VFX_Zap_05_Purple - yleinen taika-/ammusosuma
         [Header("Starting balance")]
         public float moveSpeed = 8f;
         public float damage = 18f;
@@ -43,10 +50,11 @@ namespace BonkSurvivor
         float spawnTimer, attackTimer, invulnerability, slashTimer;
         string notice = "Selviä viisi minuuttia!";
         float noticeUntil = 5f;
-        GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle;
+        GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle, hudNameStyle, cardTextStyle;
         bool settingsOpen;
         int fpsCap = 60;
         float masterVolume = 1f;
+        string joinCodeInputField = "";
         sealed class Enemy { public Transform body; public float health, speed; public bool elite; public Animator animator; }
         sealed class Drop { public Transform body; public int value; public bool isHealth; }
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); }
@@ -160,6 +168,7 @@ namespace BonkSurvivor
 
         void Update()
         {
+            if (NetworkClientMode) { TickNetworkClient(Time.deltaTime); return; }
             var k = Keyboard.current;
             if (AtMainMenu)
             {
@@ -178,6 +187,7 @@ namespace BonkSurvivor
             }
             if (ShopOpen || Selecting || PendingChoices > 0) return;
             float dt = Time.deltaTime; Elapsed += dt;
+            TickNetworkCoop(dt);
 
             Vector2 input = Vector2.zero;
             if (k != null)
@@ -235,7 +245,7 @@ namespace BonkSurvivor
             }
         }
 
-        void LateUpdate() { if (followCamera) UpdateCamera(false); }
+        void LateUpdate() { if (NetworkClientMode) return; if (followCamera) UpdateCamera(false); }
         void UpdateCamera(bool snap)
         {
             var target = player.position + new Vector3(0, 23, -19);
@@ -268,6 +278,11 @@ namespace BonkSurvivor
                     }
                 }
                 body = instance.transform;
+                if (IsNetworkHost)
+                {
+                    var netObj = instance.GetComponent<NetworkObject>();
+                    if (netObj) netObj.Spawn();
+                }
             }
             else body = Shape(elite ? "Brute" : "Chaser", PrimitiveType.Capsule, p + Vector3.up, Vector3.one * (elite ? 1.3f : .8f), elite ? eliteMaterial : enemyMaterial, world);
             enemies.Add(new Enemy {
@@ -287,7 +302,7 @@ namespace BonkSurvivor
                     var segment = end - start;
                     float t = Mathf.Clamp01(Vector3.Dot(e.body.position - start, segment) / Mathf.Max(.0001f, segment.sqrMagnitude));
                     if (!b.hit.Contains(e) && (e.body.position - (start + segment * t)).sqrMagnitude < (e.elite ? 1.2f : .7f) * Size * Size)
-                    { b.hit.Add(e); Hit(e, b.power); }
+                    { b.hit.Add(e); Hit(e, b.power); SpawnImpact(e.body.position, Weapon.Bow, Size); }
                 }
                 if (b.life <= 0) { Destroy(b.body.gameObject); bolts.RemoveAt(i); }
             }
@@ -341,18 +356,22 @@ namespace BonkSurvivor
                 centerTitleStyle = new GUIStyle(titleStyle) { alignment = TextAnchor.MiddleCenter };
                 centerTextStyle = new GUIStyle(textStyle) { alignment = TextAnchor.MiddleCenter };
                 centerButtonStyle = new GUIStyle(buttonStyle) { alignment = TextAnchor.MiddleCenter };
+                hudNameStyle = new GUIStyle(titleStyle) { fontSize = 21 };
+                cardTextStyle = new GUIStyle(textStyle) { fontSize = 13 };
             }
             titleStyle.normal.textColor = Color.white; textStyle.normal.textColor = Color.white;
             buttonStyle.normal.textColor = Color.white; buttonStyle.hover.textColor = Color.white;
             centerTitleStyle.normal.textColor = Color.white; centerTextStyle.normal.textColor = Color.white;
             centerButtonStyle.normal.textColor = Color.white; centerButtonStyle.hover.textColor = Color.white;
+            hudNameStyle.normal.textColor = Color.white; cardTextStyle.normal.textColor = Color.white;
             GUI.matrix = Matrix4x4.Scale(new Vector3(Screen.width / 1280f, Screen.height / 720f, 1));
+            if (NetworkClientMode) { DrawNetworkClientHud(); return; }
             if (AtMainMenu) { DrawMainMenu(); return; }
             bool overlayOpen = ShopOpen || Finished || Selecting || PendingChoices > 0;
             if (!overlayOpen)
             {
                 GUI.Box(new Rect(20,20,330,144), GUIContent.none);
-                GUI.Label(new Rect(36,28,310,40), "POTTU / BONK", titleStyle);
+                GUI.Label(new Rect(36,28,310,40), CharacterTitle(SelectedCharacter), hudNameStyle);
                 GUI.Label(new Rect(36,72,300,30), "TASO " + Level + "   •   " + Coins + " kultaa   •   " + Kills + " kaatoa", textStyle);
                 Bar(new Rect(36,108,290,16), Health / maxHealth, new Color(.2f,.9f,.7f));
                 GUI.Label(new Rect(36,128,290,28), "HP " + Mathf.CeilToInt(Health) + "/" + maxHealth + "    XP " + Experience + "/" + NextLevel, textStyle);
@@ -419,7 +438,35 @@ namespace BonkSurvivor
             if (GUI.Button(new Rect(490,340,300,56), "PELAA  [ENTER]", centerButtonStyle)) StartGame();
             if (GUI.Button(new Rect(490,406,300,50), "ASETUKSET", centerButtonStyle)) settingsOpen = true;
             if (GUI.Button(new Rect(490,466,300,50), "LOPETA", centerButtonStyle)) QuitGame();
+            DrawMultiplayerPanel();
             GUI.Label(new Rect(240,650,800,30), "WASD liiku   •   SPACE kierähdä   •   E tutki   •   TAB kauppa", centerTextStyle);
+        }
+
+        void DrawMultiplayerPanel()
+        {
+            var net = SurvivorNetwork.Instance;
+            if (!net) return;
+            GUI.Label(new Rect(240,520,800,26), "MONINPELI", centerTextStyle);
+            switch (net.CurrentState)
+            {
+                case SurvivorNetwork.State.Connected when net.JoinCode != "":
+                    GUI.Label(new Rect(240,548,800,30), "Liittymiskoodi: " + net.JoinCode +
+                        (net.ConnectedFriendCount > 0 ? "   (kaveri pelissä!)" : "   (odotetaan kaveria...)"), centerTextStyle);
+                    if (GUI.Button(new Rect(490,580,300,40), "Kopioi koodi", centerButtonStyle)) GUIUtility.systemCopyBuffer = net.JoinCode;
+                    break;
+                case SurvivorNetwork.State.Connected:
+                case SurvivorNetwork.State.SigningIn:
+                case SurvivorNetwork.State.Hosting:
+                case SurvivorNetwork.State.Joining:
+                    GUI.Label(new Rect(240,548,800,30), net.StatusMessage, centerTextStyle);
+                    break;
+                default:
+                    if (net.CurrentState == SurvivorNetwork.State.Error) GUI.Label(new Rect(240,548,800,26), net.StatusMessage, centerTextStyle);
+                    if (GUI.Button(new Rect(340,580,240,40), "ISÄNNÖI KAVERILLE", centerButtonStyle)) net.HostGame();
+                    joinCodeInputField = GUI.TextField(new Rect(590,580,180,40), joinCodeInputField, 12);
+                    if (GUI.Button(new Rect(780,580,180,40), "LIITY KOODILLA", centerButtonStyle)) net.JoinGame(joinCodeInputField);
+                    break;
+            }
         }
 
         void DrawSettings()

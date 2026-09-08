@@ -1,0 +1,85 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace MagicPigGames.ProjectileFactory
+{
+    public class AnimationEventHandlerRealisticEffectsPack4 : MonoBehaviour
+    {
+        public ProjectileSpawner projectileSpawner;
+
+        public List<RealisticEffectsPack4HandEffects> handEffects;
+
+        public Transform spawnPoint;
+
+        public void ActivateEffect()
+        {
+            projectileSpawner.SpawnProjectile();
+        }
+
+        public void ActivateCharacterEffect()
+        {
+            var foundEffectsPairs = handEffects
+                .Where(x => x.basicProjectile == projectileSpawner.Projectile)
+                .ToList();
+
+            if (!foundEffectsPairs.Any())
+            {
+                Debug.Log($"No pair found for {projectileSpawner.Projectile.name}");
+                return;
+            }
+
+            foreach (var foundEffectPair in foundEffectsPairs)
+                CreateEffect(foundEffectPair.handEffect
+                    , foundEffectPair.customSpawnPoint == null
+                        ? spawnPoint
+                        : foundEffectPair.customSpawnPoint
+                    , foundEffectPair.parentToSpawnPoint);
+        }
+
+        private void CreateEffect(GameObject handEffect, Transform spawnPoint, bool parentToSpawnPoint)
+        {
+            var newObject = ProjectilePoolManager.instance.GetProjectile(handEffect);
+            if (newObject == null)
+                newObject = Instantiate(handEffect, spawnPoint.position, spawnPoint.rotation);
+
+            newObject.SetActive(false);
+            newObject.transform.position = spawnPoint.position;
+            if (parentToSpawnPoint)
+            {
+                newObject.transform.SetParent(spawnPoint);
+                newObject.transform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                newObject.transform.SetParent(null);
+                newObject.transform.rotation = spawnPoint.rotation;
+            }
+
+            newObject.SetActive(true);
+
+            DestroyEffectSetup(newObject);
+        }
+
+        private void DestroyEffectSetup(GameObject newObject)
+        {
+            var destroyScript = newObject.GetComponent<DestroyOrPoolObject>();
+            if (destroyScript == null)
+                return;
+
+            // Note: Setting the projectile will trigger the destroy script if that bool is set!
+            destroyScript.SetProjectile(projectileSpawner.Projectile);
+        }
+    }
+
+    [Serializable]
+    public class RealisticEffectsPack4HandEffects
+    {
+        [FormerlySerializedAs("projectile")] public Projectile basicProjectile;
+        public GameObject handEffect;
+        public Transform customSpawnPoint;
+        public bool parentToSpawnPoint = true;
+    }
+}

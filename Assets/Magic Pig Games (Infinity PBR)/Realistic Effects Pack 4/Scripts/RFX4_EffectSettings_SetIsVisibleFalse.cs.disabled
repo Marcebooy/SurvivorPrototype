@@ -1,0 +1,44 @@
+using System;
+using UnityEngine;
+
+namespace MagicPigGames.ProjectileFactory
+{
+    [CreateAssetMenu(fileName = "New RFX4_EffectSettings Set IsVisible False",
+        menuName =
+            "Projectile System/Destroy Behavior/Realistic Effects Pack 4/RFX4_EffectSettings Set IsVisible False")]
+    [Serializable]
+    public class RFX4_EffectSettings_SetIsVisibleFalse : DestroyOnTriggerOrCollision
+    {
+        [Header("Realistic Effects Pack 4/Options")] [ShowInProjectileEditor("Lifetime")]
+        public float lifetime = 2f;
+        //public float destroyDelay = 5f;
+
+        private float _timer;
+
+        // Internal description is used for the custom inspector to show a description of the behavior.
+        public override string InternalDescription => "This behavior sets the IsVisible property of the " +
+                                                      "RFX4_EffectSettings to false after a certain amount of time.";
+
+        // Internal icon is used for the custom inspector to show an icon of the behavior.
+        public override string InternalIcon => "Gear";
+
+        public override void Tick()
+        {
+            _timer += Time.deltaTime;
+            if (_timer > lifetime)
+            {
+                // Get the class RFX4_EffectSettings in children of projectile
+                var effectSettings = Projectile.GetComponentInChildren<RFX4_EffectSettings>();
+                effectSettings.IsVisible = false;
+            }
+
+            if (_timer > lifetime + destroyDelay)
+                Projectile.TriggerDestroy();
+        }
+
+        public override void DoDestroy(Projectile projectile)
+        {
+            RemoveObject();
+        }
+    }
+}

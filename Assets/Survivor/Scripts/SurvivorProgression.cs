@@ -16,12 +16,15 @@ namespace BonkSurvivor
         public bool BossDefeated { get; private set; }
         public bool BossActive => boss != null;
         public int WeaponCount => weaponLevels.Count;
+        public int TomeCount => tomeLevels.Count;
         public IReadOnlyList<int> Choices => choices;
         public float Size { get; private set; } = 1;
         public int Quantity { get; private set; } = 1;
         public float CritChance { get; private set; }
         public float Armor { get; private set; }
         readonly Dictionary<Weapon, int> weaponLevels = new Dictionary<Weapon, int>();
+        readonly Dictionary<int, int> tomeLevels = new Dictionary<int, int>();
+        const int MaxWeaponKinds = 5, MaxTomeKinds = 5;
         readonly List<int> choices = new List<int>();
         readonly List<Landmark> landmarks = new List<Landmark>();
         readonly List<Flash> flashes = new List<Flash>();
@@ -60,13 +63,13 @@ namespace BonkSurvivor
             foreach (var p in landmarks) if (p.body) Destroy(p.body.gameObject);
             foreach (var f in flashes) if (f.body) Destroy(f.body.gameObject);
             ClearArsenal(true);
-            landmarks.Clear(); flashes.Clear(); weaponLevels.Clear(); choices.Clear();
+            landmarks.Clear(); flashes.Clear(); weaponLevels.Clear(); tomeLevels.Clear(); choices.Clear();
             Silver = PlayerPrefs.GetInt(SaveKey + "Silver", 0);
             LegacyHealth = Mathf.Clamp(PlayerPrefs.GetInt(SaveKey + "Health", 0), 0, 10);
             maxHealth += LegacyHealth * 10; Health = maxHealth;
             Size = 1; Quantity = 1; CritChance = Armor = 0;
             Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
-            EarnedSilver = 0; rewardPaid = false; BossDefeated = false; PendingChoices = 0; Selecting = true;
+            EarnedSilver = 0; rewardPaid = false; BossDefeated = false; PendingChoices = 0; Selecting = true; awaitingCharacterChoice = true;
             CreateLandmarks();
         }
 
@@ -95,11 +98,27 @@ namespace BonkSurvivor
             landmarks.Add(new Landmark { body = t, kind = kind });
         }
 
+        static bool IsTomeId(int id) => (id >= 3 && id <= 9) || id == 16 || id == 17;
+        static Weapon IdToWeapon(int id) => id < 3 ? (Weapon)id : id <= 15 ? (Weapon)(id - 7) : (Weapon)(id - 9);
+
+        // Max 5 distinct weapons and 5 distinct Tomes per run; already-owned kinds can still level up past the cap.
+        List<int> BuildUpgradePool()
+        {
+            var pool = new List<int>();
+            for (int i = 0; i < UpgradeNames.Length; i++)
+            {
+                if (i == 5 && Quantity >= 6) continue;
+                if (i == 7 && CritChance >= .699f) continue;
+                if (IsTomeId(i)) { if (!tomeLevels.ContainsKey(i) && tomeLevels.Count >= MaxTomeKinds) continue; }
+                else { var w = IdToWeapon(i); if (!weaponLevels.ContainsKey(w) && weaponLevels.Count >= MaxWeaponKinds) continue; }
+                pool.Add(i);
+            }
+            return pool;
+        }
+
         void RollChoices()
         {
-            choices.Clear(); var pool = new List<int>();
-            for (int i = 0; i < UpgradeNames.Length; i++)
-                if ((i != 5 || Quantity < 6) && (i != 7 || CritChance < .699f)) pool.Add(i);
+            choices.Clear(); var pool = BuildUpgradePool();
             for (int i = 0; i < 3; i++) { int n = Random.Range(0, pool.Count); choices.Add(pool[n]); pool.RemoveAt(n); }
         }
 
@@ -117,11 +136,15 @@ namespace BonkSurvivor
             if (id >= 18) { var w=(Weapon)(id-9); bool owned=WeaponLevel(w)>0; weaponLevels[w]=WeaponLevel(w)+1; if(owned) GrantWeaponBonus(); }
             else if (id >= 10 && id <= 15) { var w=(Weapon)(id-7); bool alreadyOwned=WeaponLevel(w)>0; weaponLevels[w]=WeaponLevel(w)+1; if (alreadyOwned) GrantWeaponBonus(); }
             else if (id < 3) { var w = (Weapon)id; bool alreadyOwned = weaponLevels.TryGetValue(w, out int level); weaponLevels[w] = alreadyOwned ? level + 1 : 1; if (alreadyOwned) GrantWeaponBonus(); }
-            else switch (id)
+            else
             {
-                case 3: damage *= 1.01f; break; case 4: attackRate *= 1.01f; break;
-                case 5: Quantity = Mathf.Min(6, Quantity + 1); break; case 6: Size *= 1.01f; break;
-                case 7: CritChance = Mathf.Min(.7f, CritChance + .01f); break; case 8: Armor += 2; break; case 9: moveSpeed *= 1.01f; break; case 16: EffectDuration *= 1.01f; break; case 17: ProjectileSpeed *= 1.01f; break;
+                tomeLevels[id] = tomeLevels.TryGetValue(id, out int tomeLevel) ? tomeLevel + 1 : 1;
+                switch (id)
+                {
+                    case 3: damage *= 1.01f; break; case 4: attackRate *= 1.01f; break;
+                    case 5: Quantity = Mathf.Min(6, Quantity + 1); break; case 6: Size *= 1.01f; break;
+                    case 7: CritChance = Mathf.Min(.7f, CritChance + .01f); break; case 8: Armor += 2; break; case 9: moveSpeed *= 1.01f; break; case 16: EffectDuration *= 1.01f; break; case 17: ProjectileSpeed *= 1.01f; break;
+                }
             }
             notice = UpgradeNames[id] + " saatu!"; noticeUntil = Elapsed + 4;
         }
@@ -185,7 +208,7 @@ namespace BonkSurvivor
             if (p.kind == 0)
             {
                 if (Coins < 12) return false;
-                Coins -= 12; ApplyUpgrade(Random.Range(0, UpgradeNames.Length)); p.used = true;
+                Coins -= 12; var pool = BuildUpgradePool(); ApplyUpgrade(pool[Random.Range(0, pool.Count)]); p.used = true;
             }
             else if (p.kind == 1)
             {
@@ -253,16 +276,18 @@ namespace BonkSurvivor
             if (weaponLevels.TryGetValue(Weapon.Sword, out int sword))
             {
                 float reach = 4 * Size;
-                if (best < reach * reach) pottu.Swing(aim);
+                if (best < reach * reach) characterVisual.Swing(aim);
                 for (int i = enemies.Count - 1; i >= 0; i--)
                 {
                     var e = enemies[i]; var delta = e.body.position - player.position;
                     if (delta.sqrMagnitude < reach * reach && Vector3.Dot(aim, delta.normalized) > -.25f)
-                        Hit(e, damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1)));
+                    { Hit(e, damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1))); SpawnImpact(e.body.position, Weapon.Sword, Size); }
                 }
                 if (best < reach * reach) { slashTimer = .16f; slash.rotation = Quaternion.LookRotation(aim); }
             }
             if (weaponLevels.TryGetValue(Weapon.Bow, out int bow))
+            {
+                characterVisual.Swing(aim);
                 for (int i = 0; i < Quantity; i++)
                 {
                     Vector3 direction = Quaternion.Euler(0, (i - (Quantity - 1) / 2f) * 9, 0) * aim;
@@ -270,6 +295,7 @@ namespace BonkSurvivor
                     t.rotation = Quaternion.LookRotation(direction);
                     bolts.Add(new Bolt { body = t, direction = direction, life = 1.3f, power = damage * (1 + .25f * (bow - 1)) });
                 }
+            }
             if (weaponLevels.TryGetValue(Weapon.Lightning, out int lightning))
             {
                 var candidates = new List<Enemy>(enemies); Vector3 origin = player.position;
@@ -290,7 +316,7 @@ namespace BonkSurvivor
             if (!Selecting && PendingChoices == 0 && !Finished && !ShopOpen)
             {
                 string weapons = LoadoutSummary();
-                GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  " + weapons, textStyle);
+                GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  Aseet " + WeaponCount + "/5  •  Tomet " + TomeCount + "/5  •  " + weapons, textStyle);
                 GUI.Label(new Rect(24,254,900,30), "Arkut: kultainen  •  Pyhäkkö: punainen  •  Portaali: sininen pohjoisessa", textStyle);
                 GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
                 if (boss != null) GUI.Label(new Rect(440,80,600,35), "ALUEEN VARTIJA  •  HP " + Mathf.CeilToInt(boss.health), titleStyle);
@@ -298,7 +324,12 @@ namespace BonkSurvivor
             }
             if (!Selecting && PendingChoices == 0) return;
             GUI.color = new Color(0,0,0,.93f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
-            if (Selecting) { DrawStarterPages(); return; }
+            if (Selecting)
+            {
+                if (awaitingCharacterChoice) DrawCharacterSelect();
+                else if (SelectedCharacter == PlayerCharacter.Pottu) DrawStarterPages();
+                return;
+            }
             GUI.Label(new Rect(90,90,1100,55), Selecting ? "VALITSE ALOITUSASE" : "TASO " + Level + " / VALITSE PÄIVITYS", titleStyle);
             GUI.Label(new Rect(90,150,1100,55), Selecting ? "Aloita yhdellä aseella. Kerää XP:tä, kokoa buildi ja voita alueen bossi." : "Peli on tauolla. Valitse yksi kolmesta. Odottavia valintoja: " + PendingChoices, textStyle);
             for (int i = 0; i < 3; i++)

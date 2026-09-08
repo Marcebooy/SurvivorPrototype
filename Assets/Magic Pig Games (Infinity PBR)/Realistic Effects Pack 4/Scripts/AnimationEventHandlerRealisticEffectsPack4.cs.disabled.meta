@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: a956429d3ff104917817b4d1dd700bee
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 282083
+  packageName: Projectile Factory for Realistic Effects Pack 4 by kripto289
+  packageVersion: 1.2
+  assetPath: Assets/Magic Pig Games (Infinity PBR)/Realistic Effects Pack 4/Scripts/AnimationEventHandlerRealisticEffectsPack4.cs
+  uploadId: 932254

@@ -112,7 +112,7 @@ namespace BonkSurvivor
         {
             if(shieldCharges<=0)return false;shieldCharges--;invulnerability=.45f;
             AreaHit(player.position,4*Size,damage*(2+.3f*WeaponLevel(Weapon.Aegis)));
-            AdvancedPulse(player.position,4*Size,Weapon.Aegis);return true;
+            AdvancedPulse(player.position,4*Size,Weapon.Aegis);characterVisual.Block();return true;
         }
         void AdvancedKill(Enemy e)
         {
@@ -126,12 +126,35 @@ namespace BonkSurvivor
             if(flashes.Count>=160)return;
             var t=Shape(WeaponLabel(w)+" pulse",PrimitiveType.Cylinder,new Vector3(center.x,.18f,center.z),new Vector3(radius*2,.015f,radius*2),AdvancedMaterial(w),world);
             flashes.Add(new Flash{body=t,life=.09f});
+            SpawnImpact(new Vector3(center.x,.6f,center.z),w,Mathf.Max(1f,radius*.45f));
         }
         void AdvancedBeam(Vector3 start,Vector3 end,float width,Weapon w)
         {
             if(flashes.Count>=160 || (end-start).sqrMagnitude<.001f)return;
             var t=Shape(WeaponLabel(w)+" strike",PrimitiveType.Cube,(start+end)/2,new Vector3(width,width,Vector3.Distance(start,end)),AdvancedMaterial(w),world);
             t.rotation=Quaternion.LookRotation(end-start);flashes.Add(new Flash{body=t,life=.12f});
+            SpawnImpact(end,w,Size);
+        }
+        // Maps a weapon to the themed asset-pack VFX it triggers on hit (Eric VFX Studio slash/fire/poison, Zap VFX frost/void/bolt).
+        GameObject ImpactEffectFor(Weapon w)
+        {
+            if(w==Weapon.Sword||w==Weapon.HeroSword||w==Weapon.CorruptedSword||w==Weapon.Scythe||w==Weapon.Katana||w==Weapon.Dexecutioner||w==Weapon.Axe)return slashEffect;
+            if(w==Weapon.Firestaff)return fireImpactEffect; // Tulipallo - ainoa oikea "fireball"-ase, efekti varattu sille yksin
+            if(w==Weapon.PoisonFlask)return poisonImpactEffect;
+            if(w==Weapon.Frostwalker)return frostImpactEffect;
+            if(w==Weapon.BlackHole||w==Weapon.SpaceNoodle)return voidImpactEffect;
+            return boltImpactEffect; // Bow, Sniper, Revolver, Bananarang, WirelessDagger, Aegis, Dice, BloodMagic, Tornado, Rocket, DragonBreath, Mines
+        }
+        // FX_Fireball (Eric VFX Studio) is authored at a scale several times larger than this game's world units
+        // (visually confirmed in Play Mode: raw scale 1 dwarfed a full-size enemy) - every other pack matches at 1x.
+        float ImpactBaseScale(Weapon w) => w==Weapon.Firestaff ? .15f : 1f;
+        void SpawnImpact(Vector3 pos,Weapon w,float scale=1f)
+        {
+            var prefab=ImpactEffectFor(w);if(!prefab)return;
+            var fx=Instantiate(prefab,pos,Quaternion.identity,world);
+            float final=scale*ImpactBaseScale(w);
+            if(!Mathf.Approximately(final,1f))fx.transform.localScale*=final;
+            Destroy(fx,1.4f);
         }
         void LineHit(Vector3 a,Vector3 b,float radius,float power)
         {
@@ -158,6 +181,7 @@ namespace BonkSurvivor
             {var end=player.position+aim*45;LineHit(player.position,end,.8f*Size,power*5);AdvancedBeam(player.position,end,.08f*Size,w);return;}
             if(w==Weapon.Katana || w==Weapon.Dexecutioner || w==Weapon.BloodMagic || w==Weapon.Dice)
             {
+                characterVisual.Swing(aim);
                 float range=w==Weapon.Dice ? 20 : w==Weapon.BloodMagic ? 10 : 6*Size;
                 var used=new HashSet<Enemy>();int count=w==Weapon.Katana ? Quantity : 1;
                 for(int i=0;i<count;i++)
@@ -182,7 +206,7 @@ namespace BonkSurvivor
                     if(delta.sqrMagnitude<=range*range && (w==Weapon.Scythe || Vector3.Dot(aim,delta.normalized)>(w==Weapon.DragonBreath ? .72f : -.2f)))Hit(e,power*multiplier);
                 }
                 if(w==Weapon.DragonBreath){AdvancedBeam(player.position,player.position+aim*range,.3f*Size,w);AdvancedBeam(player.position,player.position+Quaternion.Euler(0,25,0)*aim*range,.12f,w);AdvancedBeam(player.position,player.position+Quaternion.Euler(0,-25,0)*aim*range,.12f,w);}
-                else {AdvancedPulse(player.position,range,w);pottu.Swing(aim);}
+                else {AdvancedPulse(player.position,range,w);characterVisual.Swing(aim);}
                 if(w!=Weapon.HeroSword)return;
             }
             int projectiles=w==Weapon.Revolver ? Quantity+2 : Quantity;
@@ -223,14 +247,14 @@ namespace BonkSurvivor
                     if(pierce)contacts.Add(e);else if(t<firstT){first=e;firstT=t;}
                 }
                 s.body.position=end;s.life-=dt;
-                if(pierce)foreach(var e in contacts){s.hit.Add(e);Hit(e,s.power);}
+                if(pierce)foreach(var e in contacts){s.hit.Add(e);Hit(e,s.power);SpawnImpact(e.body.position,s.kind,Size);}
                 else if(first!=null)
                 {
                     s.body.position=start+segment*firstT;s.hit.Add(first);
                     if(s.kind==Weapon.Rocket){AreaHit(s.body.position,3*Size,s.power);AdvancedPulse(s.body.position,3*Size,s.kind);s.life=0;}
                     else
                     {
-                        Hit(first,s.power);s.target=s.bounces>0 ? Nearest(s.body.position,12,s.hit) : null;
+                        Hit(first,s.power);SpawnImpact(s.body.position,s.kind,Size);s.target=s.bounces>0 ? Nearest(s.body.position,12,s.hit) : null;
                         if(s.target==null)s.life=0;else{s.bounces--;s.direction=(s.target.body.position-s.body.position).normalized;}
                     }
                 }
@@ -250,6 +274,7 @@ namespace BonkSurvivor
             bool beam=w==Weapon.SpaceNoodle;
             var body=Shape(WeaponLabel(w),beam ? PrimitiveType.Cube : PrimitiveType.Cylinder,new Vector3(pos.x,beam ? 1 : .12f,pos.z),beam ? Vector3.one*.1f : new Vector3(radius*2,w==Weapon.Tornado ? 1.3f : .035f,radius*2),AdvancedMaterial(w),world);
             advancedZones.Add(new AdvancedZone{kind=w,body=body,target=target,direction=dir,power=power,radius=radius,life=life});
+            if(!beam)SpawnImpact(new Vector3(pos.x,.4f,pos.z),w,Mathf.Max(1f,radius*.5f));
         }
         void TickAdvancedZones(float dt)
         {

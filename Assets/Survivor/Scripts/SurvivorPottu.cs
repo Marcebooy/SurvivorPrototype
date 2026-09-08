@@ -6,7 +6,11 @@ namespace BonkSurvivor
 {
     public sealed partial class SurvivorGame
     {
-        PottuVisual pottu;
+        public enum PlayerCharacter { Pottu, Velho, Ritari, Necromancer, Berserker, Golem, Hunter, Ninja, Paladin }
+        public PlayerCharacter SelectedCharacter { get; private set; } = PlayerCharacter.Pottu;
+        bool awaitingCharacterChoice;
+        ICharacterVisual characterVisual;
+        Transform visualRoot;
         float dodgeLeft, dodgeCooldown, hurtFlash;
         Vector3 dodgeDirection;
         public bool IsDodging => dodgeLeft > 0;
@@ -33,14 +37,94 @@ namespace BonkSurvivor
 
         void BuildPottu()
         {
-            player=new GameObject("Pottu").transform; player.SetParent(world,false); player.position=Vector3.up;
-            pottu=player.gameObject.AddComponent<PottuVisual>(); pottu.Build();
+            player=new GameObject("Player").transform; player.SetParent(world,false); player.position=Vector3.up;
+            BuildCharacterVisual(PlayerCharacter.Pottu);
         }
+        void BuildCharacterVisual(PlayerCharacter character)
+        {
+            if(visualRoot) Destroy(visualRoot.gameObject);
+            visualRoot=new GameObject(character+" visual").transform; visualRoot.SetParent(player,false);
+            SelectedCharacter=character;
+            if(character==PlayerCharacter.Velho) { var v=visualRoot.gameObject.AddComponent<VelhoVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Ritari) { var v=visualRoot.gameObject.AddComponent<RitariVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Necromancer) { var v=visualRoot.gameObject.AddComponent<NecromancerVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Berserker) { var v=visualRoot.gameObject.AddComponent<BerserkerVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Golem) { var v=visualRoot.gameObject.AddComponent<GolemVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Hunter) { var v=visualRoot.gameObject.AddComponent<HunterVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Ninja) { var v=visualRoot.gameObject.AddComponent<NinjaVisual>(); v.Build(); characterVisual=v; }
+            else if(character==PlayerCharacter.Paladin) { var v=visualRoot.gameObject.AddComponent<PaladinVisual>(); v.Build(); characterVisual=v; }
+            else { var v=visualRoot.gameObject.AddComponent<PottuVisual>(); v.Build(); characterVisual=v; }
+        }
+        public bool SelectCharacter(PlayerCharacter character)
+        {
+            if(!Selecting || !awaitingCharacterChoice) return false;
+            BuildCharacterVisual(character); ResetPottu(); awaitingCharacterChoice=false;
+            if(character==PlayerCharacter.Velho) weaponLevels[Weapon.Lightning]=1;
+            else if(character==PlayerCharacter.Ritari) weaponLevels[Weapon.Sword]=1;
+            else if(character==PlayerCharacter.Necromancer) weaponLevels[Weapon.Bone]=1;
+            else if(character==PlayerCharacter.Berserker) weaponLevels[Weapon.CorruptedSword]=1;
+            else if(character==PlayerCharacter.Golem) weaponLevels[Weapon.Chunkers]=1;
+            else if(character==PlayerCharacter.Hunter) weaponLevels[Weapon.Bow]=1;
+            else if(character==PlayerCharacter.Ninja) weaponLevels[Weapon.Katana]=1;
+            else if(character==PlayerCharacter.Paladin) weaponLevels[Weapon.Aura]=1;
+            if(character!=PlayerCharacter.Pottu)
+            {
+                Selecting=false;
+                notice="Etsi arkkuja ja pyhäkkö. Portaali avautuu 90 sekunnissa."; noticeUntil=Elapsed+7;
+            }
+            return true;
+        }
+        static readonly (PlayerCharacter character, string name, string description)[] CharacterRoster =
+        {
+            (PlayerCharacter.Pottu, "POTTU", "Tasapainoinen lähitaistelija.\nAloitusase: valitse itse (30 asetta).\nPelityyli: luotettava lähivahinko, kohtuullinen HP."),
+            (PlayerCharacter.Velho, "VELHO", "Area damage ja elementtiefektit.\nAloitusase: Salamasauva - sähköisku, joka ketjuttuu lähellä oleviin vihollisiin.\nPelityyli: suuri vahinko ja alue, heikompi kestävyys."),
+            (PlayerCharacter.Ritari, "RITARI", "Tankki ja lähitaistelija.\nAloitusase: Sword - miekaniskut lähellä oleviin vihollisiin.\nPelityyli: kestävä lähitaistelu; kilpi (Aegis) täydentää buildia hyvin myöhemmin."),
+            (PlayerCharacter.Necromancer, "NECROMANCER", "Kutsuihin ja tappojen ketjuttamiseen erikoistunut.\nAloitusase: Pomppuluu - kimpoaa vihollisesta toiseen.\nPelityyli: heikompi suora vahinko, mutta ketjuttuvat osumat."),
+            (PlayerCharacter.Berserker, "BERSERKERI", "Aggressiivinen lähitaistelija, joka hyötyy matalasta HP:stä.\nAloitusase: Corrupted Sword - vahvistuu puuttuvan HP:n mukaan.\nPelityyli: suuri vahinko, puolustus heikkenee taistelun aikana."),
+            (PlayerCharacter.Golem, "GOLEM", "Hidas tankki ja alueen hallitsija.\nAloitusase: Chunkers - kiertävät kivet murskaavat lähellä olevia.\nPelityyli: erittäin suuri HP ja koko; jokainen osuma laukaisee shokkiaallon."),
+            (PlayerCharacter.Hunter, "METSÄSTÄJÄ", "Etäisyysvahinko ja kriittiset osumat.\nAloitusase: Bow - nuolet läpäisevät vihollisia.\nPelityyli: suuri kantama ja nopeus, heikompi HP ja Armor."),
+            (PlayerCharacter.Ninja, "NINJA", "Nopea glass cannon ja väistöihin perustuva hahmo.\nAloitusase: Katana - nopeat automaattiset iskut.\nPelityyli: erittäin suuri liikkumisnopeus, matala HP; väistö on oma varjoaskel-animaatio."),
+            (PlayerCharacter.Paladin, "PALADIINI", "Puolustava hybridihahmo.\nAloitusase: Aura - jatkuva vahinkokehä pelaajan ympärillä.\nPelityyli: Armor ja HP; kilpi (Aegis) täydentää buildia hyvin myöhemmin."),
+        };
+        void DrawCharacterSelect()
+        {
+            GUI.Label(new Rect(90,74,1100,40),"VALITSE HAHMO",titleStyle);
+            GUI.Label(new Rect(90,116,1100,30),"Jokaisella hahmolla on oma pelityyli ja aloitusase.",textStyle);
+            const float x0=40, x1=1240, gapX=16, gapY=14, top=156, cardHeight=210;
+            int columns=CharacterRoster.Length<=5 ? CharacterRoster.Length : Mathf.CeilToInt(CharacterRoster.Length/2f);
+            float width=(x1-x0-(columns-1)*gapX)/columns;
+            for(int i=0;i<CharacterRoster.Length;i++)
+            {
+                var entry=CharacterRoster[i];
+                int col=i%columns, row=i/columns;
+                DrawCharacterCard(x0+col*(width+gapX),top+row*(cardHeight+gapY),width,cardHeight,entry.character,entry.name,entry.description);
+            }
+            DrawLegacy(90,596);
+        }
+        void DrawCharacterCard(float x, float y, float width, float height, PlayerCharacter character, string name, string description)
+        {
+            GUI.Box(new Rect(x,y,width,height),GUIContent.none);
+            GUI.Label(new Rect(x+14,y+10,width-28,30),name,hudNameStyle);
+            GUI.Label(new Rect(x+14,y+46,width-28,height-92),description,cardTextStyle);
+            if(GUI.Button(new Rect(x+14,y+height-38,width-28,32),"Valitse",buttonStyle)) SelectCharacter(character);
+        }
+        static string CharacterTitle(PlayerCharacter character) => character switch
+        {
+            PlayerCharacter.Velho => "VELHO / ZAP",
+            PlayerCharacter.Ritari => "RITARI / MIEKKA",
+            PlayerCharacter.Necromancer => "NECROMANCER / LUU",
+            PlayerCharacter.Berserker => "BERSERKERI / RAIVO",
+            PlayerCharacter.Golem => "GOLEM / MURSKA",
+            PlayerCharacter.Hunter => "METSÄSTÄJÄ / JOUSI",
+            PlayerCharacter.Ninja => "NINJA / VARJO",
+            PlayerCharacter.Paladin => "PALADIINI / AURA",
+            _ => "POTTU / BONK",
+        };
         void ResetPottu()
         {
             dodgeLeft=dodgeCooldown=hurtFlash=0; damageLabels.Clear();
             foreach(var pair in hitFlashes) if(pair.Key) pair.Key.SetPropertyBlock(null);
-            hitFlashes.Clear(); player.rotation=Quaternion.Euler(0,180,0); pottu.ResetPose();
+            hitFlashes.Clear(); player.rotation=Quaternion.Euler(0,180,0); characterVisual.ResetPose();
         }
         public bool TryDodge(Vector3 direction)
         {
@@ -60,7 +144,7 @@ namespace BonkSurvivor
             dodgeLeft=Mathf.Max(0,dodgeLeft-dt);
             float roll=IsDodging ? 1-dodgeLeft/.38f : -1;
             float panSize=Size*(1+(weaponLevels.TryGetValue(Weapon.Sword,out int level) ? level-1 : 0)*.13f);
-            pottu.Tick(dt,rolling ? 0 : move.magnitude,roll,panSize,weaponLevels.ContainsKey(Weapon.Sword));
+            characterVisual.Tick(dt,rolling ? 0 : move.magnitude,roll,panSize,weaponLevels.ContainsKey(Weapon.Sword),Health/Mathf.Max(1,maxHealth));
             TickFeedback(dt);
         }
         bool ReceiveDamage(float amount)
@@ -68,6 +152,7 @@ namespace BonkSurvivor
             if(IsDodging || invulnerability>0 || Finished) return false;
             if(BlockWithAegis()) return false;
             Health=Mathf.Max(0,Health-Mathf.Max(1,amount-Armor)); invulnerability=.45f; hurtFlash=.25f;
+            characterVisual.Shockwave();
             if(Health<=0) FinishRun(); return true;
         }
         void HitFeedback(Enemy enemy, float amount, bool crit)
@@ -76,7 +161,7 @@ namespace BonkSurvivor
             damageLabels.Add(new DamageLabel { position=enemy.body.position+Vector3.up*1.25f, text=(crit ? "BONK! " : "")+Mathf.CeilToInt(amount),life=.7f,crit=crit });
             var renderer=enemy.body.GetComponent<Renderer>();
             if(renderer) { if(flashBlock==null) flashBlock=new MaterialPropertyBlock(); flashBlock.SetColor("_BaseColor",Color.white); renderer.SetPropertyBlock(flashBlock); hitFlashes[renderer]=.1f; }
-            pottu.Bonk();
+            characterVisual.Bonk();
         }
         void TickFeedback(float dt)
         {
@@ -90,7 +175,7 @@ namespace BonkSurvivor
         {
             if(Selecting || PendingChoices>0 || ShopOpen || Finished) return;
             DrawAdvancedStatus();
-            GUI.Label(new Rect(24,600,330,32),IsDodging ? "POTTU PYÖRII!" : dodgeCooldown>0 ? "Väistö: "+dodgeCooldown.ToString("0.0")+" s" : "Väistö valmis [SPACE]",textStyle);
+            GUI.Label(new Rect(24,600,330,32),IsDodging ? "VÄISTÖSSÄ!" : dodgeCooldown>0 ? "Väistö: "+dodgeCooldown.ToString("0.0")+" s" : "Väistö valmis [SPACE]",textStyle);
             foreach(var label in damageLabels)
             {
                 var p=followCamera.WorldToViewportPoint(label.position); if(p.z<=0) continue;

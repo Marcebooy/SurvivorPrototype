@@ -4,7 +4,7 @@ using UnityEngine;
 namespace BonkSurvivor
 {
     // Procedural low-poly character; its visual pose never changes the gameplay root.
-    public sealed class PottuVisual : MonoBehaviour
+    public sealed class PottuVisual : MonoBehaviour, ICharacterVisual
     {
         Transform pose, torso, helmet, leftFoot, rightFoot, arm, pan;
         Material skin, dark, steel, rim, white, leather;
@@ -115,7 +115,9 @@ namespace BonkSurvivor
             if(soundCooldown>0) return;
             audioSource.pitch=Random.Range(.88f,1.12f); audioSource.PlayOneShot(bonk); soundCooldown=.055f;
         }
-        public void Tick(float dt, float speed, float roll, float size, bool showPan)
+        public void Block() { }
+        public void Shockwave() { }
+        public void Tick(float dt, float speed, float roll, float size, bool showPan, float healthFraction)
         {
             phase+=dt*16*speed; swing=Mathf.Max(0,swing-dt); soundCooldown=Mathf.Max(0,soundCooldown-dt);
             float step=Mathf.Sin(phase)*speed;

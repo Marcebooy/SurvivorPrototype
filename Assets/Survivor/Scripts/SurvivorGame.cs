@@ -60,7 +60,8 @@ namespace BonkSurvivor
         string notice = "Selviä viisi minuuttia!";
         float noticeUntil = 5f;
         GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle, hudNameStyle, cardTextStyle, badgeStyle, cardNameStyle;
-        bool settingsOpen;
+        enum MenuScreen { Home, Multiplayer, Maps, Leaderboards, Settings }
+        MenuScreen menuScreen = MenuScreen.Home;
         int fpsCap = 60;
         float masterVolume = 1f;
         string joinCodeInputField = "";
@@ -468,50 +469,86 @@ namespace BonkSurvivor
 
         void DrawMainMenu()
         {
-            if (settingsOpen) { DrawSettings(); return; }
             GUI.color = new Color(0,0,0,.85f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
+            DrawMenuTabs();
+            switch (menuScreen)
+            {
+                case MenuScreen.Multiplayer: DrawMultiplayerPanel(); break;
+                case MenuScreen.Maps: DrawMenuPlaceholder("MAPIT"); break;
+                case MenuScreen.Leaderboards: DrawMenuPlaceholder("TULOSTAULUT"); break;
+                case MenuScreen.Settings: DrawSettings(); break;
+                default: DrawHomeTab(); break;
+            }
+        }
+
+        void DrawMenuTabs()
+        {
+            (MenuScreen screen, string label)[] tabs =
+            {
+                (MenuScreen.Home, "KOTI"),
+                (MenuScreen.Multiplayer, "MONINPELI"),
+                (MenuScreen.Maps, "MAPIT"),
+                (MenuScreen.Leaderboards, "TULOSTAULUT"),
+                (MenuScreen.Settings, "ASETUKSET"),
+            };
+            const float x0 = 240, tabWidth = 160;
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                GUI.color = menuScreen == tabs[i].screen ? new Color(.3f,.85f,1) : Color.white;
+                if (GUI.Button(new Rect(x0 + i * tabWidth, 60, tabWidth, 40), tabs[i].label, centerButtonStyle)) menuScreen = tabs[i].screen;
+            }
+            GUI.color = Color.white;
+        }
+
+        void DrawMenuPlaceholder(string title)
+        {
+            GUI.Label(new Rect(240,150,800,60), title, centerTitleStyle);
+            GUI.enabled = false;
+            GUI.Label(new Rect(240,260,800,40), "Tulossa myöhemmin", centerTextStyle);
+            GUI.enabled = true;
+        }
+
+        void DrawHomeTab()
+        {
             GUI.Label(new Rect(240,150,800,60), "POTTU / BONK", centerTitleStyle);
             GUI.Label(new Rect(240,220,800,30), "Selviydy hengissä niin pitkään kuin pystyt", centerTextStyle);
             GUI.Label(new Rect(240,270,800,34), "PARAS SELVIYTYMISAIKA  " + FormatTime(BestSurvivalSeconds), centerTextStyle);
             if (GUI.Button(new Rect(490,340,300,56), "PELAA  [ENTER]", centerButtonStyle)) StartGame();
-            if (GUI.Button(new Rect(490,406,300,50), "ASETUKSET", centerButtonStyle)) settingsOpen = true;
-            if (GUI.Button(new Rect(490,466,300,50), "LOPETA", centerButtonStyle)) QuitGame();
+            if (GUI.Button(new Rect(490,406,300,50), "LOPETA", centerButtonStyle)) QuitGame();
             DrawMapSeedMenu();
-            DrawMultiplayerPanel();
             GUI.Label(new Rect(240,650,800,30), "WASD liiku   •   SPACE kierähdä   •   E tutki   •   TAB kauppa", centerTextStyle);
         }
 
         void DrawMultiplayerPanel()
         {
             var net = SurvivorNetwork.Instance;
-            if (!net) return;
-            GUI.Label(new Rect(240,520,800,26), "MONINPELI", centerTextStyle);
+            GUI.Label(new Rect(240,150,800,60), "MONINPELI", centerTitleStyle);
+            if (!net) { GUI.Label(new Rect(240,220,800,30), "Moninpeli ei ole käytettävissä.", centerTextStyle); return; }
             switch (net.CurrentState)
             {
                 case SurvivorNetwork.State.Connected when net.JoinCode != "":
-                    GUI.Label(new Rect(240,548,800,30), "Liittymiskoodi: " + net.JoinCode +
+                    GUI.Label(new Rect(240,220,800,30), "Liittymiskoodi: " + net.JoinCode +
                         (net.ConnectedFriendCount > 0 ? "   (kaveri pelissä!)" : "   (odotetaan kaveria...)"), centerTextStyle);
-                    if (GUI.Button(new Rect(490,580,300,40), "Kopioi koodi", centerButtonStyle)) GUIUtility.systemCopyBuffer = net.JoinCode;
+                    if (GUI.Button(new Rect(490,260,300,40), "Kopioi koodi", centerButtonStyle)) GUIUtility.systemCopyBuffer = net.JoinCode;
                     break;
                 case SurvivorNetwork.State.Connected:
                 case SurvivorNetwork.State.SigningIn:
                 case SurvivorNetwork.State.Hosting:
                 case SurvivorNetwork.State.Joining:
-                    GUI.Label(new Rect(240,548,800,30), net.StatusMessage, centerTextStyle);
+                    GUI.Label(new Rect(240,220,800,30), net.StatusMessage, centerTextStyle);
                     break;
                 default:
-                    if (net.CurrentState == SurvivorNetwork.State.Error) GUI.Label(new Rect(240,548,800,26), net.StatusMessage, centerTextStyle);
-                    if (GUI.Button(new Rect(340,580,240,40), "ISÄNNÖI KAVERILLE", centerButtonStyle)) net.HostGame();
-                    joinCodeInputField = GUI.TextField(new Rect(590,580,180,40), joinCodeInputField, 12);
-                    if (GUI.Button(new Rect(780,580,180,40), "LIITY KOODILLA", centerButtonStyle)) net.JoinGame(joinCodeInputField);
+                    if (net.CurrentState == SurvivorNetwork.State.Error) GUI.Label(new Rect(240,220,800,26), net.StatusMessage, centerTextStyle);
+                    if (GUI.Button(new Rect(340,260,240,40), "ISÄNNÖI KAVERILLE", centerButtonStyle)) net.HostGame();
+                    joinCodeInputField = GUI.TextField(new Rect(590,260,180,40), joinCodeInputField, 12);
+                    if (GUI.Button(new Rect(780,260,180,40), "LIITY KOODILLA", centerButtonStyle)) net.JoinGame(joinCodeInputField);
                     break;
             }
         }
 
         void DrawSettings()
         {
-            GUI.color = new Color(0,0,0,.85f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
-            GUI.Label(new Rect(240,140,800,60), "ASETUKSET", centerTitleStyle);
+            GUI.Label(new Rect(240,150,800,60), "ASETUKSET", centerTitleStyle);
 
             GUI.Label(new Rect(390,250,500,30), "Ruudunpäivitysnopeus", centerTextStyle);
             GUI.color = fpsCap == 60 ? new Color(.3f,.85f,1) : Color.white;
@@ -523,8 +560,6 @@ namespace BonkSurvivor
             GUI.Label(new Rect(390,380,500,30), "Äänenvoimakkuus  " + Mathf.RoundToInt(masterVolume * 100) + " %", centerTextStyle);
             float newVolume = GUI.HorizontalSlider(new Rect(390,420,500,24), masterVolume, 0f, 1f);
             if (!Mathf.Approximately(newVolume, masterVolume)) SetVolume(newVolume);
-
-            if (GUI.Button(new Rect(490,500,300,50), "TAKAISIN", centerButtonStyle)) settingsOpen = false;
         }
 
         void OnDestroy() { if (swipeMesh) Destroy(swipeMesh); foreach (var mesh in mapMeshes) if (mesh) Destroy(mesh); foreach (var m in materials) if (m) Destroy(m); }

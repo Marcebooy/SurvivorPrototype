@@ -36,12 +36,16 @@ namespace BonkSurvivor
 
         SurvivorGame map;
         Transform visualRoot;
+        ICharacterVisual visual;
+        Vector3 lastPos;
+        bool hasLastPos;
 
         public override void OnNetworkSpawn()
         {
             map = Object.FindFirstObjectByType<SurvivorGame>();
             Active.Add(this);
             if (IsOwner) { Local = this; if (map) transform.position = map.MapSpawn; }
+            lastPos = transform.position; hasLastPos = true;
             // The body mesh is built independently (not networked) on every peer that can see this
             // object - host, the owning friend, and anyone else - so everyone shows the same
             // deterministic model without replicating the mesh itself. On the host, RequestCharacterRpc
@@ -54,14 +58,20 @@ namespace BonkSurvivor
         }
 
         // Builds the body mesh fresh under this transform. On the host (FriendState != null) this
-        // also wires the result into the Combatant so combat code (Swing/Bonk/Block) has a visual
-        // to call into - see SelectCharacter's `current == hostState` check in SurvivorPottu.cs,
-        // which skips its own mesh-building for a friend Combatant so there's only ever one mesh.
+        // also wires a trigger-relaying wrapper into the Combatant so combat code (Swing/Bonk/Block)
+        // both animates the host's own local copy AND replays the same trigger on every other peer
+        // (via RPC) - see SelectCharacter's `current == hostState` check in SurvivorPottu.cs, which
+        // skips its own mesh-building for a friend Combatant so there's only ever one mesh per peer.
         public void RebuildVisual(SurvivorGame.PlayerCharacter character)
         {
             if (visualRoot) Destroy(visualRoot.gameObject);
-            var visual = SurvivorGame.BuildCharacterVisualOn(transform, character, out visualRoot);
-            if (FriendState != null) { FriendState.CharacterVisual = visual; FriendState.VisualRoot = visualRoot; FriendState.SelectedCharacter = character; }
+            visual = SurvivorGame.BuildCharacterVisualOn(transform, character, out visualRoot);
+            hasLastPos = false;
+            if (FriendState != null)
+            {
+                FriendState.CharacterVisual = new TriggerRelayVisual(visual, (kind, aim) => PlayTriggerRpc(kind, aim));
+                FriendState.VisualRoot = visualRoot; FriendState.SelectedCharacter = character;
+            }
         }
 
         public override void OnNetworkDespawn()
@@ -72,6 +82,18 @@ namespace BonkSurvivor
 
         void Update()
         {
+            // Everyone (owner, host, any spectator) drives their own local copy's walk-cycle blend
+            // from locally observed movement - cheaper and simpler than networking animation floats,
+            // and works whether or not this particular peer is the one actually moving the body.
+            if (visual != null)
+            {
+                float dt = Time.deltaTime;
+                float speed = 0;
+                if (hasLastPos && dt > 0) speed = Mathf.Clamp01(Vector3.Distance(transform.position, lastPos) / (dt * MoveSpeed));
+                lastPos = transform.position; hasLastPos = true;
+                visual.Tick(dt, speed, -1, 1, true, 1);
+            }
+
             if (!IsOwner) return;
             Vector2 input = Vector2.zero;
             var k = Keyboard.current;
@@ -87,6 +109,11 @@ namespace BonkSurvivor
             transform.position = map ? map.MoveOnMap(transform.position, motion) : transform.position + motion;
             if (move.sqrMagnitude > .01f) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(move), Time.deltaTime * 14);
         }
+
+        // Host -> everyone else: replay a discrete animation trigger (see TriggerRelayVisual). The
+        // host already played it locally before calling this, so skip it there.
+        [Rpc(SendTo.NotServer)]
+        void PlayTriggerRpc(int kind, Vector3 aim) { if (visual != null) TriggerRelayVisual.Apply(visual, kind, aim); }
 
         // Client -> host: menu choices. The client renders the picker UI from shared static data
         // (character roster / upgrade names) - only the pick itself needs to cross the network.

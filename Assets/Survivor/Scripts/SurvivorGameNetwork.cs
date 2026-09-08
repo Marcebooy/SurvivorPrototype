@@ -77,11 +77,21 @@ namespace BonkSurvivor
             }
         }
 
+        HostAvatarNet visualBridgeFor;
+
         void TickNetworkCoop(float dt)
         {
             if (!IsNetworkHost) return;
             var avatar = SurvivorNetwork.Instance ? SurvivorNetwork.Instance.HostAvatar : null;
-            if (avatar) avatar.MirrorHost(player.position, player.rotation, SelectedCharacter);
+            if (avatar)
+            {
+                avatar.MirrorHost(player.position, player.rotation, SelectedCharacter);
+                // Once the mirror has built its own visual, wrap the host's real one so Swing/Bonk/
+                // Block/Shockwave also replay for a connected friend. Only (re)wrap when needed -
+                // avoids allocating a new wrapper every frame.
+                if (avatar.Visual != null && visualBridgeFor != avatar) { hostState.CharacterVisual = avatar.WrapForHost(hostOwnVisual); visualBridgeFor = avatar; }
+            }
+            else visualBridgeFor = null;
             var remotes = RemotePlayerNet.Active;
             for (int r = 0; r < remotes.Count; r++)
             {

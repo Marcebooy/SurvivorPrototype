@@ -10,6 +10,7 @@ namespace BonkSurvivor
     {
         [Header("Enemy model")]
         public GameObject undeadEnemyPrefab;
+        public GameObject dropPrefab; // networked XP/gold/health pickup - see DropNet.cs
         [Header("VFX")]
         public GameObject lightningZapEffect;
         public GameObject auraEffectPrefab;
@@ -329,10 +330,29 @@ namespace BonkSurvivor
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;
-            else drops.Add(new Drop { body = Shape("XP + gold", PrimitiveType.Cube, new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .4f, xpMaterial, world), value = value });
+            else drops.Add(new Drop { body = SpawnDrop(new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .4f, PrimitiveType.Cube, xpMaterial, false), value = value });
             if (Random.value < .01f)
-                drops.Add(new Drop { body = Shape("Health pickup", PrimitiveType.Sphere, new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .45f, healthMaterial, world), value = 25, isHealth = true });
+                drops.Add(new Drop { body = SpawnDrop(new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .45f, PrimitiveType.Sphere, healthMaterial, true), value = 25, isHealth = true });
             enemies.Remove(e); Destroy(e.body.gameObject); Kills++;
+        }
+
+        // Networked when hosting a multiplayer session (so a connected friend can see loot on the
+        // ground too - DropNet.cs), otherwise the same plain primitive as always.
+        Transform SpawnDrop(Vector3 pos, Vector3 scale, PrimitiveType shape, Material material, bool isHealth)
+        {
+            // Only networked when actually hosting - DropNet's color depends on OnNetworkSpawn
+            // running, so offline this stays the plain Shape() primitive exactly as before.
+            if (dropPrefab && IsNetworkHost)
+            {
+                var instance = Instantiate(dropPrefab, pos, Quaternion.identity, world);
+                instance.transform.localScale = scale;
+                var dn = instance.GetComponent<DropNet>();
+                if (dn) dn.IsHealth.Value = isHealth;
+                var netObj = instance.GetComponent<NetworkObject>();
+                if (netObj) netObj.Spawn();
+                return instance.transform;
+            }
+            return Shape(isHealth ? "Health pickup" : "XP + gold", shape, pos, scale, material, world);
         }
 
         public void GrantExperience(int amount)

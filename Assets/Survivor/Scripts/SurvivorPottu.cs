@@ -11,6 +11,9 @@ namespace BonkSurvivor
         bool awaitingCharacterChoice { get => current.AwaitingCharacterChoice; set => current.AwaitingCharacterChoice = value; }
         ICharacterVisual characterVisual { get => current.CharacterVisual; set => current.CharacterVisual = value; }
         Transform visualRoot { get => current.VisualRoot; set => current.VisualRoot = value; }
+        // The host's own real visual, unwrapped - TickNetworkCoop wraps it (once a HostAvatarNet
+        // mirror exists) so its Swing/Bonk/Block/Shockwave calls also replay for a connected friend.
+        ICharacterVisual hostOwnVisual;
         float dodgeLeft, dodgeCooldown, hurtFlash;
         Vector3 dodgeDirection;
         public bool IsDodging => dodgeLeft > 0;
@@ -44,8 +47,9 @@ namespace BonkSurvivor
         {
             if(visualRoot) Destroy(visualRoot.gameObject);
             SelectedCharacter=character;
-            characterVisual = BuildCharacterVisualOn(player, character, out var root);
-            visualRoot = root;
+            var v = BuildCharacterVisualOn(player, character, out var root);
+            characterVisual = v; visualRoot = root;
+            if (current == hostState) hostOwnVisual = v;
         }
 
         // Standalone (not routed through `current`) so any peer can build the SAME deterministic

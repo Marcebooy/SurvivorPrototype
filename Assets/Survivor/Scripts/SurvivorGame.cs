@@ -203,7 +203,7 @@ namespace BonkSurvivor
             TickProgression(dt); if (Finished) return;
             invulnerability -= dt;
             spawnTimer -= dt;
-            int enemyCap = 260 + (Area - 1) * 30;
+            int enemyCap = Mathf.RoundToInt((260 + (Area - 1) * 30) * MapTierMultiplier);
             if (boss == null && Elapsed - areaStarted < 90 && spawnTimer <= 0 && enemies.Count < enemyCap)
             {
                 SpawnEnemy(); spawnTimer = Mathf.Max(.09f, .8f - Elapsed / 200f - (Area - 1) * .05f);
@@ -301,7 +301,7 @@ namespace BonkSurvivor
             else body = Shape(elite ? "Brute" : "Chaser", PrimitiveType.Capsule, p + Vector3.up, Vector3.one * (elite ? 1.3f : .8f), elite ? eliteMaterial : enemyMaterial, world);
             enemies.Add(new Enemy {
                 body = body, animator = animator,
-                health = (elite ? 130 : 34) * (1 + Elapsed / 200) * curse * (1 + .45f * (Area - 1)), speed = ((elite ? 3.4f : 4.6f) + Mathf.Min(3, Elapsed / 70)) * curse, elite = elite
+                health = (elite ? 130 : 34) * (1 + Elapsed / 200) * curse * (1 + .45f * (Area - 1)) * MapTierMultiplier, speed = ((elite ? 3.4f : 4.6f) + Mathf.Min(3, Elapsed / 70)) * curse, elite = elite
             });
         }
 

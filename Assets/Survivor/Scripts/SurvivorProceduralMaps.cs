@@ -12,8 +12,13 @@ namespace BonkSurvivor
         // BeginMapRun() so switching tabs mid-run never changes the map underfoot.
         public enum MapType { Procedural, Mosswood, BoneCave }
         MapType selectedMapType = MapType.Procedural;
+        int selectedMapTier = 1;
         MapType activeMapType = MapType.Procedural;
+        int activeMapTier = 1;
         Transform fixedMapRoot;
+        // Stacks on top of the existing per-Area enemy scaling (curse, Area multiplier below) -
+        // Procedural always runs at Tier 1, so this is a 1.0x no-op unless a fixed map is active.
+        float MapTierMultiplier => 1f + (activeMapTier - 1) * .35f;
         public ProceduralMapLayout MapLayout { get; private set; }
         public int CurrentMapSeed { get; private set; }
         public int RunSeed { get; private set; }
@@ -50,12 +55,12 @@ namespace BonkSurvivor
 
         void BeginMapRun()
         {
-            activeMapType = selectedMapType;
+            activeMapType = selectedMapType; activeMapTier = selectedMapTier;
             // Consumed here (run start), not at MAPIT selection time, so browsing doesn't spend
             // anything. If the player ran out since selecting it (e.g. last one used elsewhere),
             // fall back to the always-free procedural map rather than blocking play.
-            if (activeMapType != MapType.Procedural && !ConsumeMapItem(activeMapType)) activeMapType = MapType.Procedural;
-            selectedMapType = activeMapType; // keep the MAPIT tab in sync with what actually ran
+            if (activeMapType != MapType.Procedural && !ConsumeMapItem(activeMapType, activeMapTier)) { activeMapType = MapType.Procedural; activeMapTier = 1; }
+            selectedMapType = activeMapType; selectedMapTier = activeMapTier; // keep the MAPIT tab in sync with what actually ran
             if (activeMapType != MapType.Procedural)
             {
                 requestedSeed = null; RunSeed = 0; seedHistory = new MapSeedHistory { runSeed = 0 };
@@ -90,22 +95,23 @@ namespace BonkSurvivor
         void DrawMapTypeTab()
         {
             GUI.Label(new Rect(240,150,800,50), "MAPIT", centerTitleStyle);
-            GUI.Label(new Rect(240,204,800,50), "Kiinteät kartat kuluttavat yhden Karttaesineen PELAA-hetkellä - bossien kaatamisesta on pieni mahdollisuus löytää niitä.", centerTextStyle);
-            DrawMapTypeOption(MapType.Procedural, 270, "SATUNNAINEN (oletus)", "Uusi proseduraalinen luola joka pelikerralla. Rajaton.", true);
-            DrawMapTypeOption(MapType.Mosswood, 350, "MOSSWOOD", "Kiinteä metsäkartta: puut ja kivet.", false);
-            DrawMapTypeOption(MapType.BoneCave, 430, "LUULUOLA", "Kiinteä luukartta: hautakivet harmaalla maastolla.", false);
+            GUI.Label(new Rect(240,204,800,44), "Kiinteät kartat kuluttavat yhden Karttaesineen PELAA-hetkellä - korkeampi Tier tekee vihollisista vaarallisempia. Bossien kaatamisesta on pieni mahdollisuus löytää niitä.", centerTextStyle);
+            float y = 262;
+            DrawMapTypeOption(MapType.Procedural, 1, y, "SATUNNAINEN (oletus, Tier 1, rajaton)", true); y += 56;
+            foreach (var type in new[] { MapType.Mosswood, MapType.BoneCave })
+                for (int tier = 1; tier <= 3; tier++) { DrawMapTypeOption(type, tier, y, null, false); y += 46; }
         }
 
-        void DrawMapTypeOption(MapType type, float y, string title, string description, bool unlimited)
+        void DrawMapTypeOption(MapType type, int tier, float y, string label, bool unlimited)
         {
-            int count = unlimited ? -1 : MapItemCount(type);
+            int count = unlimited ? -1 : MapItemCount(type, tier);
             bool owned = unlimited || count > 0;
-            string label = unlimited ? title : title + " (" + count + " kpl)";
+            if (label == null) label = MapTypeName(type).ToUpperInvariant() + " T" + tier + (owned ? " (" + count + " kpl)" : " - Ei karttoja, tapa bosseja saadaksesi");
+            bool selected = selectedMapType == type && (unlimited || selectedMapTier == tier);
             GUI.enabled = owned;
-            GUI.color = selectedMapType == type ? new Color(.3f,.85f,1) : Color.white;
-            if (GUI.Button(new Rect(390,y,500,50), label, centerButtonStyle) && owned) selectedMapType = type;
+            GUI.color = selected ? new Color(.3f,.85f,1) : Color.white;
+            if (GUI.Button(new Rect(390,y,500,40), label, centerButtonStyle) && owned) { selectedMapType = type; selectedMapTier = unlimited ? 1 : tier; }
             GUI.color = Color.white; GUI.enabled = true;
-            GUI.Label(new Rect(390,y+52,500,26), owned ? description : "Ei karttoja - tapa bosseja saadaksesi.", centerTextStyle);
         }
 
         void GenerateProceduralMap(int seed, bool save)

@@ -47,14 +47,24 @@ namespace BonkSurvivor
         }
 
         // 18% boss-kill chance, picked between the two non-procedural map types (Procedural is
-        // already free/unlimited so it never drops). Uses the same `notice` banner as other
+        // already free/unlimited so it never drops). Tier rolls 1-3, weighted toward the low
+        // end (60/30/10%) so higher-Tier maps stay rare. Uses the same `notice` banner as other
         // run events (e.g. "ALUE X" on area advance).
         void TryDropMapItem()
         {
             if (Random.value >= .18f) return;
             var type = Random.value < .5f ? MapType.Mosswood : MapType.BoneCave;
-            GrantMapItem(type);
-            notice = "Löysit Karttaesineen: " + MapTypeName(type) + "!"; noticeUntil = Elapsed + 6;
+            int tier = RollMapTier();
+            GrantMapItem(type, tier);
+            notice = "Löysit Karttaesineen: " + MapTypeName(type) + " T" + tier + "!"; noticeUntil = Elapsed + 6;
+        }
+
+        static int RollMapTier()
+        {
+            float roll = Random.value;
+            if (roll < .60f) return 1;
+            if (roll < .90f) return 2;
+            return 3;
         }
     }
 }

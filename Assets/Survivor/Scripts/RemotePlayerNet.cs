@@ -35,12 +35,33 @@ namespace BonkSurvivor
         public bool IsAlive => Health.Value > 0;
 
         SurvivorGame map;
+        Transform visualRoot;
 
         public override void OnNetworkSpawn()
         {
             map = Object.FindFirstObjectByType<SurvivorGame>();
             Active.Add(this);
             if (IsOwner) { Local = this; if (map) transform.position = map.MapSpawn; }
+            // The body mesh is built independently (not networked) on every peer that can see this
+            // object - host, the owning friend, and anyone else - so everyone shows the same
+            // deterministic model without replicating the mesh itself. On the host, RequestCharacterRpc
+            // already builds it synchronously (and wires it into FriendState for combat animations);
+            // this reactive path is only for OTHER peers (the friend's own client, spectators) where
+            // FriendState is null, so we don't rebuild a redundant second copy on the host itself.
+            AwaitingCharacterChoice.OnValueChanged += (_, awaiting) => { if (FriendState == null && !awaiting) RebuildVisual((SurvivorGame.PlayerCharacter)SelectedCharacter.Value); };
+            SelectedCharacter.OnValueChanged += (_, val) => { if (FriendState == null && !AwaitingCharacterChoice.Value) RebuildVisual((SurvivorGame.PlayerCharacter)val); };
+            if (FriendState == null && !AwaitingCharacterChoice.Value) RebuildVisual((SurvivorGame.PlayerCharacter)SelectedCharacter.Value);
+        }
+
+        // Builds the body mesh fresh under this transform. On the host (FriendState != null) this
+        // also wires the result into the Combatant so combat code (Swing/Bonk/Block) has a visual
+        // to call into - see SelectCharacter's `current == hostState` check in SurvivorPottu.cs,
+        // which skips its own mesh-building for a friend Combatant so there's only ever one mesh.
+        public void RebuildVisual(SurvivorGame.PlayerCharacter character)
+        {
+            if (visualRoot) Destroy(visualRoot.gameObject);
+            var visual = SurvivorGame.BuildCharacterVisualOn(transform, character, out visualRoot);
+            if (FriendState != null) { FriendState.CharacterVisual = visual; FriendState.VisualRoot = visualRoot; FriendState.SelectedCharacter = character; }
         }
 
         public override void OnNetworkDespawn()
@@ -72,7 +93,11 @@ namespace BonkSurvivor
         [Rpc(SendTo.Server)]
         public void RequestCharacterRpc(int character)
         {
-            if (map && FriendState != null) map.FriendSelectCharacter(FriendState, (SurvivorGame.PlayerCharacter)character);
+            if (!map || FriendState == null) return;
+            // Build the mesh first (synchronously, host-local) so it already exists when
+            // SelectCharacter's ResetPottu() calls into it a moment later.
+            RebuildVisual((SurvivorGame.PlayerCharacter)character);
+            map.FriendSelectCharacter(FriendState, (SurvivorGame.PlayerCharacter)character);
         }
 
         [Rpc(SendTo.Server)]

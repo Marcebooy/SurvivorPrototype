@@ -1,4 +1,6 @@
-# Proseduraaliset kartat (generaattori v1)
+# Proseduraaliset avoimet kartat (generaattori v2)
+
+**Päivitys:** huoneet ja käytävät on poistettu käyttäjän toiveesta. Kartta on yksi laaja, tasainen, avoin alue, jonka ulkoreuna ja maamerkkien paikat vaihtelevat seedin mukaan. Sisäseiniä ei ole. Bossin jälkeinen automaattinen kartanvaihto, buildin säilyminen, minimappi ja seed-tallennus toimivat kuten alla. Vanha v1-seed ei enää tuota huonekarttaa: nykyinen generaattoriversio on 2. Alla olevat huone-/käytäväkuvaukset dokumentoivat aiemman v1-toteutuksen; koodin Rooms-lista sisältää nyt vain näkymättömät maamerkkien ankkuripisteet.
 
 Paina Play Unityssä ja aloita peli. Päävalikon **KARTAN SEED** voi jättää tyhjäksi (satunnainen uusi kierros) tai siihen voi syöttää 32-bittisen kokonaisluvun, myös 0:n tai negatiivisen luvun. **Käytä viimeisintä seediä** täyttää viimeksi pelatun kartan seedin. Pelin aikana seedin nappi kopioi sen leikepöydälle.
 

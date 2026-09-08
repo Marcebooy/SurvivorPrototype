@@ -327,7 +327,7 @@ namespace BonkSurvivor
             {
                 string weapons = LoadoutSummary();
                 GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  Aseet " + WeaponCount + "/5  •  Tomet " + TomeCount + "/5  •  " + weapons, textStyle);
-                GUI.Label(new Rect(24,254,900,30), "Arkut: keltainen  •  Pyhäkkö: punainen  •  Bossihuone: sininen kartalla", textStyle);
+                GUI.Label(new Rect(24,254,900,30), "Arkut: keltainen  •  Pyhäkkö: punainen  •  Bossiportaali: sininen kartalla", textStyle);
                 DrawDungeonMap();
                 GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
                 if (boss != null) GUI.Label(new Rect(440,80,600,35), "ALUEEN VARTIJA  •  HP " + Mathf.CeilToInt(boss.health), titleStyle);
@@ -364,5 +364,4 @@ namespace BonkSurvivor
         }
     }
 }
-
 

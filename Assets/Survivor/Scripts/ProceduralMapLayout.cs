@@ -7,9 +7,9 @@ namespace BonkSurvivor
     // Version the algorithm when changing seed semantics. No UnityEngine.Random or scene state.
     public sealed class ProceduralMapLayout
     {
-        public const int GeneratorVersion = 1, GridSize = 65;
+        public const int GeneratorVersion = 2, GridSize = 65;
         public const float CellSize = 4f;
-        const int Origin = GridSize / 2, RoomSpacing = 11;
+        const int Origin = GridSize / 2;
         public int Seed { get; }
         public readonly List<RectInt> Rooms = new List<RectInt>();
         public readonly List<Vector2Int> FloorCells = new List<Vector2Int>();
@@ -33,38 +33,26 @@ namespace BonkSurvivor
         {
             Seed = seed;
             var rng = new SeedRandom(seed);
-            int roomCount = rng.Next(8, 13);
-            var slots = new List<Vector2Int> { Vector2Int.zero };
-            var links = new List<Vector2Int>();
-            // Grow a spanning tree on coarse room slots. Every added room has a parent.
-            while (slots.Count < roomCount)
+            // One broad continuous clearing. Seed changes its outline, never creates rooms or choke points.
+            float radiusX=rng.Next(8200,10300)/100f, radiusZ=rng.Next(7400,9500)/100f;
+            float phase=rng.Next(0,6283)/1000f;
+            for(int x=1;x<GridSize-1;x++) for(int z=1;z<GridSize-1;z++)
             {
-                var candidates = new List<Vector2Int>();
-                for (int parent=0;parent<slots.Count;parent++)
-                    for (int d=0;d<4;d++)
-                    {
-                        var slot=slots[parent]+Directions[d];
-                        if(Mathf.Abs(slot.x)<=2 && Mathf.Abs(slot.y)<=2 && !slots.Contains(slot)) candidates.Add(new Vector2Int(parent,d));
-                    }
-                var edge=candidates[rng.Next(0,candidates.Count)];
-                slots.Add(slots[edge.x]+Directions[edge.y]); links.Add(new Vector2Int(edge.x,slots.Count-1));
+                float nx=(x-Origin)*CellSize/radiusX, nz=(z-Origin)*CellSize/radiusZ;
+                float angle=Mathf.Atan2(nz,nx);
+                float edge=1f+.065f*Mathf.Sin(3*angle+phase)+.035f*Mathf.Cos(2*angle-phase);
+                floor[x,z]=nx*nx+nz*nz<edge*edge;
             }
-            foreach(var slot in slots)
+            // Legacy Rooms collection now stores invisible landmark anchors only, not carved rooms.
+            Rooms.Add(new RectInt(Origin,Origin,1,1));
+            int anchors=rng.Next(8,13);
+            for(int i=1;i<anchors;i++)
             {
-                int halfX=rng.Next(3,5), halfZ=rng.Next(3,5);
-                var center=slot*RoomSpacing+new Vector2Int(Origin,Origin);
-                var room=new RectInt(center.x-halfX,center.y-halfZ,halfX*2+1,halfZ*2+1);
-                Rooms.Add(room);
-                Carve(room);
-            }
-            // Optional loops offer alternate routes without compromising connectivity.
-            for(int a=0;a<slots.Count;a++)
-                for(int b=a+1;b<slots.Count;b++)
-                    if((slots[a]-slots[b]).sqrMagnitude==1 && rng.Next(0,3)==0) links.Add(new Vector2Int(a,b));
-            foreach(var link in links)
-            {
-                var a=ToCell(Center(Rooms[link.x])); var b=ToCell(Center(Rooms[link.y]));
-                Carve(new RectInt(Mathf.Min(a.x,b.x)-1,Mathf.Min(a.y,b.y)-1,Mathf.Abs(a.x-b.x)+3,Mathf.Abs(a.y-b.y)+3));
+                float angle=phase+(i-1)*Mathf.PI*2/(anchors-1);
+                float distance=rng.Next(52,73)/100f;
+                int x=Origin+Mathf.RoundToInt(Mathf.Cos(angle)*radiusX*distance/CellSize);
+                int z=Origin+Mathf.RoundToInt(Mathf.Sin(angle)*radiusZ*distance/CellSize);
+                Rooms.Add(new RectInt(x,z,1,1));
             }
             for(int x=0;x<GridSize;x++) for(int z=0;z<GridSize;z++) if(floor[x,z]) FloorCells.Add(new Vector2Int(x,z));
             UpdateNavigation(Spawn);

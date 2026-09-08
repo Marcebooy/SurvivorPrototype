@@ -48,12 +48,13 @@ try
     }
     Check(g.MapSeeds.Count==4 && UnityEngine.PlayerPrefs.GetInt(prefix+"LastMapSeed")==g.CurrentMapSeed,"Four map seeds persisted");
     var loaded=UnityEngine.JsonUtility.FromJson<BonkSurvivor.SurvivorGame.MapSeedHistory>(UnityEngine.PlayerPrefs.GetString(prefix+"MapSeedHistory"));
-    Check(loaded.maps.Count==4 && loaded.maps[3].seed==g.CurrentMapSeed && loaded.maps[3].generatorVersion==1,"Seed history round-trips through saved JSON");
+    Check(loaded.maps.Count==4 && loaded.maps[3].seed==g.CurrentMapSeed && loaded.maps[3].generatorVersion==BonkSurvivor.ProceduralMapLayout.GeneratorVersion,"Seed history round-trips through saved JSON");
     int replaySeed=g.CurrentMapSeed;var previous=g.MapLayout.FloorCells.ToArray();
     g.StartSeededRun(replaySeed);
     Check(System.Linq.Enumerable.SequenceEqual(previous,g.MapLayout.FloorCells),"A later map seed reproduces the exact layout as a new run");
     return checks;
 }
+catch(System.Exception error) { return "Checks completed: "+string.Join("; ",checks)+" ERROR: "+error.ToString(); }
 finally
 {
     Set("AtMainMenu",true);g.enabled=true;UnityEngine.Random.state=state;

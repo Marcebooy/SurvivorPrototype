@@ -239,6 +239,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BonkSurvivor.SurvivorNetwork
   remotePlayerPrefab: {fileID: 4481238649362794325, guid: 0ac3efacbe35c284f9cfa50c45e86fba, type: 3}
+  hostAvatarPrefab: {fileID: 6035561538296828065, guid: 925e3b04aeb7a9842a96ba874db402b5, type: 3}
 --- !u!1 &2027967768
 GameObject:
   m_ObjectHideFlags: 0
@@ -277,12 +278,7 @@ MonoBehaviour:
   frostImpactEffect: {fileID: 5627696518775099638, guid: 543d521d2176ace4aba4667ddca92d97, type: 3}
   voidImpactEffect: {fileID: 5627696518775099638, guid: 6e19186c425546840baabfaf7ea829f8, type: 3}
   boltImpactEffect: {fileID: 5627696518775099638, guid: b9006bf1a0b6b994bbe0d867a1c2f33a, type: 3}
-  moveSpeed: 8
-  damage: 18
-  attackRate: 1.3
-  pickupRadius: 3.5
   arenaRadius: 60
-  maxHealth: 100
 --- !u!4 &2027967770
 Transform:
   m_ObjectHideFlags: 0

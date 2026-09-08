@@ -24,15 +24,11 @@ namespace BonkSurvivor
             if(RemotePlayerNet.Local) RemotePlayerNet.Local.transform.position=MapSpawn;
         }
 
-        // Host-side: create a fresh Combatant for a just-connected friend and give them the same
-        // default look the host starts with (BuildPottu does this for the host at Start()).
-        public Combatant CreateFriendCombatant(Transform body)
-        {
-            var c = new Combatant { Body = body, Selecting = true, AwaitingCharacterChoice = true };
-            var prev = current; current = c;
-            try { BuildCharacterVisual(PlayerCharacter.Pottu); } finally { current = prev; }
-            return c;
-        }
+        // Host-side: create a fresh Combatant for a just-connected friend. No visual yet - the
+        // friend has no body until they pick a character (RemotePlayerNet builds it then), same as
+        // the friend's own client shows nothing while AwaitingCharacterChoice is true.
+        public Combatant CreateFriendCombatant(Transform body) =>
+            new Combatant { Body = body, Selecting = true, AwaitingCharacterChoice = true };
 
         public bool FriendSelectCharacter(Combatant c, PlayerCharacter character)
         {
@@ -84,6 +80,8 @@ namespace BonkSurvivor
         void TickNetworkCoop(float dt)
         {
             if (!IsNetworkHost) return;
+            var avatar = SurvivorNetwork.Instance ? SurvivorNetwork.Instance.HostAvatar : null;
+            if (avatar) avatar.MirrorHost(player.position, player.rotation, SelectedCharacter);
             var remotes = RemotePlayerNet.Active;
             for (int r = 0; r < remotes.Count; r++)
             {

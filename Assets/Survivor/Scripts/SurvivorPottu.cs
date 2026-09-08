@@ -43,22 +43,35 @@ namespace BonkSurvivor
         void BuildCharacterVisual(PlayerCharacter character)
         {
             if(visualRoot) Destroy(visualRoot.gameObject);
-            visualRoot=new GameObject(character+" visual").transform; visualRoot.SetParent(player,false);
             SelectedCharacter=character;
-            if(character==PlayerCharacter.Velho) { var v=visualRoot.gameObject.AddComponent<VelhoVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Ritari) { var v=visualRoot.gameObject.AddComponent<RitariVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Necromancer) { var v=visualRoot.gameObject.AddComponent<NecromancerVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Berserker) { var v=visualRoot.gameObject.AddComponent<BerserkerVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Golem) { var v=visualRoot.gameObject.AddComponent<GolemVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Hunter) { var v=visualRoot.gameObject.AddComponent<HunterVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Ninja) { var v=visualRoot.gameObject.AddComponent<NinjaVisual>(); v.Build(); characterVisual=v; }
-            else if(character==PlayerCharacter.Paladin) { var v=visualRoot.gameObject.AddComponent<PaladinVisual>(); v.Build(); characterVisual=v; }
-            else { var v=visualRoot.gameObject.AddComponent<PottuVisual>(); v.Build(); characterVisual=v; }
+            characterVisual = BuildCharacterVisualOn(player, character, out var root);
+            visualRoot = root;
+        }
+
+        // Standalone (not routed through `current`) so any peer can build the SAME deterministic
+        // body locally under an arbitrary transform - used to show a connected friend's own body
+        // and the host's body on every machine without networking the mesh itself. See
+        // RemotePlayerNet.cs and HostAvatarNet.cs.
+        public static ICharacterVisual BuildCharacterVisualOn(Transform parent, PlayerCharacter character, out Transform root)
+        {
+            root=new GameObject(character+" visual").transform; root.SetParent(parent,false);
+            if(character==PlayerCharacter.Velho) { var v=root.gameObject.AddComponent<VelhoVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Ritari) { var v=root.gameObject.AddComponent<RitariVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Necromancer) { var v=root.gameObject.AddComponent<NecromancerVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Berserker) { var v=root.gameObject.AddComponent<BerserkerVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Golem) { var v=root.gameObject.AddComponent<GolemVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Hunter) { var v=root.gameObject.AddComponent<HunterVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Ninja) { var v=root.gameObject.AddComponent<NinjaVisual>(); v.Build(); return v; }
+            if(character==PlayerCharacter.Paladin) { var v=root.gameObject.AddComponent<PaladinVisual>(); v.Build(); return v; }
+            var pottu=root.gameObject.AddComponent<PottuVisual>(); pottu.Build(); return pottu;
         }
         public bool SelectCharacter(PlayerCharacter character)
         {
             if(!Selecting || !awaitingCharacterChoice) return false;
-            BuildCharacterVisual(character); ResetPottu(); awaitingCharacterChoice=false;
+            // For a friend Combatant, RemotePlayerNet already built (and wired in) the mesh so every
+            // peer shows the same one - building another here would leave two overlapping bodies.
+            if(current == hostState) BuildCharacterVisual(character); else SelectedCharacter = character;
+            ResetPottu(); awaitingCharacterChoice=false;
             if(character==PlayerCharacter.Velho) weaponLevels[Weapon.Lightning]=1;
             else if(character==PlayerCharacter.Ritari) weaponLevels[Weapon.Sword]=1;
             else if(character==PlayerCharacter.Necromancer) weaponLevels[Weapon.Bone]=1;

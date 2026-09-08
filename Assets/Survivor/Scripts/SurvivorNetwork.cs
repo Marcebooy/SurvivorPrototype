@@ -25,6 +25,8 @@ namespace BonkSurvivor
         public int ConnectedFriendCount => networkManager && networkManager.IsServer ? Mathf.Max(0, networkManager.ConnectedClientsIds.Count - 1) : 0;
 
         [SerializeField] GameObject remotePlayerPrefab;
+        [SerializeField] GameObject hostAvatarPrefab;
+        public HostAvatarNet HostAvatar { get; private set; }
 
         NetworkManager networkManager;
         UnityTransport transport;
@@ -164,6 +166,12 @@ namespace BonkSurvivor
                     CurrentState = State.Error; StatusMessage = "Isännöinti epäonnistui.";
                     return;
                 }
+                if (hostAvatarPrefab)
+                {
+                    var avatarInstance = Instantiate(hostAvatarPrefab);
+                    HostAvatar = avatarInstance.GetComponent<HostAvatarNet>();
+                    avatarInstance.GetComponent<NetworkObject>().Spawn();
+                }
                 CurrentState = State.Connected; StatusMessage = "Isännöit peliä - anna koodi kaverille.";
             }
             catch (Exception e)
@@ -201,6 +209,7 @@ namespace BonkSurvivor
         public void Disconnect()
         {
             if (networkManager && networkManager.IsListening) networkManager.Shutdown();
+            HostAvatar = null;
             CurrentState = State.Offline; StatusMessage = ""; JoinCode = "";
         }
     }

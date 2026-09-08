@@ -77,7 +77,7 @@ namespace BonkSurvivor
             proceduralRoot=new GameObject("Generated map - seed "+CurrentMapSeed).transform;
             proceduralRoot.SetParent(world,false);
             var roomMat=MakeMaterial(new Color(.25f,.35f,.22f));
-            var trailMat=MakeMaterial(new Color(.40f,.35f,.25f));
+            var trailMat=MakeMaterial(new Color(.27f,.37f,.23f));
             var wallMat=MakeMaterial(new Color(.34f,.40f,.38f));
             var bark=MakeMaterial(new Color(.25f,.16f,.09f));
             var leaf=MakeMaterial(new Color(.15f,.31f,.22f));
@@ -98,16 +98,16 @@ namespace BonkSurvivor
             var directions=new[]{Vector2Int.right,Vector2Int.up,Vector2Int.left,Vector2Int.down};
             foreach(var cell in MapLayout.FloorCells)
             {
-                bool room=false; foreach(var r in MapLayout.Rooms) if(r.Contains(cell)) { room=true;break; }
+                bool room = (cell.x * 17 + cell.y * 31 + (CurrentMapSeed & 255)) % 19 != 0;
                 var p=MapLayout.ToWorld(cell); const float h=ProceduralMapLayout.CellSize*.5f;
                 Quad(room ? roomV : trailV,room ? roomT : trailT,p+new Vector3(-h,0,-h),p+new Vector3(-h,0,h),p+new Vector3(h,0,h),p+new Vector3(h,0,-h));
                 foreach(var dir in directions)
                     if(!MapLayout.IsFloor(cell.x+dir.x,cell.y+dir.y))
                         Wall(p+new Vector3(dir.x,0,dir.y)*h,new Vector3(-dir.y,0,dir.x)*h);
             }
-            MapMesh("Mossy room floors",FacetedMesh("Room floor mesh",roomV.ToArray(),roomT.ToArray()),Vector3.zero,Vector3.one,roomMat,proceduralRoot);
-            MapMesh("Connecting corridors",FacetedMesh("Corridor mesh",trailV.ToArray(),trailT.ToArray()),Vector3.zero,Vector3.one,trailMat,proceduralRoot);
-            MapMesh("Low stone walls",FacetedMesh("Boundary wall mesh",wallV.ToArray(),wallT.ToArray()),Vector3.zero,Vector3.one,wallMat,proceduralRoot);
+            MapMesh("Open meadow",FacetedMesh("Meadow mesh",roomV.ToArray(),roomT.ToArray()),Vector3.zero,Vector3.one,roomMat,proceduralRoot);
+            MapMesh("Grass variation",FacetedMesh("Grass detail mesh",trailV.ToArray(),trailT.ToArray()),Vector3.zero,Vector3.one,trailMat,proceduralRoot);
+            MapMesh("Outer stone boundary",FacetedMesh("Boundary wall mesh",wallV.ToArray(),wallT.ToArray()),Vector3.zero,Vector3.one,wallMat,proceduralRoot);
             var coneV=new Vector3[8]; var coneT=new int[21]; coneV[0]=Vector3.up;
             for(int i=0;i<7;i++) { float a=i*Mathf.PI*2/7;coneV[i+1]=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a));coneT[i*3]=0;coneT[i*3+1]=(i+1)%7+1;coneT[i*3+2]=i+1; }
             var cone=FacetedMesh("Pine crown mesh",coneV,coneT);

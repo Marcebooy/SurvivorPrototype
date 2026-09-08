@@ -14,6 +14,17 @@ foreach(int seed in seeds)
     var map=new BonkSurvivor.ProceduralMapLayout(seed);
     if(map.Rooms.Count<8 || map.Rooms.Count>12 || map.BossRoom==0) throw new System.Exception("Invalid room roles "+seed);
     if(map.ReachableCellCount!=map.FloorCells.Count) throw new System.Exception("Disconnected seed "+seed);
+    for(int x=0;x<BonkSurvivor.ProceduralMapLayout.GridSize;x++)
+    {
+        bool entered=false,exited=false;
+        for(int z=0;z<BonkSurvivor.ProceduralMapLayout.GridSize;z++)
+        {
+            if(map.IsFloor(x,z)) { if(exited)throw new System.Exception("Internal gap in open map "+seed); entered=true; }
+            else if(entered) exited=true;
+        }
+    }
+    for(int x=-12;x<=12;x++)for(int z=-12;z<=12;z++)
+        if(!map.IsWalkable(new UnityEngine.Vector3(x*4,0,z*4)))throw new System.Exception("Central combat space blocked "+seed);
     string hash=Fingerprint(map); hashes.Add(hash);
     if(hash!=Fingerprint(new BonkSurvivor.ProceduralMapLayout(seed))) throw new System.Exception("Non-deterministic seed "+seed);
     if(!map.IsWalkable(map.Spawn,1.3f) || !map.IsWalkable(map.BossPosition,1.8f)) throw new System.Exception("Invalid spawn "+seed);

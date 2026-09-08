@@ -100,6 +100,9 @@ namespace BonkSurvivor
             DrawMapTypeOption(MapType.Procedural, 1, y, "SATUNNAINEN (oletus, Tier 1, rajaton)", true); y += 56;
             foreach (var type in new[] { MapType.Mosswood, MapType.BoneCave })
                 for (int tier = 1; tier <= 3; tier++) { DrawMapTypeOption(type, tier, y, null, false); y += 46; }
+            y += 14;
+            string selectedLabel = selectedMapType == MapType.Procedural ? "SATUNNAINEN" : MapTypeName(selectedMapType).ToUpperInvariant() + " T" + selectedMapTier;
+            if (GUI.Button(new Rect(390,y,500,54), "PELAA VALITULLA KARTALLA  [" + selectedLabel + "]", centerButtonStyle)) StartGame();
         }
 
         void DrawMapTypeOption(MapType type, int tier, float y, string label, bool unlimited)

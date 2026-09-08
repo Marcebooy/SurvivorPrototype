@@ -36,6 +36,7 @@ Käytä projektin omaa Unity CLI -taitoa Unity Editorin ohjaamiseen. Jos CLI ei 
 - Vastaa käyttäjälle suomeksi, ellei hän pyydä muuta.
 - Kerro lyhyesti, mitä muutettiin ja miten muutos varmennettiin.
 - Älä väitä tehtävää valmiiksi ilman tarkistusta.
+- Kirjaa tehdyt muutokset lyhyesti tiedoston lopun "Muutosloki"-osioon (uusin ylimpänä).
 
 ## MegaBonk-koonti
 
@@ -126,3 +127,15 @@ Shrinet ovat riski–palkinto-valintoja: ne voivat antaa tehokkaan palkinnon, mu
 - Crowd-control-build: Black Hole + Frostwalker + Lightning Staff.
 
 Tarkat perusvahingot, cooldownit ja upgrade-arvot riippuvat peliversiosta ja muuttuvat päivityksissä. Tämä koonti kuvaa aseiden toimintaa ja statseja yleisellä tasolla; numeeriset arvot kannattaa tarkistaa aina kyseisen version pelistä tai ajantasaisesta tietokannasta.
+
+## Muutosloki
+
+Lyhyt loki tehdyistä muutoksista. Uusin ylimpänä.
+
+- 2026-09-08: Viholliset katoavat ja spawni loppuu heti kun 90s bossiportaali-ajastin nollautuu (ei enää riipu pelaajan menemisestä portaalille); bossi itse ilmestyy yhä vasta E:llä portaalilla. XP-kerääminen estyy bossin aikana (kulta yhä kertyy). Bossin kuoltua alue vaihtuu automaattisesti ~2s kuluttua (`SurvivorGame.cs: Hit`, `SurvivorProgression.cs: TickProgression, Interact`).
+- 2026-09-08: Areena kasvatettu (säde 38 → 60, pilarit/lattiamerkit/arkut/pyhäkkö/portaali skaalautuvat mukana). Kokeiltiin lisäksi kiipeäviä kukkuloita (korkeusvaihtelu), mutta ne poistettiin käyttäjän pyynnöstä — kartta jäi isommaksi mutta tasaiseksi (`SurvivorGame.cs`, `SurvivorPottu.cs`, `SurvivorProgression.cs`).
+- 2026-09-08: Kauppa-, asevalinta- ja tasopäivitysvalikot piilottavat nyt taustalla olevat HUD-tekstit (yläpalkki, ohjeet, "ALUE X" / "Arkut:" -rivit) kokonaan sen sijaan että ne vain himmenivät läpinäkyvästi (`SurvivorGame.cs`, `SurvivorProgression.cs`).
+- 2026-09-08: "Poistu päävalikkoon" -kesken jäävä kierros tallentaa nyt selviytymisajan (jos ennätys) ja maksaa Silver-palkkion tapoista, kuten normaali kuolema (`SurvivorGame.cs: ExitToMainMenu`).
+- 2026-09-08: Jo omistetun aseen valitseminen tasopäivityksessä antaa nyt aina joko +15 % Damage tai +15 % Size (n. 35 % erillinen mahdollisuus kummallekin, taataan vähintään toinen) — ei enää koskaan "tyhjää" päivitystä (`SurvivorProgression.cs: ApplyUpgrade`, `GrantWeaponBonus`).
+- 2026-09-08: Lisätty ESC-taukovalikkoon "Poistu päävalikkoon" -nappi ja päävalikkoon "LOPETA"-nappi (`SurvivorGame.cs`).
+- 2026-09-08: Pystytetty GitHub-repo ([Marcebooy/SurvivorPrototype](https://github.com/Marcebooy/SurvivorPrototype), public), GitHub Releases -pohjainen build-jakelu, Discord-webhook release-ilmoituksille, sekä itsepäivittyvä launcher (`Launcher/`) kaverille jaettavaksi. Pysyvä latauslinkki: `https://github.com/Marcebooy/SurvivorPrototype/releases/download/launcher/SurvivorPrototypeLauncher.exe`.

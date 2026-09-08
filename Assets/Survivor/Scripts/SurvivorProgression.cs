@@ -26,7 +26,8 @@ namespace BonkSurvivor
         readonly List<Landmark> landmarks = new List<Landmark>();
         readonly List<Flash> flashes = new List<Flash>();
         Enemy boss;
-        float areaStarted, curse = 1, bossAttackTimer;
+        float areaStarted, curse = 1, bossAttackTimer, bossDefeatedAt = -1;
+        bool bossTimerExpired;
         int bossKills;
         bool rewardPaid;
         bool newRecord;
@@ -64,7 +65,7 @@ namespace BonkSurvivor
             LegacyHealth = Mathf.Clamp(PlayerPrefs.GetInt(SaveKey + "Health", 0), 0, 10);
             maxHealth += LegacyHealth * 10; Health = maxHealth;
             Size = 1; Quantity = 1; CritChance = Armor = 0;
-            Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3;
+            Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
             EarnedSilver = 0; rewardPaid = false; BossDefeated = false; PendingChoices = 0; Selecting = true;
             CreateLandmarks();
         }
@@ -79,11 +80,12 @@ namespace BonkSurvivor
 
         void CreateLandmarks()
         {
-            AddLandmark(0, new Vector3(10, .8f, 9), eliteMaterial);
-            AddLandmark(0, new Vector3(-18, .8f, 12), eliteMaterial);
-            AddLandmark(0, new Vector3(20, .8f, -15), eliteMaterial);
-            AddLandmark(1, new Vector3(-12, 1, -12), enemyMaterial);
-            AddLandmark(2, new Vector3(0, 1.5f, 25), xpMaterial);
+            float k = arenaRadius / 38f;
+            AddLandmark(0, new Vector3(10 * k, .8f, 9 * k), eliteMaterial);
+            AddLandmark(0, new Vector3(-18 * k, .8f, 12 * k), eliteMaterial);
+            AddLandmark(0, new Vector3(20 * k, .8f, -15 * k), eliteMaterial);
+            AddLandmark(1, new Vector3(-12 * k, 1, -12 * k), enemyMaterial);
+            AddLandmark(2, new Vector3(0, 1.5f, 25 * k), xpMaterial);
         }
 
         void AddLandmark(int kind, Vector3 pos, Material material)
@@ -112,8 +114,8 @@ namespace BonkSurvivor
         void ApplyUpgrade(int id)
         {
             if (id < 0 || id >= UpgradeNames.Length) return;
-            if (id >= 10 && id <= 15) { var w=(Weapon)(id-7); weaponLevels[w]=WeaponLevel(w)+1; }
-            else if (id < 3) { var w = (Weapon)id; weaponLevels[w] = weaponLevels.TryGetValue(w, out int level) ? level + 1 : 1; }
+            if (id >= 10 && id <= 15) { var w=(Weapon)(id-7); bool alreadyOwned=WeaponLevel(w)>0; weaponLevels[w]=WeaponLevel(w)+1; if (alreadyOwned) GrantWeaponBonus(); }
+            else if (id < 3) { var w = (Weapon)id; bool alreadyOwned = weaponLevels.TryGetValue(w, out int level); weaponLevels[w] = alreadyOwned ? level + 1 : 1; if (alreadyOwned) GrantWeaponBonus(); }
             else switch (id)
             {
                 case 3: damage *= 1.2f; break; case 4: attackRate *= 1.2f; break;
@@ -123,10 +125,27 @@ namespace BonkSurvivor
             notice = UpgradeNames[id] + " saatu!"; noticeUntil = Elapsed + 4;
         }
 
+        // Re-picking an already-owned weapon always pays off: damage, size, or (with a bit of luck) both.
+        void GrantWeaponBonus()
+        {
+            bool damageBoost = Random.value < .35f;
+            bool sizeBoost = Random.value < .35f;
+            if (!damageBoost && !sizeBoost) { if (Random.value < .5f) damageBoost = true; else sizeBoost = true; }
+            if (damageBoost) damage *= 1.15f;
+            if (sizeBoost) Size *= 1.15f;
+        }
+
         void TickProgression(float dt)
         {
             for (int i = flashes.Count - 1; i >= 0; i--)
             { flashes[i].life -= dt; if (flashes[i].life <= 0) { Destroy(flashes[i].body.gameObject); flashes.RemoveAt(i); } }
+            if (!bossTimerExpired && boss == null && Elapsed - areaStarted >= 90)
+            {
+                bossTimerExpired = true;
+                foreach (var stray in enemies) if (stray.body) Destroy(stray.body.gameObject);
+                enemies.Clear();
+                notice = "Alueen vartija odottaa portaalilla! Uusia vihollisia ei enää tule."; noticeUntil = Elapsed + 6;
+            }
             interactionHint = "";
             foreach (var p in landmarks)
             {
@@ -149,6 +168,7 @@ namespace BonkSurvivor
                     flashes.Add(new Flash { body = ring, life = .3f });
                 }
             }
+            if (BossDefeated && bossDefeatedAt >= 0 && Elapsed - bossDefeatedAt > 2f) AdvanceArea();
         }
 
         string LandmarkHint(int kind)
@@ -180,6 +200,7 @@ namespace BonkSurvivor
                 boss = new Enemy { body = Shape("Alueen vartija", PrimitiveType.Capsule, player.position + Vector3.forward * 10,
                     new Vector3(2.6f, 2.6f, 2.6f), eliteMaterial, world), health = 900 * Area * curse, speed = 3.2f * curse, elite = true };
                 enemies.Add(boss); bossAttackTimer = 3;
+                notice = "Alueen vartija ilmestyi! Uusia vihollisia ei enää tule — voita bossi ja palaa portaalille."; noticeUntil = Elapsed + 6;
             }
             else return false;
             if (p.used) p.body.localScale *= .35f;
@@ -189,7 +210,7 @@ namespace BonkSurvivor
         void AdvanceArea()
         {
             ClearArsenal(false);
-            Area++; areaStarted = Elapsed; BossDefeated = false;
+            Area++; areaStarted = Elapsed; BossDefeated = false; bossTimerExpired = false;
             foreach (var e in enemies) Destroy(e.body.gameObject); enemies.Clear();
             foreach (var b in bolts) Destroy(b.body.gameObject); bolts.Clear();
             foreach (var d in drops) Destroy(d.body.gameObject); drops.Clear();
@@ -268,11 +289,11 @@ namespace BonkSurvivor
 
         void DrawProgression()
         {
-            string weapons = ""; foreach (var w in weaponLevels) weapons += WeaponLabel(w.Key) + " " + w.Value + "   ";
-            GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  " + weapons, textStyle);
-            GUI.Label(new Rect(24,254,900,30), "Arkut: kultainen  •  Pyhäkkö: punainen  •  Portaali: sininen pohjoisessa", textStyle);
             if (!Selecting && PendingChoices == 0 && !Finished && !ShopOpen)
             {
+                string weapons = ""; foreach (var w in weaponLevels) weapons += WeaponLabel(w.Key) + " " + w.Value + "   ";
+                GUI.Label(new Rect(24,192,790,60), "ALUE " + Area + "  •  " + weapons, textStyle);
+                GUI.Label(new Rect(24,254,900,30), "Arkut: kultainen  •  Pyhäkkö: punainen  •  Portaali: sininen pohjoisessa", textStyle);
                 GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
                 if (boss != null) GUI.Label(new Rect(440,80,600,35), "ALUEEN VARTIJA  •  HP " + Mathf.CeilToInt(boss.health), titleStyle);
                 else GUI.Label(new Rect(850,190,410,55), BossDefeated ? "Bossi voitettu — palaa portaaliin" : "Bossiportaali: " + Mathf.Max(0, Mathf.CeilToInt(90 - Elapsed + areaStarted)) + " s", textStyle);

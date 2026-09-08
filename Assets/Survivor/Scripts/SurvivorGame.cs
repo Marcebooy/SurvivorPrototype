@@ -13,7 +13,7 @@ namespace BonkSurvivor
         public float attackRate = 1.3f;
         public float pickupRadius = 3.5f;
         // Runs now end on death; portals advance between areas.
-        public float arenaRadius = 38f;
+        public float arenaRadius = 60f;
         public float maxHealth = 100f;
         public float Health { get; private set; }
         public int Level { get; private set; } = 1;
@@ -46,6 +46,16 @@ namespace BonkSurvivor
         void Start() { LoadHighscore(); BuildWorld(); }
 
         void StartGame() { AtMainMenu = false; ResetRun(); }
+        void ExitToMainMenu() { FinishRun(); AtMainMenu = true; ShopOpen = false; }
+
+        static void QuitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
 
         Material MakeMaterial(Color color)
         {
@@ -73,14 +83,16 @@ namespace BonkSurvivor
             xpMaterial = MakeMaterial(new Color(.3f, .8f, 1f));
             boltMaterial = MakeMaterial(new Color(1f, .9f, .35f));
             Shape("Arena", PrimitiveType.Cylinder, new Vector3(0, -.3f, 0), new Vector3(arenaRadius * 2 + 4, .3f, arenaRadius * 2 + 4), ground, world);
-            for (int i = 0; i < 48; i++)
+            int pillarCount = Mathf.RoundToInt(48f * arenaRadius / 38f);
+            for (int i = 0; i < pillarCount; i++)
             {
-                float a = i * Mathf.PI * 2 / 48;
+                float a = i * Mathf.PI * 2 / pillarCount;
                 var p = new Vector3(Mathf.Cos(a), 0, Mathf.Sin(a)) * (arenaRadius + 1.2f);
                 Shape("Boundary pillar", PrimitiveType.Cube, p + Vector3.up, new Vector3(.7f, 2, .7f), i % 4 == 0 ? cyan : stone, world);
             }
-            for (int x = -30; x <= 30; x += 6)
-            for (int z = -30; z <= 30; z += 6)
+            int floorExtent = Mathf.CeilToInt(arenaRadius);
+            for (int x = -floorExtent; x <= floorExtent; x += 6)
+            for (int z = -floorExtent; z <= floorExtent; z += 6)
                 if (new Vector2(x,z).magnitude < arenaRadius - 2)
                     Shape("Floor marker", PrimitiveType.Cube, new Vector3(x, .015f, z), new Vector3(.14f, .025f, .14f), stone, world);
             BuildPottu();
@@ -146,7 +158,7 @@ namespace BonkSurvivor
             TickProgression(dt); if (Finished) return;
             invulnerability -= dt;
             spawnTimer -= dt;
-            if (spawnTimer <= 0 && enemies.Count < 260)
+            if (boss == null && Elapsed - areaStarted < 90 && spawnTimer <= 0 && enemies.Count < 260)
             {
                 SpawnEnemy(); spawnTimer = Mathf.Max(.09f, .8f - Elapsed / 200f);
             }
@@ -218,7 +230,7 @@ namespace BonkSurvivor
         {
             bool critical = Random.value < CritChance; if (critical) amount *= 2; HitFeedback(e, amount, critical); e.health -= amount;
             if (e.health > 0) { e.body.position += (e.body.position - player.position).normalized * .6f; return; }
-            if (e == boss) { boss = null; BossDefeated = true; bossKills++; notice = "Bossi voitettu! Palaa siniselle portaalille."; noticeUntil = Elapsed + 8; }
+            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; notice = "Bossi voitettu! Seuraava alue avautuu..."; noticeUntil = Elapsed + 8; }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;
@@ -228,7 +240,7 @@ namespace BonkSurvivor
 
         public void GrantExperience(int amount)
         {
-            if (amount <= 0 || Selecting || Finished) return;
+            if (amount <= 0 || Selecting || Finished || boss != null) return;
             Experience += amount;
             while (Experience >= NextLevel)
             {
@@ -265,16 +277,20 @@ namespace BonkSurvivor
             centerButtonStyle.normal.textColor = Color.white; centerButtonStyle.hover.textColor = Color.white;
             GUI.matrix = Matrix4x4.Scale(new Vector3(Screen.width / 1280f, Screen.height / 720f, 1));
             if (AtMainMenu) { DrawMainMenu(); return; }
-            GUI.Box(new Rect(20,20,330,144), GUIContent.none);
-            GUI.Label(new Rect(36,28,310,40), "POTTU / BONK", titleStyle);
-            GUI.Label(new Rect(36,72,300,30), "TASO " + Level + "   •   " + Coins + " kultaa   •   " + Kills + " kaatoa", textStyle);
-            Bar(new Rect(36,108,290,16), Health / maxHealth, new Color(.2f,.9f,.7f));
-            GUI.Label(new Rect(36,128,290,28), "HP " + Mathf.CeilToInt(Health) + "/" + maxHealth + "    XP " + Experience + "/" + NextLevel, textStyle);
-            Bar(new Rect(20,174,330,6), (float)Experience / NextLevel, new Color(.35f,.65f,1));
-            GUI.Label(new Rect(1070,28,200,40), Mathf.FloorToInt(Elapsed / 60).ToString("00") + ":" + Mathf.FloorToInt(Elapsed % 60).ToString("00") + " / RUN", titleStyle);
-            GUI.Label(new Rect(24,664,1000,35), "WASD  Liiku   •   SPACE  Kierähdä   •   E  Tutki   •   TAB  Kauppa", textStyle);
-            if (GUI.Button(new Rect(1070,650,185,44), "Kauppa [TAB]", buttonStyle) && !Finished && !Selecting && PendingChoices == 0) ShopOpen = !ShopOpen;
-            if (Elapsed < noticeUntil) GUI.Label(new Rect(370,28,690,65), notice, textStyle);
+            bool overlayOpen = ShopOpen || Finished || Selecting || PendingChoices > 0;
+            if (!overlayOpen)
+            {
+                GUI.Box(new Rect(20,20,330,144), GUIContent.none);
+                GUI.Label(new Rect(36,28,310,40), "POTTU / BONK", titleStyle);
+                GUI.Label(new Rect(36,72,300,30), "TASO " + Level + "   •   " + Coins + " kultaa   •   " + Kills + " kaatoa", textStyle);
+                Bar(new Rect(36,108,290,16), Health / maxHealth, new Color(.2f,.9f,.7f));
+                GUI.Label(new Rect(36,128,290,28), "HP " + Mathf.CeilToInt(Health) + "/" + maxHealth + "    XP " + Experience + "/" + NextLevel, textStyle);
+                Bar(new Rect(20,174,330,6), (float)Experience / NextLevel, new Color(.35f,.65f,1));
+                GUI.Label(new Rect(1070,28,200,40), Mathf.FloorToInt(Elapsed / 60).ToString("00") + ":" + Mathf.FloorToInt(Elapsed % 60).ToString("00") + " / RUN", titleStyle);
+                GUI.Label(new Rect(24,664,1000,35), "WASD  Liiku   •   SPACE  Kierähdä   •   E  Tutki   •   TAB  Kauppa", textStyle);
+                if (GUI.Button(new Rect(1070,650,185,44), "Kauppa [TAB]", buttonStyle) && !Finished && !Selecting && PendingChoices == 0) ShopOpen = !ShopOpen;
+                if (Elapsed < noticeUntil) GUI.Label(new Rect(370,28,690,65), notice, textStyle);
+            }
             if ((ShopOpen || Finished) && !Selecting && PendingChoices == 0)
             {
                 GUI.color = new Color(0,0,0,.85f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
@@ -302,7 +318,8 @@ namespace BonkSurvivor
                     }
                     GUI.enabled = true;
                     GUI.Label(new Rect(380,513,520,34), "Vahinko " + damage + "  •  " + attackRate.ToString("0.00") + " iskua/s  •  Nopeus " + moveSpeed.ToString("0.0"), textStyle);
-                    if (GUI.Button(new Rect(380,558,520,42), "Jatka [TAB]", buttonStyle)) ShopOpen = false;
+                    if (GUI.Button(new Rect(380,558,250,42), "Jatka [TAB]", buttonStyle)) ShopOpen = false;
+                    if (GUI.Button(new Rect(650,558,250,42), "Poistu päävalikkoon", buttonStyle)) ExitToMainMenu();
                 }
             }
             DrawPottuHUD();
@@ -328,6 +345,7 @@ namespace BonkSurvivor
             GUI.Label(new Rect(240,220,800,30), "Selviydy hengissä niin pitkään kuin pystyt", centerTextStyle);
             GUI.Label(new Rect(240,270,800,34), "PARAS SELVIYTYMISAIKA  " + FormatTime(BestSurvivalSeconds), centerTextStyle);
             if (GUI.Button(new Rect(490,340,300,56), "PELAA  [ENTER]", centerButtonStyle)) StartGame();
+            if (GUI.Button(new Rect(490,406,300,50), "LOPETA", centerButtonStyle)) QuitGame();
             GUI.Label(new Rect(240,650,800,30), "WASD liiku   •   SPACE kierähdä   •   E tutki   •   TAB kauppa", centerTextStyle);
         }
 

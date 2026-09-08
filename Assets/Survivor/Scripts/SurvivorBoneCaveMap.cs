@@ -11,7 +11,7 @@ namespace BonkSurvivor
         // identical every run, unlike the procedural dungeon (ProceduralMapLayout) used by default.
         void BuildBoneCaveMap()
         {
-            var root = new GameObject("Luuluola - bone cave map").transform; root.SetParent(world, false);
+            var root = new GameObject("Luuluola - bone cave map").transform; root.SetParent(world, false); fixedMapRoot = root;
             var earth = MakeMaterial(new Color(.16f, .15f, .16f));
             var floor = MakeMaterial(new Color(.62f, .60f, .55f));
             var dust = MakeMaterial(new Color(.72f, .70f, .63f));

@@ -93,7 +93,7 @@ namespace BonkSurvivor
 
         void BuildForestMap()
         {
-            var root = new GameObject("Mosswood - forest map").transform; root.SetParent(world, false);
+            var root = new GameObject("Mosswood - forest map").transform; root.SetParent(world, false); fixedMapRoot = root;
             var earth = MakeMaterial(new Color(.20f, .26f, .13f));
             var grass = MakeMaterial(new Color(.25f, .36f, .17f));
             var moss = MakeMaterial(new Color(.31f, .40f, .20f));

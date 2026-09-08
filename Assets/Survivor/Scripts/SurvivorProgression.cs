@@ -243,7 +243,8 @@ namespace BonkSurvivor
             if (!MapTransitionPending || NetworkClientMode) return;
             ClearMapCombat();
             Area++; areaStarted = Elapsed; BossDefeated = false; bossTimerExpired = false; bossDefeatedAt = -1;
-            GenerateProceduralMap(NextMapSeed(CurrentMapSeed), true);
+            if (activeMapType != MapType.Procedural) BuildFixedMap(activeMapType);
+            else GenerateProceduralMap(NextMapSeed(CurrentMapSeed), true);
             CreateLandmarks(); player.position = MapSpawn + Vector3.up; Health = maxHealth;
             spawnTimer=1.5f; invulnerability=2f; dodgeLeft=dodgeCooldown=0; ShopOpen=false;
             UpdateCamera(true);

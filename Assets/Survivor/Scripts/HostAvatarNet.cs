@@ -70,5 +70,17 @@ namespace BonkSurvivor
 
         [Rpc(SendTo.NotServer)]
         void PlayTriggerRpc(int kind, Vector3 aim) { if (visual != null) TriggerRelayVisual.Apply(visual, kind, aim); }
+
+        SurvivorGame game;
+
+        // Host -> every connected friend: a hit landed somewhere in the world (from either the
+        // host's or a friend's weapons) - see SurvivorGame.Hit/BroadcastDamageNumber. The client
+        // renders its own independent floating-text copy (SurvivorGameNetwork.AddNetworkDamageLabel).
+        [Rpc(SendTo.NotServer)]
+        public void ShowDamageNumberRpc(Vector3 pos, int amount, bool crit)
+        {
+            if (!game) game = Object.FindFirstObjectByType<SurvivorGame>();
+            if (game) game.AddNetworkDamageLabel(pos, amount, crit);
+        }
     }
 }

@@ -66,6 +66,25 @@ namespace BonkSurvivor
             return best;
         }
 
+        // Client-side-only floating damage numbers. HitFeedback's own `damageLabels` list is host-
+        // screen-only IMGUI state; a connected friend never saw any combat feedback text at all, so
+        // the host broadcasts each hit (BroadcastDamageNumber, HostAvatarNet.ShowDamageNumberRpc)
+        // and the client renders its own small independent copy here.
+        sealed class NetDamageLabel { public Vector3 position; public string text; public float life; public bool crit; }
+        readonly System.Collections.Generic.List<NetDamageLabel> netDamageLabels = new System.Collections.Generic.List<NetDamageLabel>();
+
+        void BroadcastDamageNumber(Vector3 pos, float amount, bool crit)
+        {
+            var avatar = SurvivorNetwork.Instance ? SurvivorNetwork.Instance.HostAvatar : null;
+            if (avatar) avatar.ShowDamageNumberRpc(pos, Mathf.CeilToInt(amount), crit);
+        }
+
+        public void AddNetworkDamageLabel(Vector3 pos, int amount, bool crit)
+        {
+            if (netDamageLabels.Count >= 60) netDamageLabels.RemoveAt(0);
+            netDamageLabels.Add(new NetDamageLabel { position = pos, text = (crit ? "BONK! " : "") + amount, life = .7f, crit = crit });
+        }
+
         void TickNetworkClient(float dt)
         {
             var rp = RemotePlayerNet.Local;
@@ -75,6 +94,23 @@ namespace BonkSurvivor
                 followCamera.transform.position = Vector3.Lerp(followCamera.transform.position, target, 1 - Mathf.Exp(-8 * dt));
                 followCamera.transform.rotation = Quaternion.Euler(48, 0, 0);
             }
+            for (int i = netDamageLabels.Count - 1; i >= 0; i--)
+            {
+                var l = netDamageLabels[i]; l.life -= dt; l.position += Vector3.up * dt * 1.6f;
+                if (l.life <= 0) netDamageLabels.RemoveAt(i);
+            }
+        }
+
+        void DrawNetworkDamageLabels()
+        {
+            if (!followCamera) return;
+            foreach (var l in netDamageLabels)
+            {
+                var p = followCamera.WorldToViewportPoint(l.position); if (p.z <= 0) continue;
+                GUI.color = l.crit ? new Color(1, .85f, .2f, Mathf.Clamp01(l.life * 3)) : new Color(1, 1, 1, Mathf.Clamp01(l.life * 3));
+                GUI.Label(new Rect(p.x * 1280 - 35, (1 - p.y) * 720 - 16, 180, 36), l.text, textStyle);
+            }
+            GUI.color = Color.white;
         }
 
         HostAvatarNet visualBridgeFor;
@@ -168,6 +204,7 @@ namespace BonkSurvivor
             GUI.Label(new Rect(36, 106, 290, 24), "TASO " + rp.Level.Value + "   •   " + rp.Coins.Value + " kultaa", textStyle);
             GUI.Label(new Rect(36, 140, 450, 30), "KARTTA " + Area, textStyle);
             DrawDungeonMap();
+            DrawNetworkDamageLabels();
             if (GUI.Button(new Rect(1070, 650, 185, 44), "Katkaise yhteys", buttonStyle) && SurvivorNetwork.Instance)
                 SurvivorNetwork.Instance.Disconnect();
         }

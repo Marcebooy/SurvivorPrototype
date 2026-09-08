@@ -324,6 +324,7 @@ namespace BonkSurvivor
         void Hit(Enemy e, float amount)
         {
             bool critical = Random.value < CritChance; if (critical) amount *= 2; HitFeedback(e, amount, critical); e.health -= amount;
+            if (IsNetworkHost) BroadcastDamageNumber(e.body.position + Vector3.up * 1.25f, amount, critical);
             if (e.health > 0) { e.body.position = MoveOnMap(e.body.position, (e.body.position - player.position).normalized * .6f, e == boss ? 1.3f : .65f); return; }
             AdvancedKill(e);
             if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); }

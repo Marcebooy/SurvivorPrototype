@@ -69,7 +69,7 @@ namespace BonkSurvivor
             maxHealth += LegacyHealth * 10; Health = maxHealth;
             Size = 1; Quantity = 1; CritChance = Armor = 0;
             Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
-            EarnedSilver = 0; rewardPaid = false; BossDefeated = false; PendingChoices = 0; Selecting = true; awaitingCharacterChoice = true;
+            EarnedSilver = 0; rewardPaid = false; accountXpPaidThisRun = false; BossDefeated = false; PendingChoices = 0; Selecting = true; awaitingCharacterChoice = true;
             BeginMapRun();
             CreateLandmarks();
         }
@@ -262,6 +262,7 @@ namespace BonkSurvivor
                 BestSurvivalSeconds = Elapsed;
                 PlayerPrefs.SetFloat(SaveKey + "BestSurvivalSeconds", BestSurvivalSeconds); PlayerPrefs.Save();
             }
+            GrantAccountAndMasteryXp();
             if (rewardPaid) return;
             EarnedSilver = Kills / 5 + bossKills * 20; Silver += EarnedSilver;
             PlayerPrefs.SetInt(SaveKey + "Silver", Silver); PlayerPrefs.Save(); rewardPaid = true;

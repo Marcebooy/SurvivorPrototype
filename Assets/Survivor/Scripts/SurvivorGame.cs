@@ -68,7 +68,7 @@ namespace BonkSurvivor
         sealed class Drop { public Transform body; public int value; public bool isHealth; }
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); }
 
-        void Start() { LoadHighscore(); LoadSettings(); BuildWorld(); }
+        void Start() { LoadHighscore(); LoadAccountProgression(); LoadSettings(); BuildWorld(); }
 
         void LoadSettings()
         {

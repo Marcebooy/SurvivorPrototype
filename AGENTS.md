@@ -31,6 +31,23 @@ unity status
 
 Käytä projektin omaa Unity CLI -taitoa Unity Editorin ohjaamiseen. Jos CLI ei löydä Editoria, tarkista ensin, että oikea projekti on avattu ja että Pipeline-paketti on asennettu.
 
+## Julkaisuprosessi
+
+Peli jaetaan GitHubin ([Marcebooy/SurvivorPrototype](https://github.com/Marcebooy/SurvivorPrototype), public) kautta. Kaverin pysyvä latauslinkki launcherille: `https://github.com/Marcebooy/SurvivorPrototype/releases/download/launcher/SurvivorPrototypeLauncher.exe` (launcher itse tarkistaa/lataa uusimman pelin releasen automaattisesti).
+
+Uutta versiota julkaistaessa:
+1. Buildaa peli (Unity CLI, StandaloneWindows64), zippaa `Builds/`-kansioon.
+2. `git add`/`commit`/`push` koodimuutokset.
+3. `gh release create vX.Y.Z <zip> --title "vX.Y.Z" --notes "..."` — releasen kuvaustekstiin muutoslista.
+4. **Discord-ilmoitus on lähetettävä erikseen käsin webhookilla** — GitHubin oma Discord-integraatio (poistettu 2026-09-08) näyttää vain otsikkorivin, ei koskaan release-tekstiä. Lähetä sen sijaan oma viesti suoraan webhookiin, esim.:
+   ```bash
+   WEBHOOK=$(cat ".secrets/discord-webhook.txt")
+   curl -s -X POST "$WEBHOOK" -H "Content-Type: application/json" -d @- <<'EOF'
+   {"content": "**Uusi päivitys julkaistu: vX.Y.Z**\nKäynnistä peli uudelleen — launcher lataa päivityksen automaattisesti.\n\nMuutokset:\n• ...\n• ..."}
+   EOF
+   ```
+   Webhook-URL on tallennettu `.secrets/discord-webhook.txt`-tiedostoon (gitignoroitu — **älä koskaan committaa tätä URL:ia**, repo on public ja URL toimisi kenelle tahansa salasanana kanavalle kirjoittamiseen).
+
 ## Viestintä
 
 - Vastaa käyttäjälle suomeksi, ellei hän pyydä muuta.
@@ -132,6 +149,8 @@ Tarkat perusvahingot, cooldownit ja upgrade-arvot riippuvat peliversiosta ja muu
 
 Lyhyt loki tehdyistä muutoksista. Uusin ylimpänä.
 
+- 2026-09-08: Vihollisten elämä/enimmäismäärä skaalautuu enemmän per alue (+45 % elämä, +30 kpl katto per bossin jälkeinen alue), ja XP per tappo pienenee tasojen myötä (-5 %/taso, pohja 35 %) (`SurvivorGame.cs: SpawnEnemy, GrantExperience, Update`).
+- 2026-09-08: Havaittiin ettei Discordin GitHub-integraatio näytä release-tekstiä lainkaan (vain otsikkorivi) — poistettiin se repo-webhook ja siirryttiin lähettämään julkaisuilmoitus suoraan Discordin webhookiin käsin muotoillulla viestillä. Ks. "Julkaisuprosessi"-osio. Webhook-URL siirretty gitignoroituun `.secrets/discord-webhook.txt`-tiedostoon (repo on public, URL ei saa päätyä sinne).
 - 2026-09-08: Kun 90s bossiportaali-ajastin nollautuu, uusien vihollisten spawni loppuu heti (olemassa olevat jäävät jäljelle tapettavaksi) — pelaaja siivoaa loput ja kävelee sitten portaalille kutsumaan bossin. XP-kerääminen estyy bossin aikana (kulta yhä kertyy). Bossin kuoltua alue vaihtuu automaattisesti ~2s kuluttua (`SurvivorGame.cs: Hit`, `SurvivorProgression.cs: TickProgression, Interact`).
 - 2026-09-08: Areena kasvatettu (säde 38 → 60, pilarit/lattiamerkit/arkut/pyhäkkö/portaali skaalautuvat mukana). Kokeiltiin lisäksi kiipeäviä kukkuloita (korkeusvaihtelu), mutta ne poistettiin käyttäjän pyynnöstä — kartta jäi isommaksi mutta tasaiseksi (`SurvivorGame.cs`, `SurvivorPottu.cs`, `SurvivorProgression.cs`).
 - 2026-09-08: Kauppa-, asevalinta- ja tasopäivitysvalikot piilottavat nyt taustalla olevat HUD-tekstit (yläpalkki, ohjeet, "ALUE X" / "Arkut:" -rivit) kokonaan sen sijaan että ne vain himmenivät läpinäkyvästi (`SurvivorGame.cs`, `SurvivorProgression.cs`).

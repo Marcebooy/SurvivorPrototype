@@ -43,3 +43,6 @@ Launcher/bin/
 Launcher/obj/
 Launcher/publish/
 !Launcher/Launcher.csproj
+
+# Secrets - never commit (repo is public)
+.secrets/

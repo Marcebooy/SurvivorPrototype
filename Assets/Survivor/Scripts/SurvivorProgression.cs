@@ -142,9 +142,7 @@ namespace BonkSurvivor
             if (!bossTimerExpired && boss == null && Elapsed - areaStarted >= 90)
             {
                 bossTimerExpired = true;
-                foreach (var stray in enemies) if (stray.body) Destroy(stray.body.gameObject);
-                enemies.Clear();
-                notice = "Alueen vartija odottaa portaalilla! Uusia vihollisia ei enää tule."; noticeUntil = Elapsed + 6;
+                notice = "Uusia vihollisia ei enää tule — tapa loput ja mene portaalille!"; noticeUntil = Elapsed + 6;
             }
             interactionHint = "";
             foreach (var p in landmarks)

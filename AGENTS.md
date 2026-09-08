@@ -132,7 +132,7 @@ Tarkat perusvahingot, cooldownit ja upgrade-arvot riippuvat peliversiosta ja muu
 
 Lyhyt loki tehdyistä muutoksista. Uusin ylimpänä.
 
-- 2026-09-08: Viholliset katoavat ja spawni loppuu heti kun 90s bossiportaali-ajastin nollautuu (ei enää riipu pelaajan menemisestä portaalille); bossi itse ilmestyy yhä vasta E:llä portaalilla. XP-kerääminen estyy bossin aikana (kulta yhä kertyy). Bossin kuoltua alue vaihtuu automaattisesti ~2s kuluttua (`SurvivorGame.cs: Hit`, `SurvivorProgression.cs: TickProgression, Interact`).
+- 2026-09-08: Kun 90s bossiportaali-ajastin nollautuu, uusien vihollisten spawni loppuu heti (olemassa olevat jäävät jäljelle tapettavaksi) — pelaaja siivoaa loput ja kävelee sitten portaalille kutsumaan bossin. XP-kerääminen estyy bossin aikana (kulta yhä kertyy). Bossin kuoltua alue vaihtuu automaattisesti ~2s kuluttua (`SurvivorGame.cs: Hit`, `SurvivorProgression.cs: TickProgression, Interact`).
 - 2026-09-08: Areena kasvatettu (säde 38 → 60, pilarit/lattiamerkit/arkut/pyhäkkö/portaali skaalautuvat mukana). Kokeiltiin lisäksi kiipeäviä kukkuloita (korkeusvaihtelu), mutta ne poistettiin käyttäjän pyynnöstä — kartta jäi isommaksi mutta tasaiseksi (`SurvivorGame.cs`, `SurvivorPottu.cs`, `SurvivorProgression.cs`).
 - 2026-09-08: Kauppa-, asevalinta- ja tasopäivitysvalikot piilottavat nyt taustalla olevat HUD-tekstit (yläpalkki, ohjeet, "ALUE X" / "Arkut:" -rivit) kokonaan sen sijaan että ne vain himmenivät läpinäkyvästi (`SurvivorGame.cs`, `SurvivorProgression.cs`).
 - 2026-09-08: "Poistu päävalikkoon" -kesken jäävä kierros tallentaa nyt selviytymisajan (jos ennätys) ja maksaa Silver-palkkion tapoista, kuten normaali kuolema (`SurvivorGame.cs: ExitToMainMenu`).

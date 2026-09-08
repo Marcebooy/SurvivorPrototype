@@ -39,11 +39,40 @@ namespace BonkSurvivor
         string notice = "Selviä viisi minuuttia!";
         float noticeUntil = 5f;
         GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle;
+        bool settingsOpen;
+        int fpsCap = 60;
+        float masterVolume = 1f;
         sealed class Enemy { public Transform body; public float health, speed; public bool elite; }
         sealed class Drop { public Transform body; public int value; }
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); }
 
-        void Start() { LoadHighscore(); BuildWorld(); }
+        void Start() { LoadHighscore(); LoadSettings(); BuildWorld(); }
+
+        void LoadSettings()
+        {
+            fpsCap = PlayerPrefs.GetInt(SaveKey + "FpsCap", 60);
+            masterVolume = PlayerPrefs.GetFloat(SaveKey + "MasterVolume", 1f);
+            ApplyFpsCap(fpsCap);
+            AudioListener.volume = masterVolume;
+        }
+
+        void ApplyFpsCap(int fps)
+        {
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = fps;
+        }
+
+        void SetFpsCap(int fps)
+        {
+            fpsCap = fps; ApplyFpsCap(fps);
+            PlayerPrefs.SetInt(SaveKey + "FpsCap", fps); PlayerPrefs.Save();
+        }
+
+        void SetVolume(float volume)
+        {
+            masterVolume = Mathf.Clamp01(volume); AudioListener.volume = masterVolume;
+            PlayerPrefs.SetFloat(SaveKey + "MasterVolume", masterVolume); PlayerPrefs.Save();
+        }
 
         void StartGame() { AtMainMenu = false; ResetRun(); }
         void ExitToMainMenu() { FinishRun(); AtMainMenu = true; ShopOpen = false; }
@@ -158,9 +187,10 @@ namespace BonkSurvivor
             TickProgression(dt); if (Finished) return;
             invulnerability -= dt;
             spawnTimer -= dt;
-            if (boss == null && Elapsed - areaStarted < 90 && spawnTimer <= 0 && enemies.Count < 260)
+            int enemyCap = 260 + (Area - 1) * 30;
+            if (boss == null && Elapsed - areaStarted < 90 && spawnTimer <= 0 && enemies.Count < enemyCap)
             {
-                SpawnEnemy(); spawnTimer = Mathf.Max(.09f, .8f - Elapsed / 200f);
+                SpawnEnemy(); spawnTimer = Mathf.Max(.09f, .8f - Elapsed / 200f - (Area - 1) * .05f);
             }
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
@@ -205,7 +235,7 @@ namespace BonkSurvivor
             bool elite = Elapsed > 20 && Random.value < .24f;
             enemies.Add(new Enemy {
                 body = Shape(elite ? "Brute" : "Chaser", PrimitiveType.Capsule, p, Vector3.one * (elite ? 1.3f : .8f), elite ? eliteMaterial : enemyMaterial, world),
-                health = (elite ? 130 : 34) * (1 + Elapsed / 200) * curse * (1 + .3f * (Area - 1)), speed = ((elite ? 3.4f : 4.6f) + Mathf.Min(3, Elapsed / 70)) * curse, elite = elite
+                health = (elite ? 130 : 34) * (1 + Elapsed / 200) * curse * (1 + .45f * (Area - 1)), speed = ((elite ? 3.4f : 4.6f) + Mathf.Min(3, Elapsed / 70)) * curse, elite = elite
             });
         }
 
@@ -241,7 +271,8 @@ namespace BonkSurvivor
         public void GrantExperience(int amount)
         {
             if (amount <= 0 || Selecting || Finished || boss != null) return;
-            Experience += amount;
+            float xpFalloff = Mathf.Max(.35f, 1f - (Level - 1) * .05f);
+            Experience += Mathf.Max(1, Mathf.RoundToInt(amount * xpFalloff));
             while (Experience >= NextLevel)
             {
                 Experience -= NextLevel; Level++; PendingChoices++;
@@ -340,13 +371,34 @@ namespace BonkSurvivor
 
         void DrawMainMenu()
         {
+            if (settingsOpen) { DrawSettings(); return; }
             GUI.color = new Color(0,0,0,.85f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
             GUI.Label(new Rect(240,150,800,60), "POTTU / BONK", centerTitleStyle);
             GUI.Label(new Rect(240,220,800,30), "Selviydy hengissä niin pitkään kuin pystyt", centerTextStyle);
             GUI.Label(new Rect(240,270,800,34), "PARAS SELVIYTYMISAIKA  " + FormatTime(BestSurvivalSeconds), centerTextStyle);
             if (GUI.Button(new Rect(490,340,300,56), "PELAA  [ENTER]", centerButtonStyle)) StartGame();
-            if (GUI.Button(new Rect(490,406,300,50), "LOPETA", centerButtonStyle)) QuitGame();
+            if (GUI.Button(new Rect(490,406,300,50), "ASETUKSET", centerButtonStyle)) settingsOpen = true;
+            if (GUI.Button(new Rect(490,466,300,50), "LOPETA", centerButtonStyle)) QuitGame();
             GUI.Label(new Rect(240,650,800,30), "WASD liiku   •   SPACE kierähdä   •   E tutki   •   TAB kauppa", centerTextStyle);
+        }
+
+        void DrawSettings()
+        {
+            GUI.color = new Color(0,0,0,.85f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;
+            GUI.Label(new Rect(240,140,800,60), "ASETUKSET", centerTitleStyle);
+
+            GUI.Label(new Rect(390,250,500,30), "Ruudunpäivitysnopeus", centerTextStyle);
+            GUI.color = fpsCap == 60 ? new Color(.3f,.85f,1) : Color.white;
+            if (GUI.Button(new Rect(390,290,235,50), "60 FPS", centerButtonStyle)) SetFpsCap(60);
+            GUI.color = fpsCap == 120 ? new Color(.3f,.85f,1) : Color.white;
+            if (GUI.Button(new Rect(655,290,235,50), "120 FPS", centerButtonStyle)) SetFpsCap(120);
+            GUI.color = Color.white;
+
+            GUI.Label(new Rect(390,380,500,30), "Äänenvoimakkuus  " + Mathf.RoundToInt(masterVolume * 100) + " %", centerTextStyle);
+            float newVolume = GUI.HorizontalSlider(new Rect(390,420,500,24), masterVolume, 0f, 1f);
+            if (!Mathf.Approximately(newVolume, masterVolume)) SetVolume(newVolume);
+
+            if (GUI.Button(new Rect(490,500,300,50), "TAKAISIN", centerButtonStyle)) settingsOpen = false;
         }
 
         void OnDestroy() { if (swipeMesh) Destroy(swipeMesh); foreach (var m in materials) if (m) Destroy(m); }

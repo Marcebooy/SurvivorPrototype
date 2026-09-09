@@ -17,6 +17,7 @@ namespace BonkSurvivor
         MapType activeMapType = MapType.Procedural;
         int activeMapTier = 1;
         Transform fixedMapRoot;
+        Vector2 mapTypeTabScroll;
         // Stacks on top of the existing per-Area enemy scaling (curse, Area multiplier below) -
         // Procedural always runs at Tier 1, so this is a 1.0x no-op unless a fixed map is active.
         float MapTierMultiplier => 1f + (activeMapTier - 1) * .35f;
@@ -123,6 +124,13 @@ namespace BonkSurvivor
 
         void DrawMapTypeTab()
         {
+            // Karttalistan (SATUNNAINEN + 3 karttatyyppiä x 3 Tieriä + PELAA-nappi) korkeus ylitti
+            // 720px-korkean canvasin, jolloin PELAA-nappi piirtyi näkymättömiin canvasin alapuolelle -
+            // sama vieritysratkaisu kuin HAHMOT-tabissa (CharacterShop.cs), samat absoluuttikoordinaatit.
+            var viewport = new Rect(0, 0, 1280, 720);
+            var content = new Rect(0, 0, 1260, 820);
+            mapTypeTabScroll = GUI.BeginScrollView(viewport, mapTypeTabScroll, content);
+
             GUI.Label(new Rect(240,150,800,50), "MAPIT", centerTitleStyle);
             GUI.Label(new Rect(240,204,800,44), "Kiinteät kartat kuluttavat yhden Karttaesineen PELAA-hetkellä - korkeampi Tier tekee vihollisista vaarallisempia. Bossien kaatamisesta on pieni mahdollisuus löytää niitä.", centerTextStyle);
             float y = 262;
@@ -132,6 +140,8 @@ namespace BonkSurvivor
             y += 14;
             string selectedLabel = selectedMapType == MapType.Procedural ? "SATUNNAINEN" : MapTypeName(selectedMapType).ToUpperInvariant() + " T" + selectedMapTier;
             if (GUI.Button(new Rect(390,y,500,54), "PELAA VALITULLA KARTALLA  [" + selectedLabel + "]", centerButtonStyle)) StartGame();
+
+            GUI.EndScrollView();
         }
 
         void DrawMapTypeOption(MapType type, int tier, float y, string label, bool unlimited)

@@ -364,9 +364,10 @@ namespace BonkSurvivor
             Vector3 aim = (nearest.body.position - player.position).normalized;
             if (weaponLevels.TryGetValue(Weapon.Sword, out int sword))
             {
-                float reach = 4 * Size;
+                float reach = 4 * Size * AffixMultiplier(Weapon.Sword, AffixStat.Size);
                 bool twinblade = ActiveVariant(Weapon.Sword) == 1;
-                float fullPower = damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1));
+                float fullPower = damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1))
+                    * AffixMultiplier(Weapon.Sword, AffixStat.Damage) * AffixMultiplier(Weapon.Sword, AffixStat.Quantity);
                 if (twinblade) fullPower *= VariantQualityMultiplier(Weapon.Sword);
                 float mainPower = twinblade ? fullPower * .65f : fullPower;
                 if (best < reach * reach) characterVisual.Swing(aim);
@@ -391,27 +392,38 @@ namespace BonkSurvivor
                     // Quantity+1 kertaa suoran läpäisevän ammusrivistön sijaan - ks. UpdateBolts.
                     var t = Shape("Ricochet arrow", PrimitiveType.Cube, player.position, new Vector3(.15f,.15f,.95f) * Size, boltMaterial, world);
                     t.rotation = Quaternion.LookRotation(aim);
-                    bolts.Add(new Bolt { body = t, direction = aim, life = 1.6f, power = damage * (1 + .25f * (bow - 1)) * 1.3f * VariantQualityMultiplier(Weapon.Bow), chain = true, chainLeft = 1 + Quantity });
+                    float ricochetPower = damage * (1 + .25f * (bow - 1)) * 1.3f * VariantQualityMultiplier(Weapon.Bow)
+                        * AffixMultiplier(Weapon.Bow, AffixStat.Damage) * AffixMultiplier(Weapon.Bow, AffixStat.Crit);
+                    int ricochetChain = 1 + Quantity + AffixCountBonus(Weapon.Bow, AffixStat.Quantity, Quantity);
+                    bolts.Add(new Bolt { body = t, direction = aim, life = 1.6f, power = ricochetPower, chain = true, chainLeft = ricochetChain });
                 }
-                else for (int i = 0; i < Quantity; i++)
+                else
                 {
-                    Vector3 direction = Quaternion.Euler(0, (i - (Quantity - 1) / 2f) * 9, 0) * aim;
-                    var t = Shape("Piercing arrow", PrimitiveType.Cube, player.position, new Vector3(.13f,.13f,.85f) * Size, boltMaterial, world);
-                    t.rotation = Quaternion.LookRotation(direction);
-                    bolts.Add(new Bolt { body = t, direction = direction, life = 1.3f, power = damage * (1 + .25f * (bow - 1)) });
+                    int count = Quantity + AffixCountBonus(Weapon.Bow, AffixStat.Quantity, Quantity);
+                    float bowPower = damage * (1 + .25f * (bow - 1)) * AffixMultiplier(Weapon.Bow, AffixStat.Damage) * AffixMultiplier(Weapon.Bow, AffixStat.Crit);
+                    for (int i = 0; i < count; i++)
+                    {
+                        Vector3 direction = Quaternion.Euler(0, (i - (count - 1) / 2f) * 9, 0) * aim;
+                        var t = Shape("Piercing arrow", PrimitiveType.Cube, player.position, new Vector3(.13f,.13f,.85f) * Size, boltMaterial, world);
+                        t.rotation = Quaternion.LookRotation(direction);
+                        bolts.Add(new Bolt { body = t, direction = direction, life = 1.3f, power = bowPower });
+                    }
                 }
             }
             if (weaponLevels.TryGetValue(Weapon.Lightning, out int lightning))
             {
                 var candidates = new List<Enemy>(enemies); Vector3 origin = player.position;
-                for (int i = 0; i < Quantity + 1; i++)
+                int chainCount = Quantity + AffixCountBonus(Weapon.Lightning, AffixStat.Quantity, Quantity)
+                    + AffixCountBonus(Weapon.Lightning, AffixStat.Bounces, Quantity);
+                float lightningPower = damage * 1.1f * AffixMultiplier(Weapon.Lightning, AffixStat.Damage);
+                for (int i = 0; i < chainCount + 1; i++)
                 {
                     Enemy target = null; float distance = (i == 0 ? 16 : 8); distance *= distance;
                     foreach (var e in candidates) { float sq = (e.body.position - origin).sqrMagnitude; if (sq < distance) { distance = sq; target = e; } }
                     if (target == null) break;
                     var end = target.body.position;
                     if (lightningZapEffect) Destroy(Instantiate(lightningZapEffect, end, Quaternion.identity, MapEffectRoot), 2f);
-                    candidates.Remove(target); Hit(target, damage * 1.1f * (1 + .25f * (lightning - 1))); origin = end;
+                    candidates.Remove(target); Hit(target, lightningPower * (1 + .25f * (lightning - 1))); origin = end;
                 }
             }
         }

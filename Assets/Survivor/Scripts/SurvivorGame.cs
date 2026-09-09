@@ -75,7 +75,7 @@ namespace BonkSurvivor
         // chain/chainLeft: Bow-variantin ("Kimmokaari") kimmoke-ammus, ks. WeaponVariants.cs + AttackWeapons.
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); public bool chain; public int chainLeft; }
 
-        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadDefaultLoadout(); LoadWeaponVariants(); LoadVariantQuality(); LoadSettings(); BuildWorld(); }
+        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadDefaultLoadout(); LoadWeaponVariants(); LoadVariantQuality(); LoadWeaponAffixes(); LoadSettings(); BuildWorld(); }
 
         void LoadSettings()
         {
@@ -238,7 +238,10 @@ namespace BonkSurvivor
                 }
             }
             attackTimer -= dt;
-            if (attackTimer <= 0) { AttackWeapons(); attackTimer = 1 / attackRate; }
+            // Sword ja Lightning jakavat tämän yhden ajastimen (AttackWeapons), joten niiden Cooldown-
+            // affiksi ei voi nopeuttaa vain yhtä asetta erikseen - se nopeuttaa koko jaettua sykettä,
+            // samoin kuin Cooldown Tome jo tekee. Bow ei ole Cooldown-poolissa, joten sen kerroin on aina 1.
+            if (attackTimer <= 0) { AttackWeapons(); attackTimer = 1 / (attackRate * SharedAttackTimerAffixMultiplier()); }
             slashTimer -= dt;
             slash.gameObject.SetActive(slashTimer > 0);
             slash.position = new Vector3(player.position.x, .15f, player.position.z);
@@ -317,7 +320,9 @@ namespace BonkSurvivor
         {
             for (int i = bolts.Count - 1; i >= 0; i--)
             {
-                var b = bolts[i]; var start = b.body.position; var end = start + b.direction * (24 * ProjectileSpeed * dt);
+                // Bolt-tyyppiä käyttää vain Bow, joten globaali ProjectileSpeed-kerroin on tässä
+                // turvallisesti myös Bow-affiksin ProjectileSpeed-kerroin.
+                var b = bolts[i]; var start = b.body.position; var end = start + b.direction * (24 * ProjectileSpeed * AffixMultiplier(Weapon.Bow, AffixStat.ProjectileSpeed) * dt);
                 b.life -= dt; b.body.position = end;
                 foreach (var e in new List<Enemy>(enemies))
                 {
@@ -359,7 +364,7 @@ namespace BonkSurvivor
             if (IsNetworkHost) BroadcastDamageNumber(e.body.position + Vector3.up * 1.25f, amount, critical);
             if (e.health > 0) { e.body.position = MoveOnMap(e.body.position, (e.body.position - player.position).normalized * .6f, e == boss ? 1.3f : .65f); return; }
             AdvancedKill(e);
-            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); TryDropQualityMaterial(); }
+            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); TryDropQualityMaterial(); TryDropWeaponAffixMaterial(); TryDropAffixRerollMaterial(); }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;

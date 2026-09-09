@@ -182,7 +182,8 @@ namespace BonkSurvivor
             ownedWeapons.Sort(); ownedTomes.Sort();
 
             const int cols = 6; const float bw = 195, bh = 34, gx = 8, gy = 6;
-            const float variantRowH = 20, qualityRowH = 20; const float rowPitch = bh + variantRowH + qualityRowH + gy;
+            const float variantRowH = 20, qualityRowH = 20; const float affixInfoRowH = 18, affixButtonRowH = 20;
+            const float rowPitch = bh + variantRowH + qualityRowH + affixInfoRowH + affixButtonRowH + gy;
             for (int i = 0; i < ownedWeapons.Count; i++)
             {
                 int col = i % cols, row = i / cols;
@@ -208,6 +209,29 @@ namespace BonkSurvivor
                             UpgradeVariantQuality(shopCharacter, weapon, 1);
                         GUI.enabled = true;
                     }
+                }
+                if (AffixPool.ContainsKey(weapon))
+                {
+                    var affixes = AffixesFor(shopCharacter, weapon);
+                    string affixText = "Affiksit: ";
+                    for (int a = 0; a < affixes.Count; a++)
+                        affixText += (a > 0 ? "  " : "") + AffixStatLabel(affixes[a].stat) + " +" + Mathf.RoundToInt(affixes[a].percent) + "%";
+                    if (affixes.Count == 0) affixText += "-";
+                    GUI.color = Color.white;
+                    float infoY = by + bh + variantRowH + qualityRowH + 2;
+                    GUI.Label(new Rect(bx, infoY, bw, affixInfoRowH), affixText, cardTextStyle);
+                    float aby = infoY + affixInfoRowH;
+                    bool canAdd = affixAddMaterial > 0 && affixes.Count < MaxAffixSlots;
+                    GUI.color = canAdd ? Color.white : new Color(.5f,.5f,.5f);
+                    GUI.enabled = canAdd;
+                    if (GUI.Button(new Rect(bx, aby, bw/2f-2, affixButtonRowH-2), "Lisää (" + affixAddMaterial + ")", cardTextStyle))
+                        TryAddAffix(shopCharacter, weapon);
+                    bool canReroll = affixRerollMaterial > 0;
+                    GUI.color = canReroll ? Color.white : new Color(.5f,.5f,.5f);
+                    GUI.enabled = canReroll;
+                    if (GUI.Button(new Rect(bx+bw/2f+2, aby, bw/2f-2, affixButtonRowH-2), "Rulla (" + affixRerollMaterial + ")", cardTextStyle))
+                        TryRerollAffixes(shopCharacter, weapon);
+                    GUI.enabled = true;
                 }
                 GUI.color = Color.white;
             }

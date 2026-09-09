@@ -75,7 +75,7 @@ namespace BonkSurvivor
         // chain/chainLeft: Bow-variantin ("Kimmokaari") kimmoke-ammus, ks. WeaponVariants.cs + AttackWeapons.
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); public bool chain; public int chainLeft; }
 
-        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadWeaponVariants(); LoadSettings(); BuildWorld(); }
+        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadWeaponVariants(); LoadVariantQuality(); LoadSettings(); BuildWorld(); }
 
         void LoadSettings()
         {
@@ -359,7 +359,7 @@ namespace BonkSurvivor
             if (IsNetworkHost) BroadcastDamageNumber(e.body.position + Vector3.up * 1.25f, amount, critical);
             if (e.health > 0) { e.body.position = MoveOnMap(e.body.position, (e.body.position - player.position).normalized * .6f, e == boss ? 1.3f : .65f); return; }
             AdvancedKill(e);
-            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); }
+            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); TryDropQualityMaterial(); }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;

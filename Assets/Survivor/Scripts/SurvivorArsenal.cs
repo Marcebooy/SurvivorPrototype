@@ -159,7 +159,7 @@ namespace BonkSurvivor
                         if (target != null)
                         {
                             SpawnImpact(target.body.position, Weapon.Chunkers, Size * 1.3f);
-                            AreaHit(target.body.position, 1.4f * Size, damage * .9f * (1 + .25f * (level - 1)));
+                            AreaHit(target.body.position, 1.4f * Size, damage * .9f * (1 + .25f * (level - 1)) * VariantQualityMultiplier(Weapon.Chunkers));
                         }
                     }
                 }

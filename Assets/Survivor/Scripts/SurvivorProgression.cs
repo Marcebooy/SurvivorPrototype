@@ -355,6 +355,7 @@ namespace BonkSurvivor
                 float reach = 4 * Size;
                 bool twinblade = ActiveVariant(Weapon.Sword) == 1;
                 float fullPower = damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1));
+                if (twinblade) fullPower *= VariantQualityMultiplier(Weapon.Sword);
                 float mainPower = twinblade ? fullPower * .65f : fullPower;
                 if (best < reach * reach) characterVisual.Swing(aim);
                 for (int i = enemies.Count - 1; i >= 0; i--)
@@ -378,7 +379,7 @@ namespace BonkSurvivor
                     // Quantity+1 kertaa suoran läpäisevän ammusrivistön sijaan - ks. UpdateBolts.
                     var t = Shape("Ricochet arrow", PrimitiveType.Cube, player.position, new Vector3(.15f,.15f,.95f) * Size, boltMaterial, world);
                     t.rotation = Quaternion.LookRotation(aim);
-                    bolts.Add(new Bolt { body = t, direction = aim, life = 1.6f, power = damage * (1 + .25f * (bow - 1)) * 1.3f, chain = true, chainLeft = 1 + Quantity });
+                    bolts.Add(new Bolt { body = t, direction = aim, life = 1.6f, power = damage * (1 + .25f * (bow - 1)) * 1.3f * VariantQualityMultiplier(Weapon.Bow), chain = true, chainLeft = 1 + Quantity });
                 }
                 else for (int i = 0; i < Quantity; i++)
                 {
@@ -451,11 +452,13 @@ namespace BonkSurvivor
 
             GUI.Label(new Rect(40,50,1200,40), "MAPPI-TILAN LOADOUT", titleStyle);
             GUI.Label(new Rect(40,92,1200,40), "Väliaikainen versio: valitse vapaasti enintään 5 asetta ja 5 Tomea " + CharacterRosterName(SelectedCharacter) + "n omistamista. Osta lisää HAHMOT-tabista päävalikossa.", textStyle);
-            GUI.Label(new Rect(40,140,600,26), "ASEET  (" + loadoutWeapons.Count + "/" + MaxWeaponKinds + ")", textStyle);
+            GUI.Label(new Rect(40,140,600,26), "ASEET  (" + loadoutWeapons.Count + "/" + MaxWeaponKinds + ")  •  Laatumateriaali: " + QualityMaterial + " kpl", textStyle);
             const int cols = 6; const float bw = 195, bh = 34, gx = 8, gy = 6, x0 = 40; const float y0 = 168;
             // variantRowH varaa tilan aseen vierestä avattavalle muunnostoggle-napille (ei omaa
             // loadout-paikkaa - sama upgradeId, vain käytöslippu activeVariantByCharacterissa).
-            const float variantRowH = 20; const float rowPitch = bh + variantRowH + gy;
+            // qualityRowH varaa tilan laatutason parannusnapille (tähdet näkyvät jo togglenapin
+            // tekstissä) - varattu aina, vaikka nappia ei näytettäisi (laatu jo 3 tai ei materiaalia).
+            const float variantRowH = 20, qualityRowH = 20; const float rowPitch = bh + variantRowH + qualityRowH + gy;
             for (int i = 0; i < ownedWeapons.Count; i++)
             {
                 int col = i % cols, row = i / cols;
@@ -468,9 +471,19 @@ namespace BonkSurvivor
                 if (IsVariantUnlocked(weapon, 1))
                 {
                     bool variantOn = ActiveVariantFor(SelectedCharacter, weapon) == 1;
+                    int quality = VariantQuality(weapon, 1);
+                    string stars = new string('★', quality) + new string('☆', 3 - quality);
                     GUI.color = variantOn ? new Color(1f,.75f,.25f) : new Color(.55f,.55f,.55f);
-                    if (GUI.Button(new Rect(bx, by+bh+2, bw, variantRowH-2), VariantName(weapon,1) + (variantOn ? " (PÄÄLLÄ)" : ""), cardTextStyle))
+                    if (GUI.Button(new Rect(bx, by+bh+2, bw, variantRowH-2), VariantName(weapon,1) + " " + stars + (variantOn ? " (PÄÄLLÄ)" : ""), cardTextStyle))
                         SetActiveVariant(SelectedCharacter, weapon, variantOn ? 0 : 1);
+                    if (quality < 3)
+                    {
+                        int cost = VariantQualityUpgradeCost(weapon, 1);
+                        GUI.color = Color.white; GUI.enabled = QualityMaterial >= cost;
+                        if (GUI.Button(new Rect(bx, by+bh+variantRowH+4, bw, qualityRowH-2), "Paranna (" + cost + " kpl)", cardTextStyle))
+                            UpgradeVariantQuality(SelectedCharacter, weapon, 1);
+                        GUI.enabled = true;
+                    }
                 }
                 GUI.color = Color.white;
             }

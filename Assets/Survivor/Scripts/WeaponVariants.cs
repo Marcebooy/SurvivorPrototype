@@ -101,5 +101,66 @@ namespace BonkSurvivor
             GrantVariant(picked, 1);
             notice = "Löysit aseen muunnoksen: " + WeaponLabel(picked) + " - " + VariantName(picked, 1) + "!"; noticeUntil = Elapsed + 6;
         }
+
+        // Variantin laatutaso (1-3 tähteä) - parantaa jo avattua varianttia, EI avaa uutta.
+        // Globaali kuten unlockedVariants (ei per hahmo, koska kyse on itse esineen ominaisuudesta
+        // eikä pelaajan sen-hetkisestä valinnasta). Laatu alkaa tähdestä 1 heti kun variantti on
+        // avattu - erillistä "tähti 0" -tilaa ei ole.
+        readonly Dictionary<(Weapon weapon, int variant), int> variantQuality = new Dictionary<(Weapon, int), int>();
+        int qualityMaterial;
+
+        static string VariantQualityKey(Weapon w, int v) => SaveKey + "VariantQuality_" + w + "_" + v;
+        const string QualityMaterialKey = SaveKey + "QualityMaterial";
+
+        public int VariantQuality(Weapon w, int v = 1) => variantQuality.TryGetValue((w, v), out int q) ? q : 1;
+        public int QualityMaterial => qualityMaterial;
+
+        // Tähti 1=1.0x, 2=1.1x, 3=1.2x - maltillinen, ei tuplaa varianttikohtaista tehoa.
+        float VariantQualityMultiplier(Weapon w, int v = 1) => 1 + .1f * (VariantQuality(w, v) - 1);
+
+        // Kasvava hinta kuten UpgradePricessa: 1 kpl 1->2, 2 kpl 2->3.
+        public int VariantQualityUpgradeCost(Weapon w, int v = 1) => VariantQuality(w, v);
+
+        public bool UpgradeVariantQuality(PlayerCharacter c, Weapon w, int v = 1)
+        {
+            if (!IsUpgradeOwned(c, WeaponUpgradeId((int)w)) || !IsVariantUnlocked(w, v)) return false;
+            int quality = VariantQuality(w, v);
+            if (quality >= 3) return false;
+            int cost = VariantQualityUpgradeCost(w, v);
+            if (qualityMaterial < cost) return false;
+            qualityMaterial -= cost;
+            variantQuality[(w, v)] = quality + 1;
+            PlayerPrefs.SetInt(QualityMaterialKey, qualityMaterial);
+            PlayerPrefs.SetInt(VariantQualityKey(w, v), quality + 1);
+            PlayerPrefs.Save();
+            return true;
+        }
+
+        void LoadVariantQuality()
+        {
+            variantQuality.Clear();
+            foreach (var w in PilotVariantWeapons)
+            {
+                int saved = PlayerPrefs.GetInt(VariantQualityKey(w, 1), 1);
+                if (saved > 1) variantQuality[(w, 1)] = Mathf.Clamp(saved, 1, 3);
+            }
+            qualityMaterial = PlayerPrefs.GetInt(QualityMaterialKey, 0);
+        }
+
+        // Kolmas, mapItemistä ja TryDropWeaponVariantista täysin riippumaton 15 % bossinkaatorulla.
+        // Vain Mappi-tilassa. Droppaa vain jos jollain omistetulla ja jo avatulla variantilla on
+        // vielä tilaa parantua (laatu < 3) - muuten materiaali olisi hetkessä hyödytöntä.
+        void TryDropQualityMaterial()
+        {
+            if (activeMapType == MapType.Procedural) return;
+            if (Random.value >= .15f) return;
+            bool anyUpgradable = false;
+            foreach (var w in PilotVariantWeapons)
+                if (IsVariantUnlocked(w, 1) && IsUpgradeOwned(SelectedCharacter, WeaponUpgradeId((int)w)) && VariantQuality(w, 1) < 3) { anyUpgradable = true; break; }
+            if (!anyUpgradable) return;
+            qualityMaterial++;
+            PlayerPrefs.SetInt(QualityMaterialKey, qualityMaterial); PlayerPrefs.Save();
+            notice = "Löysit laatumateriaalia! (" + qualityMaterial + " kpl)"; noticeUntil = Elapsed + 6;
+        }
     }
 }

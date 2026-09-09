@@ -220,7 +220,19 @@ Kuusi pohjaperhettä (yksi kutakin otetta ja siluettia kohti) + pieni erillinen 
 
 **Koodiriippuvuus — TEHTY 2026-09-09.** `WeaponAttachmentPoint`-järjestelmä toteutettu (ks. AGENTS.md:n Muutosloki samalta päivältä tarkat tiedot): korvaa `SwordVariantVisual.cs`:n vanhan hahmon-runkoon-sidotun likimääräisen sijoittelun oikealla socket-kiinnityksellä kaikille 9 hahmolle × 4 pistettä. 8 riggatulle FBX-hahmolle suora luuparentointi 0,01-skaalakompensoinnilla; Pottulle erillinen `WeaponRigidFollower`, joka ei peri vartalon squash/stretchiä eikä Size-statin pannunskaalaa. Varmennettu Unity CLI:llä Play Modessa (36/36 pistettä resolvoitui, 0 konsolivirhettä, Pottun ase-skaala pysyi 1,0:ssa Size 1-3:lla). Ei koskenut WeaponStats.cs:ään. **Ei tehty (rajattu omiksi tehtäviksi)**: vanhojen leivottujen asemeshien poisto (Ritarin baked-in miekka pysyy tunnettuna rajoituksena), tukikäden IK, hyökkäysanimaatioiden puolikartoitus, pitkien aseiden Stow-törmäystarkistus.
 
-**Tila**: assettipilotti ja sen koodi-integraatio molemmat valmiit 2026-09-09. Astra jatkaa 3D-hahmomalleilla (9/20, seuraavana Pyromancer) ja uusilla kartoilla; seuraavaksi Codelle: 30 aseen visuaalinen kytkeminen WeaponAttachmentPointiin asekohtaisesti (tähän mennessä vain Sword/Kaksoiskajo on kytketty).
+**Aseiden kytkentä WeaponAttachmentPointiin — 18/30 VALMIS (2026-09-10).** Sword/Kaksoiskajo (edellinen tehtävä) + 17 lisää tunnistettu catalog.json:in `"role"`-kentästä ja kytketty uudella taulukkopohjaisella `WeaponVisualCatalog.cs`:llä: Katana, CorruptedSword, Lightning, Firestaff, Revolver, Shotgun, Sniper, Rocket, Chunkers, Dice, Bone, PoisonFlask, Mines, Bananarang, Axe, Bow, Scythe. 17 prefabia siirretty `Library/Prefabs/`:sta uuteen `Library/Prefabs/Resources/`-alikansioon (Unity CLI:n `move_asset`, GUID säilyi) - `Resources.Load` ei löytänyt niitä alkuperäisestä sijainnista. Testattu Unity CLI:llä: 9 hahmoa × 17 asetta (153/153), 0 konsolivirhettä.
+
+**(a) Kytketty onnistuneesti**: ks. yllä, 17 asetta + Sword = 18/30.
+
+**(b) Jäävät kokonaan ilman mallia (8 asetta) — pyydä Astralta seuraavaksi**: Aegis, SpaceNoodle, WirelessDagger, Dexecutioner, BloodMagic, DragonBreath, HeroSword, Flamewalker. Ei yhtään catalog.json-vastinetta millekään näistä - tarkistettu tiedostosta, ei arvattu.
+
+**(c) Epäselvät tapaukset, ei kytketty ilman lisätietoa Astralta**: `Relic_ArcaneFocus` - kohdan 10.6 alkuperäinen suunnitelma ehdotti sitä yhteiseksi kantajaksi VIIDELLE aseelle (Aura/Aegis/Black Hole/Space Noodle/Blood Magic), catalog.json ei erottele kumpaa - tarvitaan Astran/Markuksen päätös ennen kytkentää. `Kit_QualityRune` - ei ase, laatutason koristemesh. `Heavy_WarAxe`/`Heavy_Hammer` - toimitettu mutta ei vastaavaa Weapon-enum-arvoa (roadmapin tulevat aseet, kohta 10.6 yllä) - odottavat kunnes ne lisätään peliin.
+
+**Efektipohjaiset, ei mallia tarvitse**: Aura, Frostwalker, Black Hole, Tornado (VFX-tunnistettavia, tietoisesti ohitettu).
+
+**Tunnetut baked-mesh-rajoitukset (sama malli kuin Ritari/Sword, ei korjattu, out of scope)**: Necromancer (baked "Ancient bone staff", konflikti Bonen kanssa), Hunter (baked jousi+viini, konflikti Bow'n kanssa), Berserker (baked kirveet käsissä, konflikti Axe/CorruptedSwordin kanssa), Ninja (baked katana-terät + varjokopiot, konflikti Katanan kanssa). Golemilla ei havaittu konfliktia (Chunkers on orbit-ase).
+
+**Tila**: assettipilotti ja koodi-integraatio (kiinnityspisteet + 18/30 asetta) valmiit 2026-09-10. Astra jatkaa 3D-hahmomalleilla (9/20, seuraavana Pyromancer) ja uusilla kartoilla; seuraavaksi Astralta tarvitaan geometria kohdan (b) 8 aseelle ja päätös kohdan (c) ArcaneFocus-jaosta ennen niiden kytkemistä.
 
 ---
 *Tämä dokumentti on ideointipohja jatkokeskustelulle. Katso AGENTS.md:n Muutosloki (Unity-projektin juuressa) tarkimmat tekniset yksityiskohdat ja testaustulokset kustakin toteutetusta osasta. Kopio elää myös Unity-projektin juuressa (`pelaaja-progressio-ja-ranked-suunnitelma.md`) jotta paikallinen koodausagentti (Code) pääsee siihen käsiksi suoraan — muista päivittää molemmat kun jompaakumpaa muokataan.*

@@ -207,6 +207,7 @@ namespace BonkSurvivor
             var move = new Vector3(input.x, 0, input.y);
             bool dodgePressed = (k != null && k.spaceKey.wasPressedThisFrame) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame);
             TickSwordVariantVisual();
+            TickWeaponVisuals();
             MovePottu(move, dt, dodgePressed);
             TickProgression(dt); if (Finished) return;
             invulnerability -= dt;

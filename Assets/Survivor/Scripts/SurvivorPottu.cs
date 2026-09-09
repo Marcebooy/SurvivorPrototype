@@ -49,7 +49,7 @@ namespace BonkSurvivor
             SelectedCharacter=character;
             var v = BuildCharacterVisualOn(player, character, out var root);
             characterVisual = v; visualRoot = root;
-            if (current == hostState) { hostOwnVisual = v; swordVariantAttached = false; }
+            if (current == hostState) { hostOwnVisual = v; swordVariantAttached = false; weaponVisualsAttached = false; }
         }
 
         // Standalone (not routed through `current`) so any peer can build the SAME deterministic

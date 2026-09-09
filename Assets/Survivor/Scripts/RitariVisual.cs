@@ -16,7 +16,9 @@ namespace BonkSurvivor
         const string WalkResource = "Ritari_Walk_Heavy";
         const string AttackResource = "Ritari_Attack_Slash";
         const string BlockResource = "Ritari_Block";
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Ritari, socket) : null;
         Animation legacyAnimation;
         float actionTimer;
 
@@ -28,6 +30,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Ritari model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

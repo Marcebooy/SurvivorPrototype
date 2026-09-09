@@ -18,7 +18,9 @@ namespace BonkSurvivor
         const string WalkResource = "Paladin_Walk_Steady";
         const string AttackResource = "Paladin_Attack_CleanSlash";
         const string BlockResource = "Paladin_Block_Holy";
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Paladin, socket) : null;
         Animation legacyAnimation;
         float actionTimer;
 
@@ -30,6 +32,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Paladin model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

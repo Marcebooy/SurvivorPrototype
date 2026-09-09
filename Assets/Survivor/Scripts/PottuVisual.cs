@@ -16,6 +16,11 @@ namespace BonkSurvivor
         Quaternion swingFacing = Quaternion.identity;
         public float PanScale => pan ? pan.localScale.x : 0;
 
+        // WeaponAttachmentPoint driver: RightHand rides the swing pivot (unscaled), everything else
+        // rides the potato body directly. WeaponRigidFollower (not this Transform's own localScale)
+        // is what keeps the weapon out of torso's animated squash/stretch and pan's Size-stat scale.
+        public Transform GetSocket(AttachmentSocket socket) => socket == AttachmentSocket.RightHand ? arm : torso;
+
         Material Mat(Color color)
         {
             var m = new Material(Shader.Find("Universal Render Pipeline/Lit")); m.color = color;

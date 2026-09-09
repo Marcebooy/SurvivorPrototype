@@ -49,7 +49,7 @@ namespace BonkSurvivor
             SelectedCharacter=character;
             var v = BuildCharacterVisualOn(player, character, out var root);
             characterVisual = v; visualRoot = root;
-            if (current == hostState) hostOwnVisual = v;
+            if (current == hostState) { hostOwnVisual = v; swordVariantAttached = false; }
         }
 
         // Standalone (not routed through `current`) so any peer can build the SAME deterministic
@@ -162,7 +162,10 @@ namespace BonkSurvivor
             dodgeLeft=Mathf.Max(0,dodgeLeft-dt);
             float roll=IsDodging ? 1-dodgeLeft/.38f : -1;
             float panSize=Size*(1+(weaponLevels.TryGetValue(Weapon.Sword,out int level) ? level-1 : 0)*.13f);
-            characterVisual.Tick(dt,rolling ? 0 : move.magnitude,roll,panSize,weaponLevels.ContainsKey(Weapon.Sword),Health/Mathf.Max(1,maxHealth));
+            // showMeleeWeapon is false when SwordVariantVisual (Kaksoiskajo) is already showing a
+            // model for Sword, so Potun oma pannu ei näy päällekkäin sen kanssa - ks. SwordVariantVisual.cs.
+            bool showMeleeWeapon=weaponLevels.ContainsKey(Weapon.Sword) && !HasSwordVariantVisual;
+            characterVisual.Tick(dt,rolling ? 0 : move.magnitude,roll,panSize,showMeleeWeapon,Health/Mathf.Max(1,maxHealth));
             TickFeedback(dt);
         }
         bool ReceiveDamage(float amount)

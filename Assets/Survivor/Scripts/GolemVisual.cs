@@ -17,7 +17,9 @@ namespace BonkSurvivor
         const string WalkResource = "Golem_Walk_Massive";
         const string AttackResource = "Golem_Attack_Crush";
         const string ShockResource = "Golem_Stoneform_Shockwave";
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Golem, socket) : null;
         Animation legacyAnimation;
         float actionTimer;
 
@@ -29,6 +31,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Golem model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

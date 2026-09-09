@@ -206,6 +206,7 @@ namespace BonkSurvivor
             input = Vector2.ClampMagnitude(input, 1);
             var move = new Vector3(input.x, 0, input.y);
             bool dodgePressed = (k != null && k.spaceKey.wasPressedThisFrame) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame);
+            TickSwordVariantVisual();
             MovePottu(move, dt, dodgePressed);
             TickProgression(dt); if (Finished) return;
             invulnerability -= dt;
@@ -250,7 +251,7 @@ namespace BonkSurvivor
             slash.position = new Vector3(player.position.x, .15f, player.position.z);
             slash.localScale = new Vector3(8 * Size, .025f, 8 * Size) * (1 - Mathf.Clamp01(slashTimer / .16f) * .3f);
             if (swordEchoTimer > 0) { swordEchoTimer -= dt; if (swordEchoTimer <= 0) SwordEchoStrike(); }
-            TickArsenal(dt); UpdateBolts(dt); TickSwordVariantVisual();
+            TickArsenal(dt); UpdateBolts(dt);
             for (int i = drops.Count - 1; i >= 0; i--)
             {
                 var d = drops[i]; float distance = Vector3.Distance(d.body.position, player.position);

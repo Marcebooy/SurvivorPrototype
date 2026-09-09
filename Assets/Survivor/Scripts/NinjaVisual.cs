@@ -16,7 +16,9 @@ namespace BonkSurvivor
         const string RunResource = "Ninja_Run_Shadow";
         const string AttackResource = "Ninja_Attack_CrossCut";
         const string DashResource = "Ninja_Shadowstep";
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Ninja, socket) : null;
         Animation legacyAnimation;
         float actionTimer;
         bool wasRolling;
@@ -29,6 +31,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Ninja model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

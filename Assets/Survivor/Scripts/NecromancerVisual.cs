@@ -12,7 +12,9 @@ namespace BonkSurvivor
     public sealed class NecromancerVisual : MonoBehaviour, ICharacterVisual
     {
         const string ResourceName = "Necromancer_Glide";
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Necromancer, socket) : null;
         Animation legacyAnimation;
         AnimationState glideState;
 
@@ -24,6 +26,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Necromancer model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

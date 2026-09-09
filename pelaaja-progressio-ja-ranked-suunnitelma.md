@@ -214,17 +214,13 @@ Kuusi pohjaperhettä (yksi kutakin otetta ja siluettia kohti) + pieni erillinen 
 
 **Laatutasot (kevyt malli)**: ★ perusmateriaalit + tunnusväri, ★★ koristepaneeli/reunakorostus + maltillinen emissio, ★★★ pieni lisämoduuli + lyhyt hyökkäyksenaikainen tehoste. Identiteetti = siluetti, variantti = yksi tunnusomainen muutos, tähdet = viimeistely.
 
-**Mallinnusjärjestys (Astran suunnitelma, hyväksytty):**
-1. **Kiinnitysten pilotti ensin** — oikea/vasen käsi, selkä, vyö + mitta-/akselisäännöt, ennen mitään pohjamallia. VALMIS 2026-09-09: kattaa kaikki 9 pelattavaa hahmoa, 36 pistettä, erillinen Unity-tarkistuskohtaus sijainnin/akselien/skaalauskompensoinnin varmistamiseksi. Tuotti dokumentit `CODE_HANDOFF.md`/`CONVENTIONS.md` Codelle luettavaksi kiinnityspiste-koodityötä varten.
-2. Yksikätinen teräase — pilotti Katana + Corrupted Sword (sama pohja, eri ilme).
-3. Sauva — Lightning + Firestaff.
-4. Ampuma-ase — Revolver + Shotgun ensin, sitten Sniper + raketinheitin (tukikäden testaus).
-5. Kelluva reliikki + pieni esinekitti.
-6. Jousi, sitten kaksikätinen varsiase.
+**Mallinnusjärjestys ja tilanne (2026-09-09):**
+1. **Kiinnitysten pilotti — VALMIS.** Oikea/vasen käsi, selkä, vyö + mitta-/akselisäännöt: kattaa kaikki 9 pelattavaa hahmoa, 36 pistettä.
+2. **Koko aseiden assettipilotti — VALMIS 2026-09-09.** Erillinen `Assets/WeaponArtPilot/`-hakemisto: 9 hahmon × 4 kiinnityspisteen bind-profiilit, metrinen SocketProbe ja AttachmentGallery, kuusi pohjaperhettä + osakitti, 21/21 FBX/prefab-versiota, yhteiset URP-materiaalit/tekstuurit, WeaponBaseGallery. Muokattavat Blender-lähteet ja Codelle kiinnityskonventiot työtilan `WeaponBases/`-kansiossa. FBX-uudelleentuonti 21/21, prefabit 21/21, 36 bind-pistettä tarkistettu, konsolin virhekysely tyhjä, jousen 0,24 m vetoklippi mukana. **Ei runtime- tai WeaponStats/SwordVariantVisual-muutoksia** — peliaikainen kiinnitys, IK ja animaatiosovitus jätetty tarkoituksella erilliseksi tehtäväksi WeaponStats-pipelinen (kohta 10.5) jälkeen, koska molemmat koskettaisivat samoja tiedostoja samaan aikaan.
 
-**Koodiriippuvuus (koordinoitava Coden kanssa)**: kiinnityspisteiden yleistäminen koodissa (`WeaponAttachmentPoint`-järjestelmä, korvaa `SwordVariantVisual.cs`:n nykyisen hahmon-runkoon-sidotun likimääräisen sijoittelun) annetaan Codelle omana tehtävänä **vasta kun WeaponStats-pipeline (kohta 10.5) on kokonaan valmis** — ei samaan aikaan, jotta kaksi isoa rinnakkaista refaktorointia ei osu samoihin tiedostoihin. Astra voi silti edetä mallinnustyössä (vaiheet 2–6) sitä ennen ilman Codea, koska kiinnityskonventiot on jo dokumentoitu.
+**Koodiriippuvuus — TEHTY 2026-09-09.** `WeaponAttachmentPoint`-järjestelmä toteutettu (ks. AGENTS.md:n Muutosloki samalta päivältä tarkat tiedot): korvaa `SwordVariantVisual.cs`:n vanhan hahmon-runkoon-sidotun likimääräisen sijoittelun oikealla socket-kiinnityksellä kaikille 9 hahmolle × 4 pistettä. 8 riggatulle FBX-hahmolle suora luuparentointi 0,01-skaalakompensoinnilla; Pottulle erillinen `WeaponRigidFollower`, joka ei peri vartalon squash/stretchiä eikä Size-statin pannunskaalaa. Varmennettu Unity CLI:llä Play Modessa (36/36 pistettä resolvoitui, 0 konsolivirhettä, Pottun ase-skaala pysyi 1,0:ssa Size 1-3:lla). Ei koskenut WeaponStats.cs:ään. **Ei tehty (rajattu omiksi tehtäviksi)**: vanhojen leivottujen asemeshien poisto (Ritarin baked-in miekka pysyy tunnettuna rajoituksena), tukikäden IK, hyökkäysanimaatioiden puolikartoitus, pitkien aseiden Stow-törmäystarkistus.
 
-**Tila**: ehdotettu 2026-09-09, aloitettu samana päivänä Astralla (vaihe 1, kiinnityspilotti + ensimmäiset pohjaperheet, valmis). Astra osui 2026-09-09 käyttörajaan kesken työn, jatkaa itsestään rajan vapautuessa.
+**Tila**: assettipilotti ja sen koodi-integraatio molemmat valmiit 2026-09-09. Astra jatkaa 3D-hahmomalleilla (9/20, seuraavana Pyromancer) ja uusilla kartoilla; seuraavaksi Codelle: 30 aseen visuaalinen kytkeminen WeaponAttachmentPointiin asekohtaisesti (tähän mennessä vain Sword/Kaksoiskajo on kytketty).
 
 ---
 *Tämä dokumentti on ideointipohja jatkokeskustelulle. Katso AGENTS.md:n Muutosloki (Unity-projektin juuressa) tarkimmat tekniset yksityiskohdat ja testaustulokset kustakin toteutetusta osasta. Kopio elää myös Unity-projektin juuressa (`pelaaja-progressio-ja-ranked-suunnitelma.md`) jotta paikallinen koodausagentti (Code) pääsee siihen käsiksi suoraan — muista päivittää molemmat kun jompaakumpaa muokataan.*

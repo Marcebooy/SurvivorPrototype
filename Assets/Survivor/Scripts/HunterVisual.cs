@@ -12,7 +12,9 @@ namespace BonkSurvivor
     {
         const string RunResource = "Hunter_Run_Agile";
         const string ShootResource = "Hunter_Bow_ChargeRelease";
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Hunter, socket) : null;
         Animation legacyAnimation;
         float actionTimer;
 
@@ -24,6 +26,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Hunter model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

@@ -16,7 +16,9 @@ namespace BonkSurvivor
         const string AttackResource = "Berserker_Attack_Double";
         const string RageResource = "Berserker_Rage_LowHP";
         const float RageThreshold = .3f;
-        Transform pose;
+        Transform pose, modelRoot;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Berserker, socket) : null;
         Animation legacyAnimation;
         float actionTimer;
         bool raging;
@@ -29,6 +31,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Berserker model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

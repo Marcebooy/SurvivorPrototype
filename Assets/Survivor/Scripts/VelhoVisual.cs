@@ -12,9 +12,11 @@ namespace BonkSurvivor
     public sealed class VelhoVisual : MonoBehaviour, ICharacterVisual
     {
         const string ResourceName = "Velho_Walk";
-        Transform pose;
+        Transform pose, modelRoot;
         Animation legacyAnimation;
         AnimationState walkState;
+
+        public Transform GetSocket(AttachmentSocket socket) => modelRoot ? WeaponAttachmentPoint.FindDriver(modelRoot, SurvivorGame.PlayerCharacter.Velho, socket) : null;
 
         public void Build()
         {
@@ -24,6 +26,7 @@ namespace BonkSurvivor
             {
                 var instance = Instantiate(prefab, pose, false);
                 instance.name = "Velho model";
+                modelRoot = instance.transform;
                 legacyAnimation = instance.GetComponentInChildren<Animation>();
                 if (legacyAnimation)
                 {

@@ -10,5 +10,10 @@ namespace BonkSurvivor
         void Bonk();
         void Block();
         void Shockwave();
+
+        // Resolves the driver Transform for a WeaponAttachmentPoint socket (a rigged bone for the 8
+        // FBX characters, or Pottu's own roll/pan pivot) - see WeaponAttachmentPoint.Attach. Returns
+        // null if the character's model failed to load (placeholder capsule) or the rig lookup missed.
+        UnityEngine.Transform GetSocket(AttachmentSocket socket);
     }
 }

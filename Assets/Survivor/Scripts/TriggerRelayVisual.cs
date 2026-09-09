@@ -26,6 +26,7 @@ namespace BonkSurvivor
         public void Bonk() { local.Bonk(); broadcast(1, default); }
         public void Block() { local.Block(); broadcast(2, default); }
         public void Shockwave() { local.Shockwave(); broadcast(3, default); }
+        public Transform GetSocket(AttachmentSocket socket) => local.GetSocket(socket);
 
         public static void Apply(ICharacterVisual visual, int kind, Vector3 aim)
         {

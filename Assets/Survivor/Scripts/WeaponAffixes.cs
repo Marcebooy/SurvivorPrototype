@@ -5,10 +5,11 @@ namespace BonkSurvivor
 {
     // Ase-affiksit: per (hahmo, ase) rullatut, pysyvät bonukset yhdelle statille kerrallaan,
     // max 2 slottia per ase. AGENTS.md:n dokumentoima statshyötylista per ase - aluksi vain
-    // seitsemälle aloitusaseelle (pilotti), laajennettu tämän jälkeen kuudelle avattavalle
-    // aseelle (Revolver/Axe/Katana/Shotgun/Frostwalker/BlackHole). Vain Mappi-tilassa
-    // (droppi + käyttö) - Selviytymistila (Procedural) ei koskaan aseta, lue tai kuluta
-    // affiksidataa miltään osin.
+    // seitsemälle aloitusaseelle (pilotti), laajennettu kuudelle avattavalle aseelle (Revolver/
+    // Axe/Katana/Shotgun/Frostwalker/BlackHole), ja nyt (kohta 10.5:n jälkeen, kohta 10.3/11)
+    // kuudelle lisää (Mines/Tornado/PoisonFlask/SpaceNoodle/Rocket/WirelessDagger). Vain
+    // Mappi-tilassa (droppi + käyttö) - Selviytymistila (Procedural) ei koskaan aseta, lue tai
+    // kuluta affiksidataa miltään osin.
     public sealed partial class SurvivorGame
     {
         public enum AffixStat { Damage, Size, Quantity, Cooldown, Duration, ProjectileSpeed, Bounces, Crit }
@@ -20,22 +21,43 @@ namespace BonkSurvivor
 
         const int MaxAffixSlots = 2;
 
-        static readonly Dictionary<Weapon, AffixStat[]> AffixPool = new Dictionary<Weapon, AffixStat[]>
+        // Affiksit käytössä näille 19 aseelle - kunkin pooli LUETAAN WeaponStats.cs:n
+        // WeaponMetadata[w].applicableStats:sta (kohta 10.5), ei kirjoiteta erikseen käsin: uuden
+        // aseen affiksien käyttöönotto vaatii siis enää vain sen lisäämisen tähän listaan, kunhan
+        // AGENTS.md:ssä on sille dokumentoitu statshyötylista jota applicableStats-arvo vastaa.
+        // Ensimmäiset 13 (7 pilotti + 6 laajennus) - committoitu (44ee574/1fc7f1b, 1669638/146c923).
+        // Seuraavat 6 (kohta 10.3/11, 2026-09-09) - Mines/Tornado/PoisonFlask/SpaceNoodle/Rocket/
+        // WirelessDagger valittu koska niiden CastAdvanced/AddAdvancedShot/AddAdvancedZone-koodi
+        // jo käytti stats.Size/stats.Duration/stats.Quantity/stats.Bounces-kertoimia identtisellä
+        // kaavalla kuin BlackHole (jolla affiksit jo toimivat) - Cooldown toimii kaikille
+        // TickAdvanced-ajastimen kautta yleisesti. Loput 11 (Dice/CorruptedSword/BloodMagic/
+        // Scythe/Dexecutioner/Sniper/Aegis/Bananarang/HeroSword/Aura/DragonBreath) jätetty
+        // tarkoituksella tämän tehtävän ulkopuolelle - osalla (esim. Sniper) applicableStats-listan
+        // Size-affiksi ei vielä vaikuttaisi CastAdvanced-koodissa mitenkään (LineHit ei lue
+        // stats.Size:a), ja se korjaus kuuluu vasta niiden omaan affiksien käyttöönottotehtävään.
+        static readonly Weapon[] AffixEnabledWeapons =
         {
-            { Weapon.Sword, new[] { AffixStat.Damage, AffixStat.Size, AffixStat.Quantity, AffixStat.Cooldown } },
-            { Weapon.Flamewalker, new[] { AffixStat.Damage, AffixStat.Duration, AffixStat.Size, AffixStat.Cooldown } },
-            { Weapon.Lightning, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Bounces, AffixStat.Cooldown } },
-            { Weapon.Firestaff, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Size, AffixStat.ProjectileSpeed } },
-            { Weapon.Chunkers, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Size, AffixStat.ProjectileSpeed } },
-            { Weapon.Bone, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Bounces, AffixStat.ProjectileSpeed } },
-            { Weapon.Bow, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Crit, AffixStat.ProjectileSpeed } },
-            { Weapon.Revolver, new[] { AffixStat.Damage, AffixStat.Bounces, AffixStat.Quantity, AffixStat.Cooldown } },
-            { Weapon.Axe, new[] { AffixStat.Damage, AffixStat.Size, AffixStat.Quantity, AffixStat.Cooldown } },
-            { Weapon.Katana, new[] { AffixStat.Damage, AffixStat.Cooldown, AffixStat.Crit, AffixStat.Quantity } },
-            { Weapon.Shotgun, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Size, AffixStat.Cooldown } },
-            { Weapon.Frostwalker, new[] { AffixStat.Damage, AffixStat.Duration, AffixStat.Size, AffixStat.Cooldown } },
-            { Weapon.BlackHole, new[] { AffixStat.Damage, AffixStat.Size, AffixStat.Duration, AffixStat.Cooldown } },
+            Weapon.Sword, Weapon.Flamewalker, Weapon.Lightning, Weapon.Firestaff, Weapon.Chunkers, Weapon.Bone, Weapon.Bow,
+            Weapon.Revolver, Weapon.Axe, Weapon.Katana, Weapon.Shotgun, Weapon.Frostwalker, Weapon.BlackHole,
+            Weapon.Mines, Weapon.Tornado, Weapon.PoisonFlask, Weapon.SpaceNoodle, Weapon.Rocket, Weapon.WirelessDagger,
         };
+
+        // Lazily built (not a static-initializer field) because WeaponMetadata lives in a
+        // different partial-class file (WeaponStats.cs) - relying on static field init order
+        // across partial-class files would be fragile. First access builds it once and caches it.
+        static Dictionary<Weapon, AffixStat[]> affixPoolCache;
+        static Dictionary<Weapon, AffixStat[]> AffixPool
+        {
+            get
+            {
+                if (affixPoolCache == null)
+                {
+                    affixPoolCache = new Dictionary<Weapon, AffixStat[]>();
+                    foreach (var w in AffixEnabledWeapons) affixPoolCache[w] = WeaponMetadata[w].applicableStats;
+                }
+                return affixPoolCache;
+            }
+        }
 
         static string AffixStatLabel(AffixStat s) => s switch
         {

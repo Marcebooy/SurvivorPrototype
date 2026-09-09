@@ -275,7 +275,7 @@ namespace BonkSurvivor
                 bossAttackTimer -= dt;
                 if (bossAttackTimer <= 0)
                 {
-                    bossAttackTimer = 2.2f;
+                    bossAttackTimer = 2.2f; if (boss.animator) boss.animator.SetTrigger("Attack");
                     if (Vector3.Distance(player.position, boss.body.position) < 5)
                     { ReceiveDamage(32); }
                     var ring = Shape("Boss shockwave", PrimitiveType.Cylinder, boss.body.position - Vector3.up * .7f, new Vector3(10,.04f,10), enemyMaterial, world);
@@ -319,8 +319,7 @@ namespace BonkSurvivor
             else if (BossDefeated) { AdvanceArea(); return true; }
             else if (boss == null && AreaBossReady)
             {
-                boss = new Enemy { body = Shape("Vartija " + Area, PrimitiveType.Capsule, ResolveMapPosition((MapLayout == null ? player.position : MapLayout.BossPosition + Vector3.up) + Vector3.forward * 8, 1.8f),
-                    new Vector3(2.6f, 2.6f, 2.6f), eliteMaterial, world), health = 900 * Area * curse, speed = 3.2f * curse, elite = true };
+                boss = CreateNecromancerBoss(ResolveMapPosition((MapLayout == null ? player.position : MapLayout.BossPosition + Vector3.up) + Vector3.forward * 8, 1.8f));
                 enemies.Add(boss); bossAttackTimer = 3;
                 notice = "Kartan " + Area + " vartija ilmestyi! Voitto vie seuraavaan karttaan."; noticeUntil = Elapsed + 6;
             }
@@ -408,6 +407,7 @@ namespace BonkSurvivor
                     // Quantity+1 kertaa suoran läpäisevän ammusrivistön sijaan - ks. UpdateBolts.
                     var t = Shape("Ricochet arrow", PrimitiveType.Cube, player.position, new Vector3(.15f,.15f,.95f) * Size, boltMaterial, world);
                     t.rotation = Quaternion.LookRotation(aim);
+                    AttachWeaponVfx(t,Weapon.Bow,Size);
                     float ricochetPower = damage * (1 + .25f * (bow - 1)) * 1.3f * VariantQualityMultiplier(Weapon.Bow)
                         * bowStats.Damage * bowStats.Crit;
                     int ricochetChain = 1 + Quantity + Mathf.RoundToInt(Quantity * (bowStats.Quantity - 1));
@@ -422,6 +422,7 @@ namespace BonkSurvivor
                         Vector3 direction = Quaternion.Euler(0, (i - (count - 1) / 2f) * 9, 0) * aim;
                         var t = Shape("Piercing arrow", PrimitiveType.Cube, player.position, new Vector3(.13f,.13f,.85f) * Size, boltMaterial, world);
                         t.rotation = Quaternion.LookRotation(direction);
+                        AttachWeaponVfx(t,Weapon.Bow,Size);
                         bolts.Add(new Bolt { body = t, direction = direction, life = 1.3f, power = bowPower });
                     }
                 }
@@ -439,7 +440,7 @@ namespace BonkSurvivor
                     foreach (var e in candidates) { float sq = (e.body.position - origin).sqrMagnitude; if (sq < distance) { distance = sq; target = e; } }
                     if (target == null) break;
                     var end = target.body.position;
-                    if (lightningZapEffect) Destroy(Instantiate(lightningZapEffect, end, Quaternion.identity, MapEffectRoot), 2f);
+                    SpawnImpact(end,Weapon.Lightning,Size);
                     candidates.Remove(target); Hit(target, lightningPower * (1 + .25f * (lightning - 1))); origin = end;
                 }
             }

@@ -1,0 +1,2356 @@
+{
+  "schemaVersion": 1,
+  "materials": {
+    "Steel": {
+      "color": [
+        0.45,
+        0.55,
+        0.61
+      ],
+      "metallic": 0.8,
+      "smoothness": 0.6599999999999999,
+      "emission": 0
+    },
+    "DarkSteel": {
+      "color": [
+        0.075,
+        0.105,
+        0.14
+      ],
+      "metallic": 0.72,
+      "smoothness": 0.61,
+      "emission": 0
+    },
+    "Gold": {
+      "color": [
+        0.55,
+        0.36,
+        0.13
+      ],
+      "metallic": 0.76,
+      "smoothness": 0.6,
+      "emission": 0
+    },
+    "Leather": {
+      "color": [
+        0.048,
+        0.075,
+        0.085
+      ],
+      "metallic": 0,
+      "smoothness": 0.28,
+      "emission": 0
+    },
+    "Bone": {
+      "color": [
+        0.68,
+        0.63,
+        0.46
+      ],
+      "metallic": 0,
+      "smoothness": 0.37,
+      "emission": 0
+    },
+    "Wood": {
+      "color": [
+        0.12,
+        0.075,
+        0.045
+      ],
+      "metallic": 0,
+      "smoothness": 0.36,
+      "emission": 0
+    },
+    "Azure": {
+      "color": [
+        0.025,
+        0.36,
+        0.63
+      ],
+      "metallic": 0.1,
+      "smoothness": 0.73,
+      "emission": 1.2
+    },
+    "Ember": {
+      "color": [
+        0.68,
+        0.14,
+        0.022
+      ],
+      "metallic": 0.1,
+      "smoothness": 0.7,
+      "emission": 1.2
+    },
+    "Violet": {
+      "color": [
+        0.24,
+        0.045,
+        0.48
+      ],
+      "metallic": 0.1,
+      "smoothness": 0.7,
+      "emission": 1.2
+    },
+    "Jade": {
+      "color": [
+        0.028,
+        0.3,
+        0.16
+      ],
+      "metallic": 0.1,
+      "smoothness": 0.7,
+      "emission": 0.8
+    },
+    "CraftedSteel": {
+      "color": [
+        0.45,
+        0.55,
+        0.61
+      ],
+      "metallic": 0.8,
+      "smoothness": 0.6599999999999999,
+      "emission": 0
+    },
+    "CraftedDarkSteel": {
+      "color": [
+        0.075,
+        0.105,
+        0.14
+      ],
+      "metallic": 0.72,
+      "smoothness": 0.61,
+      "emission": 0
+    },
+    "CraftedGold": {
+      "color": [
+        0.55,
+        0.36,
+        0.13
+      ],
+      "metallic": 0.76,
+      "smoothness": 0.6,
+      "emission": 0
+    },
+    "CraftedLeather": {
+      "color": [
+        0.048,
+        0.075,
+        0.085
+      ],
+      "metallic": 0,
+      "smoothness": 0.28,
+      "emission": 0
+    },
+    "CraftedAzure": {
+      "color": [
+        0.025,
+        0.36,
+        0.63
+      ],
+      "metallic": 0.1,
+      "smoothness": 0.73,
+      "emission": 1.2
+    },
+    "CraftedEmber": {
+      "color": [
+        0.68,
+        0.14,
+        0.022
+      ],
+      "metallic": 0.1,
+      "smoothness": 0.7,
+      "emission": 1.2
+    },
+    "CraftedWood": {
+      "color": [
+        0.12,
+        0.075,
+        0.045
+      ],
+      "metallic": 0,
+      "smoothness": 0.36,
+      "emission": 0
+    }
+  },
+  "assets": [
+    {
+      "asset": "Blade_Katana",
+      "family": "OneHandBlade",
+      "role": "Katana",
+      "moduleChanges": [
+        "width",
+        "guard hooks",
+        "palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 1.12,
+      "staticUnlessNoted": true,
+      "triangles": 1358,
+      "sockets": {
+        "Tip": {
+          "blenderPosition": [
+            0.054999999701976776,
+            0.0,
+            1.1200000047683716
+          ],
+          "unityPosition": [
+            -0.054999999701976776,
+            1.1200000047683716,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Blade_CorruptedSword",
+      "family": "OneHandBlade",
+      "role": "CorruptedSword",
+      "moduleChanges": [
+        "width",
+        "guard hooks",
+        "palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 1.12,
+      "staticUnlessNoted": true,
+      "triangles": 1510,
+      "sockets": {
+        "Tip": {
+          "blenderPosition": [
+            0.054999999701976776,
+            0.0,
+            1.1200000047683716
+          ],
+          "unityPosition": [
+            -0.054999999701976776,
+            1.1200000047683716,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Staff_Lightning",
+      "family": "Staff",
+      "role": "Lightning",
+      "moduleChanges": [
+        "fork module",
+        "crystal palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 1.1,
+      "staticUnlessNoted": true,
+      "triangles": 1518,
+      "sockets": {
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            1.100000023841858
+          ],
+          "unityPosition": [
+            -0.0,
+            1.100000023841858,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Staff_Firestaff",
+      "family": "Staff",
+      "role": "Firestaff",
+      "moduleChanges": [
+        "fork module",
+        "crystal palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 1.1,
+      "staticUnlessNoted": true,
+      "triangles": 1518,
+      "sockets": {
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            1.100000023841858
+          ],
+          "unityPosition": [
+            -0.0,
+            1.100000023841858,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Gun_Revolver",
+      "family": "Firearm",
+      "role": "Revolver",
+      "moduleChanges": [
+        "barrel",
+        "stock",
+        "optic or tube"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.34,
+      "staticUnlessNoted": true,
+      "triangles": 624,
+      "sockets": {
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            -0.3479999899864197,
+            0.17000000178813934
+          ],
+          "unityPosition": [
+            -0.0,
+            0.17000000178813934,
+            0.3479999899864197
+          ]
+        },
+        "Eject": {
+          "blenderPosition": [
+            -0.07999999821186066,
+            -0.03999999910593033,
+            0.15000000596046448
+          ],
+          "unityPosition": [
+            0.07999999821186066,
+            0.15000000596046448,
+            0.03999999910593033
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Gun_Shotgun",
+      "family": "Firearm",
+      "role": "Shotgun",
+      "moduleChanges": [
+        "barrel",
+        "stock",
+        "optic or tube"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.57,
+      "staticUnlessNoted": true,
+      "triangles": 840,
+      "sockets": {
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            -0.28999999165534973,
+            0.05999999865889549
+          ],
+          "unityPosition": [
+            -0.0,
+            0.05999999865889549,
+            0.28999999165534973
+          ]
+        },
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            -0.578000009059906,
+            0.17000000178813934
+          ],
+          "unityPosition": [
+            -0.0,
+            0.17000000178813934,
+            0.578000009059906
+          ]
+        },
+        "Eject": {
+          "blenderPosition": [
+            -0.07999999821186066,
+            -0.03999999910593033,
+            0.15000000596046448
+          ],
+          "unityPosition": [
+            0.07999999821186066,
+            0.15000000596046448,
+            0.03999999910593033
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Gun_Sniper",
+      "family": "Firearm",
+      "role": "Sniper",
+      "moduleChanges": [
+        "barrel",
+        "stock",
+        "optic or tube"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.85,
+      "staticUnlessNoted": true,
+      "triangles": 992,
+      "sockets": {
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            -0.28999999165534973,
+            0.05999999865889549
+          ],
+          "unityPosition": [
+            -0.0,
+            0.05999999865889549,
+            0.28999999165534973
+          ]
+        },
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            -0.8579999804496765,
+            0.17000000178813934
+          ],
+          "unityPosition": [
+            -0.0,
+            0.17000000178813934,
+            0.8579999804496765
+          ]
+        },
+        "Eject": {
+          "blenderPosition": [
+            -0.07999999821186066,
+            -0.03999999910593033,
+            0.15000000596046448
+          ],
+          "unityPosition": [
+            0.07999999821186066,
+            0.15000000596046448,
+            0.03999999910593033
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Gun_Rocket",
+      "family": "Firearm",
+      "role": "Rocket",
+      "moduleChanges": [
+        "barrel",
+        "stock",
+        "optic or tube"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.58,
+      "staticUnlessNoted": true,
+      "triangles": 816,
+      "sockets": {
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            -0.28999999165534973,
+            0.05999999865889549
+          ],
+          "unityPosition": [
+            -0.0,
+            0.05999999865889549,
+            0.28999999165534973
+          ]
+        },
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            -0.5879999995231628,
+            0.17000000178813934
+          ],
+          "unityPosition": [
+            -0.0,
+            0.17000000178813934,
+            0.5879999995231628
+          ]
+        },
+        "Eject": {
+          "blenderPosition": [
+            -0.07999999821186066,
+            -0.03999999910593033,
+            0.15000000596046448
+          ],
+          "unityPosition": [
+            0.07999999821186066,
+            0.15000000596046448,
+            0.03999999910593033
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Relic_Chunkers",
+      "family": "FloatingRelic",
+      "role": "Chunkers",
+      "moduleChanges": [
+        "core silhouette",
+        "frame",
+        "palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 612,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Relic_ArcaneFocus",
+      "family": "FloatingRelic",
+      "role": "ArcaneFocus",
+      "moduleChanges": [
+        "core silhouette",
+        "frame",
+        "palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 612,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Relic_Dice",
+      "family": "FloatingRelic",
+      "role": "Dice",
+      "moduleChanges": [
+        "core silhouette",
+        "frame",
+        "palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 208,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Kit_Bone",
+      "family": "PropKit",
+      "role": "Bone",
+      "moduleChanges": [
+        "small replaceable mesh"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 108,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Kit_PoisonFlask",
+      "family": "PropKit",
+      "role": "PoisonFlask",
+      "moduleChanges": [
+        "small replaceable mesh"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 164,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Kit_Mine",
+      "family": "PropKit",
+      "role": "Mine",
+      "moduleChanges": [
+        "small replaceable mesh"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 64,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Kit_Bananarang",
+      "family": "PropKit",
+      "role": "Bananarang",
+      "moduleChanges": [
+        "small replaceable mesh"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 76,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Kit_ThrowingAxe",
+      "family": "PropKit",
+      "role": "ThrowingAxe",
+      "moduleChanges": [
+        "small replaceable mesh"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 164,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Kit_QualityRune",
+      "family": "PropKit",
+      "role": "QualityRune",
+      "moduleChanges": [
+        "small replaceable mesh"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "triangles": 108,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Bow_Recurve",
+      "family": "Bow",
+      "role": "Recurve",
+      "moduleChanges": [
+        "limb cap",
+        "palette"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.76,
+      "staticUnlessNoted": false,
+      "animation": "Bow_DrawRelease: frames 1-31, 30fps",
+      "drawTravelMetres": 0.24,
+      "triangles": 1414,
+      "sockets": {
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            -0.11999999731779099,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            0.11999999731779099
+          ]
+        },
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            0.07999999821186066,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.07999999821186066
+          ]
+        },
+        "Nock": {
+          "blenderPosition": [
+            0.0,
+            0.07999999821186066,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.07999999821186066
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Heavy_Scythe",
+      "family": "TwoHandHaft",
+      "role": "Scythe",
+      "moduleChanges": [
+        "head module"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.9,
+      "staticUnlessNoted": true,
+      "triangles": 1642,
+      "sockets": {
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            -0.33000001311302185
+          ],
+          "unityPosition": [
+            -0.0,
+            -0.33000001311302185,
+            -0.0
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.8999999761581421
+          ],
+          "unityPosition": [
+            -0.0,
+            0.8999999761581421,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Heavy_WarAxe",
+      "family": "TwoHandHaft",
+      "role": "WarAxe",
+      "moduleChanges": [
+        "head module"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.9,
+      "staticUnlessNoted": true,
+      "triangles": 1850,
+      "sockets": {
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            -0.33000001311302185
+          ],
+          "unityPosition": [
+            -0.0,
+            -0.33000001311302185,
+            -0.0
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.8999999761581421
+          ],
+          "unityPosition": [
+            -0.0,
+            0.8999999761581421,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Heavy_Hammer",
+      "family": "TwoHandHaft",
+      "role": "Hammer",
+      "moduleChanges": [
+        "head module"
+      ],
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "nominalReachMetres": 0.9,
+      "staticUnlessNoted": true,
+      "triangles": 1790,
+      "sockets": {
+        "SupportGrip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            -0.33000001311302185
+          ],
+          "unityPosition": [
+            -0.0,
+            -0.33000001311302185,
+            -0.0
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.8999999761581421
+          ],
+          "unityPosition": [
+            -0.0,
+            0.8999999761581421,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Blade_Dexecutioner",
+      "family": "OneHandBlade",
+      "role": "Dexecutioner",
+      "weaponEnum": "Dexecutioner",
+      "resource": "Blade_Dexecutioner",
+      "prefabPath": "Assets/WeaponArtPilot/Library/Prefabs/Resources/Blade_Dexecutioner.prefab",
+      "moduleChanges": [
+        "shared 22cm grip",
+        "blade module",
+        "guard",
+        "pommel",
+        "rounded geometry, ornamental inlays, crafted palette"
+      ],
+      "nominalReachMetres": 1.08,
+      "staticUnlessNoted": true,
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "styleVersion": 3,
+      "triangles": 12336,
+      "sockets": {
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            1.0800000429153442
+          ],
+          "unityPosition": [
+            -0.0,
+            1.0800000429153442,
+            -0.0
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Blade_HeroSword",
+      "family": "OneHandBlade",
+      "role": "HeroSword",
+      "weaponEnum": "HeroSword",
+      "resource": "Blade_HeroSword",
+      "prefabPath": "Assets/WeaponArtPilot/Library/Prefabs/Resources/Blade_HeroSword.prefab",
+      "moduleChanges": [
+        "shared 22cm grip",
+        "blade module",
+        "guard",
+        "pommel",
+        "rounded geometry, ornamental inlays, crafted palette"
+      ],
+      "nominalReachMetres": 1.15,
+      "staticUnlessNoted": true,
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "styleVersion": 3,
+      "triangles": 13772,
+      "sockets": {
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            1.149999976158142
+          ],
+          "unityPosition": [
+            -0.0,
+            1.149999976158142,
+            -0.0
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Blade_WirelessDagger",
+      "family": "OneHandBlade",
+      "role": "WirelessDagger",
+      "weaponEnum": "WirelessDagger",
+      "resource": "Blade_WirelessDagger",
+      "prefabPath": "Assets/WeaponArtPilot/Library/Prefabs/Resources/Blade_WirelessDagger.prefab",
+      "moduleChanges": [
+        "shared 22cm grip",
+        "blade module",
+        "guard",
+        "pommel",
+        "rounded geometry, ornamental inlays, crafted palette"
+      ],
+      "nominalReachMetres": 0.6,
+      "staticUnlessNoted": true,
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "styleVersion": 3,
+      "triangles": 12424,
+      "sockets": {
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.6000000238418579
+          ],
+          "unityPosition": [
+            -0.0,
+            0.6000000238418579,
+            -0.0
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Staff_DragonsBreath",
+      "family": "Staff",
+      "role": "DragonBreath",
+      "weaponEnum": "DragonBreath",
+      "resource": "Staff_DragonsBreath",
+      "prefabPath": "Assets/WeaponArtPilot/Library/Prefabs/Resources/Staff_DragonsBreath.prefab",
+      "moduleChanges": [
+        "shared Lightning/Firestaff shaft and grip",
+        "dragon jaw fork",
+        "ember core",
+        "rounded geometry, ornamental inlays, crafted palette"
+      ],
+      "nominalReachMetres": 1.115,
+      "staticUnlessNoted": true,
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "styleVersion": 3,
+      "triangles": 19248,
+      "sockets": {
+        "Muzzle": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            1.1150000095367432
+          ],
+          "unityPosition": [
+            -0.0,
+            1.1150000095367432,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            1.1150000095367432
+          ],
+          "unityPosition": [
+            -0.0,
+            1.1150000095367432,
+            -0.0
+          ]
+        }
+      }
+    },
+    {
+      "asset": "Relic_Flamewalker",
+      "family": "FloatingRelic",
+      "role": "Flamewalker",
+      "weaponEnum": "Flamewalker",
+      "resource": "Relic_Flamewalker",
+      "prefabPath": "Assets/WeaponArtPilot/Library/Prefabs/Resources/Relic_Flamewalker.prefab",
+      "moduleChanges": [
+        "shared 40cm relic frame",
+        "brazier core",
+        "flame silhouette",
+        "rounded geometry, ornamental inlays, crafted palette"
+      ],
+      "nominalReachMetres": 0.2,
+      "staticUnlessNoted": true,
+      "qualityLevels": {
+        "1": {
+          "emissionMultiplier": 0.65,
+          "extraFX": false
+        },
+        "2": {
+          "emissionMultiplier": 1.0,
+          "extraFX": "single rune at QualityFX"
+        },
+        "3": {
+          "emissionMultiplier": 1.4,
+          "extraFX": "short pulse only on attack"
+        }
+      },
+      "styleVersion": 3,
+      "triangles": 7700,
+      "sockets": {
+        "EffectOrigin": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            -0.15000000596046448
+          ],
+          "unityPosition": [
+            -0.0,
+            -0.15000000596046448,
+            -0.0
+          ]
+        },
+        "Grip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "Stow": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "unityPosition": [
+            -0.0,
+            0.0,
+            -0.0
+          ]
+        },
+        "QualityFX": {
+          "blenderPosition": [
+            0.0,
+            -0.03999999910593033,
+            0.14000000059604645
+          ],
+          "unityPosition": [
+            -0.0,
+            0.14000000059604645,
+            0.03999999910593033
+          ]
+        },
+        "Tip": {
+          "blenderPosition": [
+            0.0,
+            0.0,
+            0.20000000298023224
+          ],
+          "unityPosition": [
+            -0.0,
+            0.20000000298023224,
+            -0.0
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball05 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball05 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball04 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball04 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball04 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball03 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball03 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball03 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Slash01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Slash01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Slash01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - IceSpike01 Teal.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - IceSpike01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - IceSpike01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Firefrost01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Firefrost01 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Firefrost01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Projectiles\Unique Projectiles Vol 2 - Fireball05 Orange.prefab
+Assets\Vefects\Zap VFX URP\VFX\Zap\Particles\VFX_Zap_06_White.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Projectiles\Toon Projectiles 2 - Ice.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Muzzles\Toon Projectiles 2 - Ice Muzzle.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Wind Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Twist Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Triangle Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Red Star Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Red Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Magic Stone Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Magic Arrow Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Ice Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Forest Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Explode Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Energy Orb Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Cube Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Cosmic Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Bullet Impact.prefab
+Assets\Magic Pig Games (Infinity PBR)\HOVL - Toon Projectiles 2\Particles\Impacts\Toon Projectiles 2 - Arrow Impact.prefab
+Assets\Eric VFX Studio\Free Game VFX\Prefab\FX_Purple_Hit_02.prefab
+Assets\Eric VFX Studio\Free Game VFX\Prefab\FX_Orange_Slash_1.prefab
+Assets\Eric VFX Studio\Free Game VFX\Prefab\FX_Green_Hit.prefab
+Assets\Eric VFX Studio\Free Game VFX\Prefab\FX_Fireball.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball05 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball05 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball05 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball04 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball04 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball04 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball03 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball03 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Fireball03 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle IceSpike01 Teal.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle IceSpike01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle IceSpike01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Firefrost01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Firefrost01 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Firefrost01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Slash01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Slash01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Muzzles\Unique Projectiles Vol 2 - Muzzle Slash01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit BlackHole01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit BlackHole01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit ElectricBall01 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit ElectricBall01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit BlackHole01 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball03 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit ElectricBall01 Yellow.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball03 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball03 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball04 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball04 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball04 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball05 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball05 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Fireball05 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Firefrost01 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Firefrost01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Firefrost01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit IceSpike01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit IceSpike01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb05 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb05 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb05 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb04 Yellow.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb04 Violet.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb04 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb03 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb03 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb03 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb02 Pink.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb02 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb02 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb01 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit IceSpike01 Teal.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail01 Green.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Slash01 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Slash01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Slash01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb06 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb06 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Orb06 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail03 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail02 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail02 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail02 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail04 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail03 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail03 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail04 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail04 Purple.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail05 Red.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail05 Pink.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit Trail05 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit WaterBall01 Blue.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit WaterBall01 Orange.prefab
+Assets\Magic Pig Games (Infinity PBR)\Unique Projectiles Volume 2\Particles\Impacts & Explosions\Unique Projectiles Vol 2 - Hit WaterBall01 Red.prefab

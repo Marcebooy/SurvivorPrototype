@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b27f17e4326571941a888a5616cc9992, type: 3}
+  m_Name: WeaponVfxCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::BonkSurvivor.WeaponVfxCatalog
+  entries:
+  - weapon: 0
+    impact: {fileID: 5835265682500369714, guid: aeba18821c514bc408412599b45216c1, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Warm melee slash
+  - weapon: 1
+    impact: {fileID: 8627385829572510822, guid: 113b4b387e279944c85f19fdce74910d, type: 3}
+    flight: {fileID: 6367490385215151913, guid: 1d51dc1dc23d74948be71728827b9921, type: 3}
+    zone: {fileID: 0}
+    description: Arrow trail and pale impact
+  - weapon: 2
+    impact: {fileID: 2799171472388455196, guid: 1a50840acd0c69e46871f715b45fa457, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Blue lightning strike
+  - weapon: 3
+    impact: {fileID: 4444096143828613859, guid: 28db1f90792b6c64698079cba2f429cc, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Stone dust
+  - weapon: 4
+    impact: {fileID: 8420221479000976745, guid: 7b1e5d0b31dba7c419abaecef13e52f3, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 4888795707035784832, guid: 6c66aec6d1e438441a79616c761123a2, type: 3}
+    description: Small persistent ground flames
+  - weapon: 5
+    impact: {fileID: 4654676504230752964, guid: c936f2c0f1519a44295dbddabd15e1b3, type: 3}
+    flight: {fileID: 5992573465105436385, guid: 3c943fd34e8829c499cb81e0a59a9a91, type: 3}
+    zone: {fileID: 0}
+    description: Bone dust and pale trail
+  - weapon: 6
+    impact: {fileID: 39553248956661859, guid: c098f6921a6124a4ea698a7fb8a56232, type: 3}
+    flight: {fileID: 7001726704016499436, guid: ee617756695261947866d99cb6316aa8, type: 3}
+    zone: {fileID: 0}
+    description: Fireball flight and separate explosion
+  - weapon: 7
+    impact: {fileID: 9165134331119031755, guid: 3dfe90e0096cf9142a4b277ec622814b, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 1801783112273183433, guid: 9bbe2d8903ad11741a0ffc4238f65f03, type: 3}
+    description: Holy aura motes
+  - weapon: 8
+    impact: {fileID: 9153923844422224786, guid: 93cbadd80cf11f046a155cc379f0ffd7, type: 3}
+    flight: {fileID: 3221310079952629066, guid: 39998ba5b6b9bbe49b5ba6a66de0dd7e, type: 3}
+    zone: {fileID: 0}
+    description: Compact pellet sparks
+  - weapon: 9
+    impact: {fileID: 849415339193937593, guid: bfabae1ddd56c8342b5c1547783a756d, type: 3}
+    flight: {fileID: 596400892733201956, guid: 7dee08e3ea14ad94f81e4d078309ebee, type: 3}
+    zone: {fileID: 0}
+    description: Ricochet sparks
+  - weapon: 10
+    impact: {fileID: 2203158750163840981, guid: 00eabe87f9052fb49bda3eaa4ca412d9, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Golden shield counterattack
+  - weapon: 11
+    impact: {fileID: 8003329052841087578, guid: 2efe10c5dd153b14a914d06a6842e1da, type: 3}
+    flight: {fileID: 5541218587464684081, guid: ddc6768d0b4713d4fb6a332af4df2a0d, type: 3}
+    zone: {fileID: 0}
+    description: Yellow returning trail
+  - weapon: 12
+    impact: {fileID: 5728753131556618778, guid: 0006f654eab12a24899d1f09802c6458, type: 3}
+    flight: {fileID: 4822182793561986103, guid: 92ec5e798774c554b9b833f6c447fe13, type: 3}
+    zone: {fileID: 0}
+    description: Steel spinning cut
+  - weapon: 13
+    impact: {fileID: 8468953780859980289, guid: cba6446614575ea458db2e6a7f7a22de, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Violet link impact
+  - weapon: 14
+    impact: {fileID: 4339439636050513125, guid: 3f46321c57293834eb99c0fc028c8a7d, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Sharp pale shot impact
+  - weapon: 15
+    impact: {fileID: 990300482405153897, guid: 51c5bc703ca74534d9684c075da4390d, type: 3}
+    flight: {fileID: 2014018070024217244, guid: 1bf7c0b9b062de14c9a4854ac5590423, type: 3}
+    zone: {fileID: 0}
+    description: Rocket exhaust and explosion
+  - weapon: 16
+    impact: {fileID: 969887663668444251, guid: 179431df9e656224c920beab9448dcf0, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Explosion only after mine triggers
+  - weapon: 17
+    impact: {fileID: 4105986675202176618, guid: 5632ff480d5ce3341aa95e47c698ddb9, type: 3}
+    flight: {fileID: 1523889651765424200, guid: 2202a4b69b4c0f5468cb9974d569b3e3, type: 3}
+    zone: {fileID: 0}
+    description: Blue homing blade
+  - weapon: 18
+    impact: {fileID: 8117770824652778527, guid: ecce7fda9aea0314890d17fb5648e8b4, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 2880013036284990970, guid: d0cc5d3b3b86d914da43e185509763d7, type: 3}
+    description: Icy ground motes
+  - weapon: 19
+    impact: {fileID: 4019425644629836539, guid: fe85c73c539f959459faef55bdfc326c, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 5144493109128719812, guid: 9ce77cb2f4b4f82428a93d3495cf413a, type: 3}
+    description: Wind swirl
+  - weapon: 20
+    impact: {fileID: 5433625423037351164, guid: 0b0edde9ccec3f8489f24d47046215df, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Red execution slash
+  - weapon: 21
+    impact: {fileID: 9920505709022142, guid: 26608126e940273439d962bffe0a4ef1, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Crimson blood burst
+  - weapon: 22
+    impact: {fileID: 1376788919828185756, guid: 99f1f6dd8ad573a4eacc18b909ea8231, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 4230533699123781479, guid: 86e6c7d81766295418601bcd9d9ae6b9, type: 3}
+    description: Violet gravity core
+  - weapon: 23
+    impact: {fileID: 5733914882091780452, guid: f56df4de2ba209c4aa42129bfec01192, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 3443019996733007096, guid: 2c282d2b89b0b3f4f90d08906f556ae1, type: 3}
+    description: Green lingering poison
+  - weapon: 24
+    impact: {fileID: 7269173459715533601, guid: 02709a3437541064382351c325295199, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Fast pale cut
+  - weapon: 25
+    impact: {fileID: 1086730250925269337, guid: b78716afb2b4f7943a25c64614f7b096, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Orange cone-end flame bursts
+  - weapon: 26
+    impact: {fileID: 4527450427598098926, guid: a5135714c01c4f843ac25532e6fdd635, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Pink dice burst
+  - weapon: 27
+    impact: {fileID: 711583600494159366, guid: 9579efc7def16a442ae5a49323e57718, type: 3}
+    flight: {fileID: 6530982263467563585, guid: 4134148fcb3f1bd41809898b70e4f25f, type: 3}
+    zone: {fileID: 0}
+    description: Golden slash wave
+  - weapon: 28
+    impact: {fileID: 475089343017835509, guid: a7898c15ca40b13448f59a0d7103c50c, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Corrupted violet cut
+  - weapon: 29
+    impact: {fileID: 4125194454576865863, guid: 8ceff2484da0a344fabab9482c2de529, type: 3}
+    flight: {fileID: 0}
+    zone: {fileID: 0}
+    description: Spectral green harvest slash
+  groundTexture: {fileID: 2800000, guid: 40307c7169d6da940aa38b86ea8e1d4a, type: 3}

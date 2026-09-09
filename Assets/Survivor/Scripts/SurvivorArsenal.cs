@@ -87,6 +87,7 @@ namespace BonkSurvivor
                 if(flames.Count>=80) { Destroy(flames[0].body.gameObject); flames.RemoveAt(0); }
                 float radius=1.4f*Size*stats.Size;
                 var t=Shape("Flame trail",PrimitiveType.Cylinder,new Vector3(player.position.x,.09f,player.position.z),new Vector3(radius*2,.055f,radius*2),fireMat,world);
+                t.GetComponent<Renderer>().sharedMaterial=WeaponZoneMaterial(w); AttachWeaponVfx(t,w,radius,true);
                 flames.Add(new FlamePatch {body=t,life=(2.5f+.3f*level)*EffectDuration*stats.Duration,power=power*.32f,radius=radius}); return;
             }
             if(w==Weapon.Aura)
@@ -96,7 +97,7 @@ namespace BonkSurvivor
                     auraRing=new GameObject("Healing green? No: damage aura",typeof(LineRenderer)).GetComponent<LineRenderer>();
                     auraRing.transform.SetParent(world,false); auraRing.sharedMaterial=auraMat; auraRing.loop=true; auraRing.positionCount=48; auraRing.widthMultiplier=.08f;
                 }
-                if(!auraEffect && auraEffectPrefab) auraEffect=Instantiate(auraEffectPrefab,world).transform;
+                if(!auraEffect) { auraEffect=new GameObject("Aura visual anchor").transform; auraEffect.SetParent(world,false); AttachWeaponVfx(auraEffect,w,3.2f*Size,true); }
                 AreaHit(player.position,3.2f*Size,power*.42f); return;
             }
             if(w==Weapon.Chunkers) return; // Continuous orbit has its own contact cadence.
@@ -117,13 +118,7 @@ namespace BonkSurvivor
                     for(int side=-1;side<=1;side+=2)
                     { var end=Shape("Bone end",PrimitiveType.Sphere,body.position,Vector3.one*.3f,boneMat,world); end.SetParent(body,true); end.localPosition=new Vector3(0,0,side*.5f); }
                 }
-                // Fireball VFX is a looping flame/aura effect, not a one-shot burst - parent it to the
-                // projectile so it's visible for the whole flight, not just at the impact explosion.
-                if(w==Weapon.Firestaff && fireImpactEffect)
-                {
-                    var trail=Instantiate(fireImpactEffect,body.position,Quaternion.identity,body);
-                    trail.transform.localScale=Vector3.one*ImpactBaseScale(Weapon.Firestaff)*Size;
-                }
+                AttachWeaponVfx(body,w,Size);
                 float speed=(w==Weapon.Firestaff ? 14 : w==Weapon.Bone ? 18 : 27)*ProjectileSpeed*stats.ProjectileSpeed;
                 int baseBounces=1+level/2;
                 shots.Add(new ArsenalShot { body=body,kind=w,direction=direction,speed=speed,
@@ -181,18 +176,17 @@ namespace BonkSurvivor
                         for(int i=enemies.Count-1;i>=0;i--)
                         {
                             var e=enemies[i]; foreach(var rock in rocks)
-                            { if((e.body.position-rock.position).sqrMagnitude<Mathf.Pow(.9f*Size*chunkersSize,2)) {Hit(e,damage*.7f*(1+.25f*(level-1))*chunkersStats.Damage);break;} }
+                            { if((e.body.position-rock.position).sqrMagnitude<Mathf.Pow(.9f*Size*chunkersSize,2)) {SpawnImpact(e.body.position,Weapon.Chunkers,Size);Hit(e,damage*.7f*(1+.25f*(level-1))*chunkersStats.Damage);break;} }
                         }
                     }
                 }
             }
             if(auraRing)
                 for(int i=0;i<48;i++) { float a=i*Mathf.PI*2/48; auraRing.SetPosition(i, new Vector3(player.position.x+Mathf.Cos(a)*3.2f*Size,.16f,player.position.z+Mathf.Sin(a)*3.2f*Size)); }
-            if(auraEffect)
-            {
-                auraEffect.position=new Vector3(player.position.x,.02f,player.position.z);
-                float ringScale=4.5f*Size; auraEffect.localScale=new Vector3(ringScale,1f,ringScale);
-            }
+            // Visual scale is set once, at attach time in CastArsenal (AttachWeaponVfx call, 3.2*Size -
+            // matching AreaHit's radius exactly). WeaponVfxPool only follows this anchor's position/rotation,
+            // not scale, so resizing auraEffect here would do nothing to the pooled instance.
+            if(auraEffect) auraEffect.position=new Vector3(player.position.x,.02f,player.position.z);
         }
 
         void TickShots(float dt)
@@ -215,13 +209,12 @@ namespace BonkSurvivor
                     if(s.kind==Weapon.Firestaff)
                     {
                         AreaHit(s.body.position,s.radius,s.power);
-                        var pulse=Shape("Fireball explosion",PrimitiveType.Sphere,s.body.position,Vector3.one*s.radius,fireMat,world);
-                        flashes.Add(new Flash {body=pulse,life=.14f}); s.life=0;
+                        s.life=0;
                         SpawnImpact(s.body.position,Weapon.Firestaff,s.radius);
                     }
                     else
                     {
-                        Hit(contact,s.power);
+                        SpawnImpact(s.body.position,s.kind,Size); Hit(contact,s.power);
                         var next=s.kind==Weapon.Bone && s.bounces>0 ? Nearest(s.body.position,10,s.hit) : null;
                         if(next!=null) { s.bounces--;s.direction=(next.body.position-s.body.position).normalized;s.body.rotation=Quaternion.LookRotation(s.direction); }
                         else s.life=0;

@@ -130,8 +130,7 @@ namespace BonkSurvivor
         void AdvancedPulse(Vector3 center,float radius,Weapon w)
         {
             if(flashes.Count>=160)return;
-            var t=Shape(WeaponLabel(w)+" pulse",PrimitiveType.Cylinder,new Vector3(center.x,.18f,center.z),new Vector3(radius*2,.015f,radius*2),AdvancedMaterial(w),world);
-            flashes.Add(new Flash{body=t,life=.09f});
+
             SpawnImpact(new Vector3(center.x,.6f,center.z),w,Mathf.Max(1f,radius*.45f));
         }
         void AdvancedBeam(Vector3 start,Vector3 end,float width,Weapon w)
@@ -141,32 +140,11 @@ namespace BonkSurvivor
             t.rotation=Quaternion.LookRotation(end-start);flashes.Add(new Flash{body=t,life=.12f});
             SpawnImpact(end,w,Size);
         }
-        // Maps a weapon to the themed asset-pack VFX it triggers on hit (Eric VFX Studio slash/fire/poison, Zap VFX frost/void/bolt).
-        GameObject ImpactEffectFor(Weapon w)
-        {
-            if(w==Weapon.Sword||w==Weapon.HeroSword||w==Weapon.CorruptedSword||w==Weapon.Scythe||w==Weapon.Katana||w==Weapon.Dexecutioner||w==Weapon.Axe)return slashEffect;
-            if(w==Weapon.Firestaff)return fireImpactEffect; // Tulipallo - ainoa oikea "fireball"-ase, efekti varattu sille yksin
-            if(w==Weapon.PoisonFlask)return poisonImpactEffect;
-            if(w==Weapon.Frostwalker)return frostImpactEffect;
-            if(w==Weapon.BlackHole||w==Weapon.SpaceNoodle)return voidImpactEffect;
-            return boltImpactEffect; // Bow, Sniper, Revolver, Bananarang, WirelessDagger, Aegis, Dice, BloodMagic, Tornado, Rocket, DragonBreath, Mines
-        }
-        // FX_Fireball (Eric VFX Studio) is authored at a scale several times larger than this game's world units
-        // (visually confirmed in Play Mode: raw scale 1 dwarfed a full-size enemy) - every other pack matches at 1x.
-        float ImpactBaseScale(Weapon w) => w==Weapon.Firestaff ? .15f : 1f;
-        void SpawnImpact(Vector3 pos,Weapon w,float scale=1f)
-        {
-            var prefab=ImpactEffectFor(w);if(!prefab)return;
-            var fx=Instantiate(prefab,pos,Quaternion.identity,MapEffectRoot);
-            float final=scale*ImpactBaseScale(w);
-            if(!Mathf.Approximately(final,1f))fx.transform.localScale*=final;
-            Destroy(fx,1.4f);
-        }
-        void LineHit(Vector3 a,Vector3 b,float radius,float power)
+        void LineHit(Vector3 a,Vector3 b,float radius,float power,Weapon kind=Weapon.Sniper)
         {
             var delta=b-a;
             for(int i=enemies.Count-1;i>=0;i--)
-            {var e=enemies[i];float t=Mathf.Clamp01(Vector3.Dot(e.body.position-a,delta)/Mathf.Max(.001f,delta.sqrMagnitude));if((e.body.position-a-delta*t).sqrMagnitude<radius*radius)Hit(e,power);}
+            {var e=enemies[i];float t=Mathf.Clamp01(Vector3.Dot(e.body.position-a,delta)/Mathf.Max(.001f,delta.sqrMagnitude));if((e.body.position-a-delta*t).sqrMagnitude<radius*radius) { SpawnImpact(e.body.position,kind,Size); Hit(e,power); }}
         }
         bool CanExecute(Enemy e) => e!=boss && !e.elite;
         void CastAdvanced(Weapon w,int level)
@@ -232,6 +210,7 @@ namespace BonkSurvivor
             var scale=w==Weapon.Bananarang ? new Vector3(.75f,.18f,.35f) : w==Weapon.Axe ? new Vector3(.8f,.16f,.8f) : w==Weapon.Rocket ? new Vector3(.3f,.3f,.9f) : w==Weapon.HeroSword ? new Vector3(2*Size,.12f,.22f) : new Vector3(.18f,.18f,.65f);
             var body=Shape(WeaponLabel(w),PrimitiveType.Cube,player.position,scale*Size*affixSize,AdvancedMaterial(w),world);body.rotation=Quaternion.LookRotation(direction);
             if(w==Weapon.Axe) {var handle=Shape("Axe handle",PrimitiveType.Cube,body.position,new Vector3(.13f,.13f,1.4f),boneMat,world);handle.SetParent(body,true);}
+            AttachWeaponVfx(body,w,Size);
             float speed=(w==Weapon.Revolver ? 30 : w==Weapon.Rocket ? 12 : w==Weapon.Axe ? 8 : 18)*ProjectileSpeed;
             int baseBounces=1+level/2;
             advancedShots.Add(new AdvancedShot{kind=w,body=body,direction=direction,target=target,power=power*(w==Weapon.Rocket ? 2 : w==Weapon.Axe ? 1.5f : 1),speed=speed,radius=(w==Weapon.HeroSword ? 1.1f : .55f)*Size*affixSize,life=(w==Weapon.Bananarang ? 3 : 2.5f)*EffectDuration,bounces=baseBounces+Mathf.RoundToInt(baseBounces*(stats.Bounces-1))});
@@ -285,8 +264,9 @@ namespace BonkSurvivor
             if(advancedZones.Count>=48){Destroy(advancedZones[0].body.gameObject);advancedZones.RemoveAt(0);}
             bool beam=w==Weapon.SpaceNoodle;
             var body=Shape(WeaponLabel(w),beam ? PrimitiveType.Cube : PrimitiveType.Cylinder,new Vector3(pos.x,beam ? 1 : .12f,pos.z),beam ? Vector3.one*.1f : new Vector3(radius*2,w==Weapon.Tornado ? 1.3f : .035f,radius*2),AdvancedMaterial(w),world);
+            if(!beam && w!=Weapon.Mines) body.GetComponent<Renderer>().sharedMaterial=WeaponZoneMaterial(w);
             advancedZones.Add(new AdvancedZone{kind=w,body=body,target=target,direction=dir,power=power,radius=radius,life=life});
-            if(!beam)SpawnImpact(new Vector3(pos.x,.4f,pos.z),w,Mathf.Max(1f,radius*.5f));
+            if(!beam) AttachWeaponVfx(body,w,radius,true);
         }
         void TickAdvancedZones(float dt)
         {
@@ -300,7 +280,7 @@ namespace BonkSurvivor
                     {
                         var end=z.target.body.position;z.body.position=(player.position+end)/2;z.body.localScale=new Vector3(.12f,.12f,Vector3.Distance(player.position,end));
                         if((end-player.position).sqrMagnitude>.001f)z.body.rotation=Quaternion.LookRotation(end-player.position);
-                        if(z.tick<=0 && z.life>0){LineHit(player.position,end,z.radius,z.power*.35f);z.tick=.3f;}
+                        if(z.tick<=0 && z.life>0){LineHit(player.position,end,z.radius,z.power*.35f,z.kind);z.tick=.3f;}
                     }
                 }
                 else if(z.life>0)

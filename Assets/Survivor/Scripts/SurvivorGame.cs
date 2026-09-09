@@ -244,7 +244,7 @@ namespace BonkSurvivor
             slash.position = new Vector3(player.position.x, .15f, player.position.z);
             slash.localScale = new Vector3(8 * Size, .025f, 8 * Size) * (1 - Mathf.Clamp01(slashTimer / .16f) * .3f);
             if (swordEchoTimer > 0) { swordEchoTimer -= dt; if (swordEchoTimer <= 0) SwordEchoStrike(); }
-            TickArsenal(dt); UpdateBolts(dt);
+            TickArsenal(dt); UpdateBolts(dt); TickSwordVariantVisual();
             for (int i = drops.Count - 1; i >= 0; i--)
             {
                 var d = drops[i]; float distance = Vector3.Distance(d.body.position, player.position);

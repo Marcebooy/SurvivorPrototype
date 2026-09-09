@@ -20,6 +20,32 @@ namespace BonkSurvivor
         // Stacks on top of the existing per-Area enemy scaling (curse, Area multiplier below) -
         // Procedural always runs at Tier 1, so this is a 1.0x no-op unless a fixed map is active.
         float MapTierMultiplier => 1f + (activeMapTier - 1) * .35f;
+
+        // Kohta 3: Mappi-tilan viholliskiintiö per Tier (SpawnEnemy()-kutsujen kokonaismäärä yhdellä
+        // alueella, ei samanaikaisten yläraja - se on erillinen enemyCap edelleen). Nousee Tierin
+        // mukaan samaan tapaan kuin MapTierMultiplier, mutta on oma erillinen luku koska kiintiö on
+        // spawnien LUKUMÄÄRÄ, ei vahinko-/HP-kerroin - näitä kahta ei pidä sekoittaa samaksi kaavaksi.
+        // Koskee kaikkia kolmea kiinteää karttaa (Mosswood/Luuluola/Tuhkaerämaa) yhtä lailla, koska
+        // ne kaikki kulkevat saman SurvivorGame.cs/SurvivorProgression.cs-ydinsilmukan läpi eikä
+        // mikään tästä eteenpäin haaraudu MapType:n mukaan - vain activeMapType != Procedural.
+        static int TierEnemyQuota(int tier) => tier switch { 1 => 150, 2 => 220, 3 => 300, _ => 150 };
+
+        // Onko tämän alueen spawnaus loppunut - Selviytymistilassa sama 90s-ajastin kuin ennenkin,
+        // Mappi-tilassa uusi kiintiöehto (SpawnEnemy() lakkaa kutsumasta, ks. Update()). Tämä EI vielä
+        // tarkoita että bossin voi kutsua Mappi-tilassa - ks. AreaBossReady alla, joka vaatii lisäksi
+        // kentän olevan tyhjä.
+        bool AreaSpawningStopped => activeMapType == MapType.Procedural
+            ? Elapsed - areaStarted >= 90
+            : areaKillCount >= TierEnemyQuota(activeMapTier);
+
+        // Onko alueen bossi kutsuttavissa ("[E] Kutsu alueen bossi"). Selviytymistilassa
+        // muuttumaton alkuperäinen käytös (pelkkä ajastin, viholliset saavat olla yhä kentällä).
+        // Mappi-tilassa vaatii LISÄKSI ettei kentällä ole enää yhtään henkiin jäänyttä vihollista
+        // (areaKillCount >= tierQuota && enemies.Count == 0 && boss == null - boss == null
+        // tarkistetaan jo kutsupaikoissa erikseen, ei toisteta tässä).
+        bool AreaBossReady => activeMapType == MapType.Procedural
+            ? AreaSpawningStopped
+            : AreaSpawningStopped && enemies.Count == 0;
         public ProceduralMapLayout MapLayout { get; private set; }
         public int CurrentMapSeed { get; private set; }
         public int RunSeed { get; private set; }

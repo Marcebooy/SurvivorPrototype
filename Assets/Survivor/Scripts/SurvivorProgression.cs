@@ -32,6 +32,11 @@ namespace BonkSurvivor
         float areaStarted, curse = 1, bossAttackTimer, bossDefeatedAt = -1;
         bool bossTimerExpired;
         int bossKills;
+        // Kohta 3: Mappi-tilan viholliskiintiö-laskuri tälle alueelle - eri asia kuin globaali Kills
+        // (joka ei koskaan nollaudu kesken runin). Ei koskaan lueta/kirjoiteta Selviytymistilassa
+        // (activeMapType == Procedural, ks. AreaSpawningStopped/AreaBossReady), joten sen arvo ei
+        // vaikuta mihinkään siellä vaikka nollautuisikin joka alueella.
+        int areaKillCount;
         bool rewardPaid;
         bool newRecord;
         string interactionHint = "";
@@ -80,7 +85,7 @@ namespace BonkSurvivor
             LegacyHealth = Mathf.Clamp(PlayerPrefs.GetInt(SaveKey + "Health", 0), 0, 10);
             maxHealth += LegacyHealth * 10; Health = maxHealth;
             Size = 1; Quantity = 1; CritChance = Armor = 0;
-            Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
+            Area = 1; areaStarted = 0; areaKillCount = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
             EarnedSilver = 0; rewardPaid = false; accountXpPaidThisRun = false; BossDefeated = false; PendingChoices = 0; Selecting = true; awaitingCharacterChoice = true;
             mapLoadoutActive = false; mapLoadout.Clear(); loadoutWeapons.Clear(); loadoutTomes.Clear();
             // Loadout picker only applies to a real Map-mode run (a fixed Mosswood/Luuluola map,
@@ -250,7 +255,7 @@ namespace BonkSurvivor
         {
             for (int i = flashes.Count - 1; i >= 0; i--)
             { flashes[i].life -= dt; if (flashes[i].life <= 0) { Destroy(flashes[i].body.gameObject); flashes.RemoveAt(i); } }
-            if (!bossTimerExpired && boss == null && Elapsed - areaStarted >= 90)
+            if (!bossTimerExpired && boss == null && AreaSpawningStopped)
             {
                 bossTimerExpired = true;
                 notice = "Uusia vihollisia ei enää tule — tapa loput ja mene portaalille!"; noticeUntil = Elapsed + 6;
@@ -285,7 +290,16 @@ namespace BonkSurvivor
             if (kind == 1) return "[E] Pyhäkkö: +30 % vahinko, vihollisten HP ja nopeus +20 %";
             if (BossDefeated) return "Seuraava kartta generoidaan...";
             if (boss != null) return "Voita bossi avataksesi portaalin.";
-            return Elapsed - areaStarted < 90 ? "Portaali avautuu: " + Mathf.CeilToInt(90 - Elapsed + areaStarted) + " s" : "[E] Kutsu alueen bossi";
+            return AreaPortalLabel();
+        }
+
+        // Jaettu LandmarkHint():n (pyhäkön/arkun ollessa poissa kentältä) ja DrawProgression():n
+        // oikean yläkulman HUD-tekstin kesken - sama teksti kummassakin, ei kahta kaavaa ylläpidettävänä.
+        string AreaPortalLabel()
+        {
+            if (AreaBossReady) return "[E] Kutsu alueen bossi";
+            if (activeMapType == MapType.Procedural) return "Portaali avautuu: " + Mathf.Max(0, Mathf.CeilToInt(90 - Elapsed + areaStarted)) + " s";
+            return areaKillCount + "/" + TierEnemyQuota(activeMapTier) + " vihollista tapettu";
         }
 
         bool Interact(Landmark p)
@@ -303,7 +317,7 @@ namespace BonkSurvivor
                 p.used = true; notice = "Pyhäkkö aktivoitu: voima ja vaara kasvavat."; noticeUntil = Elapsed + 5;
             }
             else if (BossDefeated) { AdvanceArea(); return true; }
-            else if (boss == null && Elapsed - areaStarted >= 90)
+            else if (boss == null && AreaBossReady)
             {
                 boss = new Enemy { body = Shape("Vartija " + Area, PrimitiveType.Capsule, ResolveMapPosition((MapLayout == null ? player.position : MapLayout.BossPosition + Vector3.up) + Vector3.forward * 8, 1.8f),
                     new Vector3(2.6f, 2.6f, 2.6f), eliteMaterial, world), health = 900 * Area * curse, speed = 3.2f * curse, elite = true };
@@ -319,7 +333,7 @@ namespace BonkSurvivor
         {
             if (!MapTransitionPending || NetworkClientMode) return;
             ClearMapCombat();
-            Area++; areaStarted = Elapsed; BossDefeated = false; bossTimerExpired = false; bossDefeatedAt = -1;
+            Area++; areaStarted = Elapsed; areaKillCount = 0; BossDefeated = false; bossTimerExpired = false; bossDefeatedAt = -1;
             if (activeMapType != MapType.Procedural) BuildFixedMap(activeMapType);
             else GenerateProceduralMap(NextMapSeed(CurrentMapSeed), true);
             CreateLandmarks(); player.position = MapSpawn + Vector3.up; Health = maxHealth;
@@ -441,7 +455,7 @@ namespace BonkSurvivor
                 DrawDungeonMap();
                 GUI.Label(new Rect(360,590,850,55), interactionHint, textStyle);
                 if (boss != null) GUI.Label(new Rect(440,80,600,35), "ALUEEN VARTIJA  •  HP " + Mathf.CeilToInt(boss.health), titleStyle);
-                else GUI.Label(new Rect(850,190,410,55), BossDefeated ? "Uusi kartta generoidaan..." : "Bossiportaali: " + Mathf.Max(0, Mathf.CeilToInt(90 - Elapsed + areaStarted)) + " s", textStyle);
+                else GUI.Label(new Rect(850,190,410,55), BossDefeated ? "Uusi kartta generoidaan..." : AreaPortalLabel(), textStyle);
             }
             if (!Selecting && PendingChoices == 0) return;
             GUI.color = new Color(0,0,0,.93f); GUI.DrawTexture(new Rect(0,0,1280,720), Texture2D.whiteTexture); GUI.color = Color.white;

@@ -213,7 +213,11 @@ namespace BonkSurvivor
             invulnerability -= dt;
             spawnTimer -= dt;
             int enemyCap = Mathf.RoundToInt((260 + (Area - 1) * 30) * MapTierMultiplier);
-            if (boss == null && Elapsed - areaStarted < 90 && spawnTimer <= 0 && enemies.Count < enemyCap)
+            // Kohta 3: Mappi-tilassa spawni jatkuu ajasta riippumatta kunnes viholliskiintiö täyttyy
+            // (AreaSpawningStopped), Selviytymistilassa muuttumaton 90s-ajastin (sama funktio kattaa
+            // molemmat - ks. SurvivorProceduralMaps.cs). enemyCap rajoittaa edelleen vain samanaikaisia
+            // vihollisia kentällä, ei kokonaismäärää.
+            if (boss == null && !AreaSpawningStopped && spawnTimer <= 0 && enemies.Count < enemyCap)
             {
                 SpawnEnemy(); spawnTimer = Mathf.Max(.09f, .8f - Elapsed / 200f - (Area - 1) * .05f);
             }
@@ -370,7 +374,8 @@ namespace BonkSurvivor
             if (IsNetworkHost) BroadcastDamageNumber(e.body.position + Vector3.up * 1.25f, amount, critical);
             if (e.health > 0) { e.body.position = MoveOnMap(e.body.position, (e.body.position - player.position).normalized * .6f, e == boss ? 1.3f : .65f); return; }
             AdvancedKill(e);
-            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); TryDropQualityMaterial(); TryDropWeaponAffixMaterial(); TryDropAffixRerollMaterial(); }
+            bool wasBoss = e == boss;
+            if (wasBoss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); TryDropQualityMaterial(); TryDropWeaponAffixMaterial(); TryDropAffixRerollMaterial(); }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;
@@ -378,6 +383,11 @@ namespace BonkSurvivor
             if (Random.value < .01f)
                 drops.Add(new Drop { body = SpawnDrop(new Vector3(e.body.position.x, .5f, e.body.position.z), Vector3.one * .45f, PrimitiveType.Sphere, healthMaterial, true), value = 25, isHealth = true });
             enemies.Remove(e); Destroy(e.body.gameObject); Kills++;
+            // Mappi-tilan viholliskiintiö (kohta 3) - lasketaan vain SpawnEnemy()-vihollisia, ei bossia.
+            // Selviytymistilassa arvoa ei koskaan lueta (AreaSpawningStopped/AreaBossReady gatettu
+            // activeMapType != Procedural -ehdolla), joten kasvattaminen siellä olisi harmitonta,
+            // mutta jätetty silti pois (wasBoss) selkeyden ja tarkoituksen vuoksi.
+            if (!wasBoss) areaKillCount++;
         }
 
         // Networked when hosting a multiplayer session (so a connected friend can see loot on the

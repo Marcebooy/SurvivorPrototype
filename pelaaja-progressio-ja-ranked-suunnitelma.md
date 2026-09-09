@@ -54,7 +54,9 @@ Ks. kohta 0.5. Tallennus `PlayerPrefs` samalla mallilla kuin Silver. Palkinnot (
 
 ## 3. Mappi-tila: Map Type + Tier — TOTEUTETTU
 
-Ks. kohta 0.5. Alkuperäinen suunnitelma sisälsi 4–6 Map Typeä — toteutettu toistaiseksi kaksi, loput voi lisätä samalla mallilla myöhemmin. Sustain-resurssi ("Map Shard") EI ole toteutettu.
+Ks. kohta 0.5. Alkuperäinen suunnitelma sisälsi 4–6 Map Typeä — toteutettu toistaiseksi kolme (Mosswood, Luuluola, Tuhkaerämaa), loput voi lisätä samalla mallilla myöhemmin. Sustain-resurssi ("Map Shard") EI ole toteutettu.
+
+**Viholliskiintiö Tierin mukaan — TOTEUTETTU 2026-09-10.** Mappi-tilan alueet eivät enää lopu 90 sekunnin ajastimeen (se pysyy Selviytymistilan omana muuttumattomana mekaniikkana) - sen sijaan `SpawnEnemy()` jatkaa kunnes Tier-kohtainen kokonaiskiintiö (`TierEnemyQuota`: T1=150, T2=220, T3=300) täyttyy, ja bossiportaali avautuu vasta kun kiintiö on täynnä JA kentällä ei ole enää yhtään henkiin jäänyttä vihollista. Samanaikaisten vihollisten yläraja (`enemyCap`) ja vihollisten HP/nopeus-skaalauskaava koskemattomia - vain spawnin määrä/lopetusehto muuttui. Koskee kaikkia kolmea kiinteää karttaa yhtä lailla (sama `SurvivorGame.cs`/`SurvivorProgression.cs`-ydinsilmukka, ei MapType-kohtaista haarautumista). UI näyttää Mappi-tilassa "X/Y vihollista tapettu" 90s-ajastimen sijaan. Testattu Unity CLI:llä Play Modessa reflektiolla (kiintiörajan tarkka osuma, `AreaBossReady` vasta tyhjällä kentällä, Selviytymistilan 0-vaikutus varmennettu erikseen) - ks. AGENTS.md:n Muutosloki tarkat luvut. Ei koskettu WeaponStats.cs:ään tai muuhun taistelukoodiin.
 
 ## 4. Loadout-systeemi Mappi-tilaan — TOTEUTETTU KOKONAAN (omistuspohjainen + variantit + laatutaso + affiksit + hahmoprofiili)
 

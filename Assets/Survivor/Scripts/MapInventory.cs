@@ -66,5 +66,18 @@ namespace BonkSurvivor
             if (roll < .90f) return 2;
             return 3;
         }
+
+        // Tiivis yhteenveto HAHMOT-tabin hahmoprofiiliin - ei toista koko MAPIT-tabin taulukkoa.
+        public string MapInventorySummary()
+        {
+            var parts = new List<string>();
+            foreach (var type in new[] { MapType.Mosswood, MapType.BoneCave })
+                for (int tier = 1; tier <= 3; tier++)
+                {
+                    int count = MapItemCount(type, tier);
+                    if (count > 0) parts.Add(MapTypeName(type) + " T" + tier + "×" + count);
+                }
+            return parts.Count > 0 ? string.Join(", ", parts) : "Ei karttoja vielä";
+        }
     }
 }

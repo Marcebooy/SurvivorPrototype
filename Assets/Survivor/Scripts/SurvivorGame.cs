@@ -75,7 +75,7 @@ namespace BonkSurvivor
         // chain/chainLeft: Bow-variantin ("Kimmokaari") kimmoke-ammus, ks. WeaponVariants.cs + AttackWeapons.
         sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); public bool chain; public int chainLeft; }
 
-        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadWeaponVariants(); LoadVariantQuality(); LoadSettings(); BuildWorld(); }
+        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadDefaultLoadout(); LoadWeaponVariants(); LoadVariantQuality(); LoadSettings(); BuildWorld(); }
 
         void LoadSettings()
         {

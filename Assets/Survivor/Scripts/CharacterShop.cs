@@ -10,6 +10,55 @@ namespace BonkSurvivor
     {
         readonly Dictionary<PlayerCharacter, HashSet<int>> ownedUpgrades = new Dictionary<PlayerCharacter, HashSet<int>>();
         PlayerCharacter shopCharacter = PlayerCharacter.Pottu;
+        Vector2 characterTabScroll;
+
+        // Pysyvä oletusloadout per hahmo - sama id-muoto kuin SurvivorProgression.cs:n mapLoadout
+        // (aseet WeaponUpgradeId:n kautta, Tomet suoraan). Esitäyttää DrawLoadoutSelectin
+        // loadoutWeapons/loadoutTomes-staging-setit ResetProgressionissa, mutta on vain lähtökohta -
+        // ConfirmLoadout/SkipLoadout eivät koskaan kirjoita tänne takaisin, joten run-kohtainen
+        // muokkaus Mappi-runin alkuruudussa ei muuta tätä pysyvää oletusta.
+        readonly Dictionary<PlayerCharacter, HashSet<int>> defaultLoadout = new Dictionary<PlayerCharacter, HashSet<int>>();
+
+        static string DefaultLoadoutKey(PlayerCharacter c) => SaveKey + "DefaultLoadout_" + c;
+
+        public IReadOnlyCollection<int> DefaultLoadoutFor(PlayerCharacter c) => defaultLoadout.TryGetValue(c, out var set) ? set : System.Array.Empty<int>();
+
+        bool IsInDefaultLoadout(PlayerCharacter c, int id) => defaultLoadout.TryGetValue(c, out var set) && set.Contains(id);
+
+        void ToggleDefaultLoadout(PlayerCharacter c, int id)
+        {
+            if (!defaultLoadout.TryGetValue(c, out var set)) defaultLoadout[c] = set = new HashSet<int>();
+            if (set.Contains(id)) set.Remove(id);
+            else
+            {
+                int cap = IsTomeId(id) ? MaxTomeKinds : MaxWeaponKinds;
+                int currentCount = 0;
+                foreach (var existing in set) if (IsTomeId(existing) == IsTomeId(id)) currentCount++;
+                if (currentCount >= cap) return;
+                set.Add(id);
+            }
+            SaveDefaultLoadout(c);
+        }
+
+        void SaveDefaultLoadout(PlayerCharacter c)
+        {
+            var set = defaultLoadout.TryGetValue(c, out var s) ? s : null;
+            PlayerPrefs.SetString(DefaultLoadoutKey(c), set == null ? "" : string.Join(",", set));
+            PlayerPrefs.Save();
+        }
+
+        void LoadDefaultLoadout()
+        {
+            defaultLoadout.Clear();
+            foreach (PlayerCharacter c in System.Enum.GetValues(typeof(PlayerCharacter)))
+            {
+                string saved = PlayerPrefs.GetString(DefaultLoadoutKey(c), "");
+                if (string.IsNullOrEmpty(saved)) continue;
+                var set = new HashSet<int>();
+                foreach (var part in saved.Split(',')) if (int.TryParse(part, out int id)) set.Add(id);
+                if (set.Count > 0) defaultLoadout[c] = set;
+            }
+        }
 
         // Every character's fixed fights-with-this weapon (matches SelectCharacter's auto-assign
         // in SurvivorPottu.cs) is owned for free from the start. Pottu has no fixed weapon in
@@ -66,6 +115,16 @@ namespace BonkSurvivor
 
         void DrawCharacterTab()
         {
+            // Sisältö kasvoi kaupan lisäksi karttavarasto-yhteenvedolla ja oletusloadout-osiolla,
+            // eikä enää mahdu yhdelle 720px-korkealle ruudulle - koko välilehti on nyt vieritettävä.
+            // ScrollView-position on koko näytön kokoinen (0,0,1280,720), joten kaikki alkuperäiset
+            // absoluuttiset koordinaatit (150, 192, 226, ... y0=326 jne.) pysyvät muuttumattomina;
+            // DrawMenuTabs() (yläpalkin välilehdet) piirretään erikseen tämän ulkopuolella, joten
+            // ScrollView ei vaikuta niihin.
+            var viewport = new Rect(0, 0, 1280, 720);
+            var content = new Rect(0, 0, 1260, 2000);
+            characterTabScroll = GUI.BeginScrollView(viewport, characterTabScroll, content);
+
             GUI.Label(new Rect(40,150,1200,40), "HAHMOT", titleStyle);
             GUI.Label(new Rect(40,192,1200,26), "Osta lisää aseita ja Tomeja Silverillä hahmokohtaisesti - Mappi-tilan loadout kootaan vain siitä mitä hahmo omistaa.", textStyle);
             const float cx0 = 40, cw = 138, ch = 32, cgap = 6;
@@ -95,6 +154,76 @@ namespace BonkSurvivor
                 int id = TomeIds[i];
                 DrawShopSlot(new Rect(x0+col*(tbw+gx), tomesY+26+row*(tbh+gy), tbw, tbh), id, UpgradeNames[id]);
             }
+            int tomeRows = Mathf.CeilToInt(TomeIds.Length / (float)tcols);
+            float profileY = tomesY + 26 + tomeRows*(tbh+gy) + 24;
+
+            GUI.Label(new Rect(40, profileY, 1200, 24), "KARTTAVARASTO: " + MapInventorySummary(), textStyle);
+            profileY += 34;
+
+            int defaultWeaponCount = 0, defaultTomeCount = 0;
+            foreach (var id in DefaultLoadoutFor(shopCharacter)) { if (IsTomeId(id)) defaultTomeCount++; else defaultWeaponCount++; }
+            GUI.Label(new Rect(40, profileY, 1200, 24),
+                "OLETUSLOADOUT (" + defaultWeaponCount + "/" + MaxWeaponKinds + " asetta, " + defaultTomeCount + "/" + MaxTomeKinds + " Tomea - esitäyttää Mappi-runin loadout-ruudun, muokattavissa vielä siellä)",
+                textStyle);
+            profileY += 30;
+            DrawDefaultLoadoutSection(40, profileY);
+
+            GUI.EndScrollView();
+        }
+
+        // Sama grid-tyyli kuin DrawLoadoutSelectissa (SurvivorProgression.cs), mutta kirjoittaa
+        // pysyvään defaultLoadoutiin loadoutWeapons/loadoutTomes-staging-setin sijaan, ja käyttää
+        // shopCharacteria (HAHMOT-tabin valinta) SelectedCharacterin (aktiivinen run) sijaan.
+        void DrawDefaultLoadoutSection(float x0, float y0)
+        {
+            var ownedWeapons = new List<int>();
+            var ownedTomes = new List<int>();
+            foreach (var id in OwnedUpgradesFor(shopCharacter)) { if (IsTomeId(id)) ownedTomes.Add(id); else ownedWeapons.Add(id); }
+            ownedWeapons.Sort(); ownedTomes.Sort();
+
+            const int cols = 6; const float bw = 195, bh = 34, gx = 8, gy = 6;
+            const float variantRowH = 20, qualityRowH = 20; const float rowPitch = bh + variantRowH + qualityRowH + gy;
+            for (int i = 0; i < ownedWeapons.Count; i++)
+            {
+                int col = i % cols, row = i / cols;
+                int upgradeId = ownedWeapons[i];
+                var weapon = IdToWeapon(upgradeId);
+                bool selected = IsInDefaultLoadout(shopCharacter, upgradeId);
+                float bx = x0+col*(bw+gx), by = y0+row*rowPitch;
+                GUI.color = selected ? new Color(.3f,.85f,1) : Color.white;
+                if (GUI.Button(new Rect(bx, by, bw, bh), WeaponLabel(weapon), cardTextStyle)) ToggleDefaultLoadout(shopCharacter, upgradeId);
+                if (IsVariantUnlocked(weapon, 1))
+                {
+                    bool variantOn = ActiveVariantFor(shopCharacter, weapon) == 1;
+                    int quality = VariantQuality(weapon, 1);
+                    string stars = new string('★', quality) + new string('☆', 3 - quality);
+                    GUI.color = variantOn ? new Color(1f,.75f,.25f) : new Color(.55f,.55f,.55f);
+                    if (GUI.Button(new Rect(bx, by+bh+2, bw, variantRowH-2), VariantName(weapon,1) + " " + stars + (variantOn ? " (PÄÄLLÄ)" : ""), cardTextStyle))
+                        SetActiveVariant(shopCharacter, weapon, variantOn ? 0 : 1);
+                    if (quality < 3)
+                    {
+                        int cost = VariantQualityUpgradeCost(weapon, 1);
+                        GUI.color = Color.white; GUI.enabled = QualityMaterial >= cost;
+                        if (GUI.Button(new Rect(bx, by+bh+variantRowH+4, bw, qualityRowH-2), "Paranna (" + cost + " kpl)", cardTextStyle))
+                            UpgradeVariantQuality(shopCharacter, weapon, 1);
+                        GUI.enabled = true;
+                    }
+                }
+                GUI.color = Color.white;
+            }
+            int weaponRows = Mathf.Max(1, Mathf.CeilToInt(ownedWeapons.Count / (float)cols));
+            float tomesY = y0 + weaponRows*rowPitch + 14;
+
+            const int tcols = 3; const float tbw = 390, tbh = 34;
+            for (int i = 0; i < ownedTomes.Count; i++)
+            {
+                int col = i % tcols, row = i / tcols;
+                int id = ownedTomes[i];
+                bool selected = IsInDefaultLoadout(shopCharacter, id);
+                GUI.color = selected ? new Color(.3f,.85f,1) : Color.white;
+                if (GUI.Button(new Rect(x0+col*(tbw+gx), tomesY+row*(tbh+gy), tbw, tbh), UpgradeNames[id], cardTextStyle)) ToggleDefaultLoadout(shopCharacter, id);
+            }
+            GUI.color = Color.white;
         }
 
         static string CharacterRosterName(PlayerCharacter character)

@@ -87,7 +87,19 @@ namespace BonkSurvivor
             // not Survival's always-procedural map) - gates BeginMapRun()/CreateLandmarks() until
             // the player confirms or skips (see DrawLoadoutSelect/ConfirmLoadout/SkipLoadout).
             awaitingLoadoutChoice = selectedMapType != MapType.Procedural;
-            if (!awaitingLoadoutChoice) { BeginMapRun(); CreateLandmarks(); }
+            if (awaitingLoadoutChoice)
+            {
+                // Esitäyttö HAHMOT-tabin pysyvästä oletusloadoutista (CharacterShop.cs) - vain
+                // lähtökohta, ei lukko: ConfirmLoadout/SkipLoadout eivät koskaan kirjoita takaisin
+                // defaultLoadoutiin, joten pelaaja voi vapaasti muokata tätä juuri ennen käynnistystä
+                // ilman että se muuttaa pysyvää oletusta.
+                foreach (var id in DefaultLoadoutFor(SelectedCharacter))
+                {
+                    if (!IsUpgradeOwned(SelectedCharacter, id)) continue; // omistus on voinut muuttua tallennuksen jälkeen
+                    if (IsTomeId(id)) loadoutTomes.Add(id); else loadoutWeapons.Add(id);
+                }
+            }
+            else { BeginMapRun(); CreateLandmarks(); }
         }
 
         public bool SelectStarter(int index)

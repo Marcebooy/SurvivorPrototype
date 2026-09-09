@@ -82,24 +82,24 @@ Peli sisältää 20 hahmoa, 30 asetta, yli 70 esinettä ja 240 tehtävää. Yksi
 
 #### Avattavat aseet
 
-- Revolver: useita kimpoilevia luoteja.
+- Revolver: useita kimpoilevia luoteja. Hyötyy Damage-, Bounces-, Quantity- ja Cooldown-statseista.
 - Aegis: torjuu vahinkoa ja vapauttaa vastaiskun.
 - Bananarang: ulos lentävä ja takaisin palaava banaani.
 - Aura: jatkuva vahinkokehä pelaajan ympärillä.
-- Axe: pyörivät, laajasti osuvat kirveet.
+- Axe: pyörivät, laajasti osuvat kirveet. Hyötyy Damage-, Size-, Quantity- ja Cooldown-statseista.
 - Space Noodle: linkittyy viholliseen ja vahingoittaa välissä olevia kohteita.
 - Sniper Rifle: hidas mutta erittäin voimakas läpäisevä laukaus.
 - Slutty Rocket: hakeutuvat räjähtävät raketit.
-- Shotgun: lyhyen kantaman haulikkoparvi.
+- Shotgun: lyhyen kantaman haulikkoparvi. Hyötyy Damage-, Quantity-, Size- ja Cooldown-statseista.
 - Mines: vihollisen kosketuksesta räjähtävät miinat.
 - Wireless Dagger: hakeutuvat tikarit, jotka voivat kimmota.
-- Frostwalker: hidastaa ja jäädyttää vihollisia.
+- Frostwalker: hidastaa ja jäädyttää vihollisia. Hyötyy Damage-, Duration-, Size- ja Cooldown-statseista.
 - Tornado: työntää ja vahingoittaa vihollisia.
 - Dexecutioner: teräase, jolla on execute-mahdollisuus tavallisiin vihollisiin.
 - Blood Magic: tapot voivat kasvattaa pysyvää Max HP:tä.
-- Black Hole: vetää vihollisia kasaan ja vahingoittaa niitä.
+- Black Hole: vetää vihollisia kasaan ja vahingoittaa niitä. Hyötyy Damage-, Size-, Duration- ja Cooldown-statseista.
 - Poison Flask: luo myrkyllisiä alueita.
-- Katana: nopeat automaattiset iskut lähimpään kohteeseen.
+- Katana: nopeat automaattiset iskut lähimpään kohteeseen. Hyötyy Damage-, Cooldown-, Crit- ja Quantity-statseista.
 - Dragon's Breath: automaattisesti suuntautuva tulikartio.
 - Dice: satunnainen vahinko; hyvät heitot kasvattavat critiä.
 - Hero Sword: voimakas lähitaistelu- ja etäviilto.

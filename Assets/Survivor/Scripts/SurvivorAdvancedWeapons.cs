@@ -103,7 +103,9 @@ namespace BonkSurvivor
                 var w=(Weapon)(9+i);int level=WeaponLevel(w);if(level==0)continue;
                 advancedTimers[i]-=dt;if(advancedTimers[i]>0)continue;
                 CastAdvanced(w,level);
-                advancedTimers[i]=AdvancedCatalog.Entries[i].interval/Mathf.Max(.1f,attackRate);
+                // Näillä aseilla on oma advancedTimers[i]-ajastin (kuten Flamewalkerilla), joten
+                // Cooldown-affiksi voi nopeuttaa juuri tätä asetta erikseen muihin vaikuttamatta.
+                advancedTimers[i]=AdvancedCatalog.Entries[i].interval/(Mathf.Max(.1f,attackRate)*AffixMultiplier(w,AffixStat.Cooldown));
             }
             TickAdvancedShots(dt);TickAdvancedZones(dt);
         }
@@ -169,16 +171,16 @@ namespace BonkSurvivor
         void CastAdvanced(Weapon w,int level)
         {
             EnsureArsenalMaterials();EnsureAdvancedMaterials();
-            float power=damage*(1+.25f*(level-1));
+            float power=damage*(1+.25f*(level-1))*AffixMultiplier(w,AffixStat.Damage);
             var nearest=Nearest(player.position,40);var aim=nearest!=null ? (nearest.body.position-player.position).normalized : player.forward;
             if(w==Weapon.Aegis){shieldCharges=1;return;}
             if(w==Weapon.Mines || w==Weapon.Frostwalker)
-            {AddAdvancedZone(w,player.position,aim,null,power,w==Weapon.Mines ? 2.8f*Size : 2*Size,(w==Weapon.Mines ? 10 : 3)*EffectDuration);return;}
+            {AddAdvancedZone(w,player.position,aim,null,power,(w==Weapon.Mines ? 2.8f*Size : 2*Size)*AffixMultiplier(w,AffixStat.Size),(w==Weapon.Mines ? 10 : 3)*EffectDuration*AffixMultiplier(w,AffixStat.Duration));return;}
             if(nearest==null)return;
             if(w==Weapon.SpaceNoodle || w==Weapon.BlackHole || w==Weapon.PoisonFlask || w==Weapon.Tornado)
             {
                 Vector3 pos=w==Weapon.Tornado || w==Weapon.SpaceNoodle ? player.position : nearest.body.position;
-                AddAdvancedZone(w,pos,aim,nearest,power,w==Weapon.SpaceNoodle ? .65f*Size : 3*Size,(w==Weapon.SpaceNoodle ? 1.8f : 3)*EffectDuration);return;
+                AddAdvancedZone(w,pos,aim,nearest,power,(w==Weapon.SpaceNoodle ? .65f*Size : 3*Size)*AffixMultiplier(w,AffixStat.Size),(w==Weapon.SpaceNoodle ? 1.8f : 3)*EffectDuration*AffixMultiplier(w,AffixStat.Duration));return;
             }
             if(w==Weapon.Sniper)
             {var end=player.position+aim*45;LineHit(player.position,end,.8f*Size,power*5);AdvancedBeam(player.position,end,.08f*Size,w);return;}
@@ -186,11 +188,13 @@ namespace BonkSurvivor
             {
                 characterVisual.Swing(aim);
                 float range=w==Weapon.Dice ? 20 : w==Weapon.BloodMagic ? 10 : 6*Size;
-                var used=new HashSet<Enemy>();int count=w==Weapon.Katana ? Quantity : 1;
+                var used=new HashSet<Enemy>();
+                int baseCount=w==Weapon.Katana ? Quantity : 1;
+                int count=baseCount+AffixCountBonus(w,AffixStat.Quantity,baseCount);
                 for(int i=0;i<count;i++)
                 {
                     var e=Nearest(player.position,range,used);if(e==null)break;used.Add(e);
-                    float hit=power*(w==Weapon.Katana ? .8f : 1.25f);
+                    float hit=power*(w==Weapon.Katana ? .8f : 1.25f)*AffixMultiplier(w,AffixStat.Crit);
                     if(w==Weapon.Dexecutioner && CanExecute(e) && Random.value<Mathf.Min(.5f,.15f+.02f*level))hit=e.health+1;
                     if(w==Weapon.Dice){LastDiceRoll=Random.Range(1,7);hit=power*LastDiceRoll*.4f;if(LastDiceRoll==6)CritChance=Mathf.Min(.7f,CritChance+.01f);}
                     AdvancedBeam(player.position,e.body.position,.18f*Size,w);Hit(e,hit);
@@ -212,7 +216,8 @@ namespace BonkSurvivor
                 else {AdvancedPulse(player.position,range,w);characterVisual.Swing(aim);}
                 if(w!=Weapon.HeroSword)return;
             }
-            int projectiles=w==Weapon.Revolver ? Quantity+2 : Quantity;
+            int baseProjectiles=w==Weapon.Revolver ? Quantity+2 : Quantity;
+            int projectiles=baseProjectiles+AffixCountBonus(w,AffixStat.Quantity,baseProjectiles);
             for(int i=0;i<projectiles && advancedShots.Count<200;i++)
             {
                 Vector3 direction=Quaternion.Euler(0,(i-(projectiles-1)*.5f)*8,0)*aim;
@@ -221,11 +226,13 @@ namespace BonkSurvivor
         }
         void AddAdvancedShot(Weapon w,int level,Vector3 direction,Enemy target,float power)
         {
+            float affixSize=AffixMultiplier(w,AffixStat.Size);
             var scale=w==Weapon.Bananarang ? new Vector3(.75f,.18f,.35f) : w==Weapon.Axe ? new Vector3(.8f,.16f,.8f) : w==Weapon.Rocket ? new Vector3(.3f,.3f,.9f) : w==Weapon.HeroSword ? new Vector3(2*Size,.12f,.22f) : new Vector3(.18f,.18f,.65f);
-            var body=Shape(WeaponLabel(w),PrimitiveType.Cube,player.position,scale*Size,AdvancedMaterial(w),world);body.rotation=Quaternion.LookRotation(direction);
+            var body=Shape(WeaponLabel(w),PrimitiveType.Cube,player.position,scale*Size*affixSize,AdvancedMaterial(w),world);body.rotation=Quaternion.LookRotation(direction);
             if(w==Weapon.Axe) {var handle=Shape("Axe handle",PrimitiveType.Cube,body.position,new Vector3(.13f,.13f,1.4f),boneMat,world);handle.SetParent(body,true);}
             float speed=(w==Weapon.Revolver ? 30 : w==Weapon.Rocket ? 12 : w==Weapon.Axe ? 8 : 18)*ProjectileSpeed;
-            advancedShots.Add(new AdvancedShot{kind=w,body=body,direction=direction,target=target,power=power*(w==Weapon.Rocket ? 2 : w==Weapon.Axe ? 1.5f : 1),speed=speed,radius=(w==Weapon.HeroSword ? 1.1f : .55f)*Size,life=(w==Weapon.Bananarang ? 3 : 2.5f)*EffectDuration,bounces=1+level/2});
+            int baseBounces=1+level/2;
+            advancedShots.Add(new AdvancedShot{kind=w,body=body,direction=direction,target=target,power=power*(w==Weapon.Rocket ? 2 : w==Weapon.Axe ? 1.5f : 1),speed=speed,radius=(w==Weapon.HeroSword ? 1.1f : .55f)*Size*affixSize,life=(w==Weapon.Bananarang ? 3 : 2.5f)*EffectDuration,bounces=baseBounces+AffixCountBonus(w,AffixStat.Bounces,baseBounces)});
         }
         void TickAdvancedShots(float dt)
         {

@@ -4,10 +4,11 @@ using UnityEngine;
 namespace BonkSurvivor
 {
     // Ase-affiksit: per (hahmo, ase) rullatut, pysyvät bonukset yhdelle statille kerrallaan,
-    // max 2 slottia per ase. Vain seitsemälle aloitusaseelle (AGENTS.md:n dokumentoima
-    // statshyötylista) - sama pilottilaajuus kuin WeaponVariants.cs:n 3 asetta, laajennettavissa
-    // myöhemmin. Vain Mappi-tilassa (droppi + käyttö) - Selviytymistila (Procedural) ei koskaan
-    // aseta, lue tai kuluta affiksidataa miltään osin.
+    // max 2 slottia per ase. AGENTS.md:n dokumentoima statshyötylista per ase - aluksi vain
+    // seitsemälle aloitusaseelle (pilotti), laajennettu tämän jälkeen kuudelle avattavalle
+    // aseelle (Revolver/Axe/Katana/Shotgun/Frostwalker/BlackHole). Vain Mappi-tilassa
+    // (droppi + käyttö) - Selviytymistila (Procedural) ei koskaan aseta, lue tai kuluta
+    // affiksidataa miltään osin.
     public sealed partial class SurvivorGame
     {
         public enum AffixStat { Damage, Size, Quantity, Cooldown, Duration, ProjectileSpeed, Bounces, Crit }
@@ -28,6 +29,12 @@ namespace BonkSurvivor
             { Weapon.Chunkers, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Size, AffixStat.ProjectileSpeed } },
             { Weapon.Bone, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Bounces, AffixStat.ProjectileSpeed } },
             { Weapon.Bow, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Crit, AffixStat.ProjectileSpeed } },
+            { Weapon.Revolver, new[] { AffixStat.Damage, AffixStat.Bounces, AffixStat.Quantity, AffixStat.Cooldown } },
+            { Weapon.Axe, new[] { AffixStat.Damage, AffixStat.Size, AffixStat.Quantity, AffixStat.Cooldown } },
+            { Weapon.Katana, new[] { AffixStat.Damage, AffixStat.Cooldown, AffixStat.Crit, AffixStat.Quantity } },
+            { Weapon.Shotgun, new[] { AffixStat.Damage, AffixStat.Quantity, AffixStat.Size, AffixStat.Cooldown } },
+            { Weapon.Frostwalker, new[] { AffixStat.Damage, AffixStat.Duration, AffixStat.Size, AffixStat.Cooldown } },
+            { Weapon.BlackHole, new[] { AffixStat.Damage, AffixStat.Size, AffixStat.Duration, AffixStat.Cooldown } },
         };
 
         static string AffixStatLabel(AffixStat s) => s switch

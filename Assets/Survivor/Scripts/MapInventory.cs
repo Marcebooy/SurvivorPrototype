@@ -18,6 +18,7 @@ namespace BonkSurvivor
         {
             MapType.Mosswood => "Mosswood",
             MapType.BoneCave => "Luuluola",
+            MapType.AshWastes => "Tuhkaerämaa",
             _ => "Satunnainen",
         };
 
@@ -26,6 +27,7 @@ namespace BonkSurvivor
             mapItems.Clear();
             mapItems[(MapType.Mosswood, 1)] = PlayerPrefs.GetInt(MapItemKey(MapType.Mosswood, 1), 0);
             mapItems[(MapType.BoneCave, 1)] = PlayerPrefs.GetInt(MapItemKey(MapType.BoneCave, 1), 0);
+            mapItems[(MapType.AshWastes, 1)] = PlayerPrefs.GetInt(MapItemKey(MapType.AshWastes, 1), 0);
         }
 
         void GrantMapItem(MapType type, int tier = 1)
@@ -46,14 +48,18 @@ namespace BonkSurvivor
             return true;
         }
 
-        // 18% boss-kill chance, picked between the two non-procedural map types (Procedural is
-        // already free/unlimited so it never drops). Tier rolls 1-3, weighted toward the low
-        // end (60/30/10%) so higher-Tier maps stay rare. Uses the same `notice` banner as other
-        // run events (e.g. "ALUE X" on area advance).
+        // Non-procedural map types that can drop as a Karttaesine - Procedural is already
+        // free/unlimited so it's excluded. AshWastes joined Mosswood/BoneCave here (kohta 9);
+        // adding a fixed map only ever means adding its MapType value to this one array.
+        static readonly MapType[] DroppableMapTypes = { MapType.Mosswood, MapType.BoneCave, MapType.AshWastes };
+
+        // 18% boss-kill chance, picked evenly between the non-procedural map types. Tier rolls
+        // 1-3, weighted toward the low end (60/30/10%) so higher-Tier maps stay rare. Uses the
+        // same `notice` banner as other run events (e.g. "ALUE X" on area advance).
         void TryDropMapItem()
         {
             if (Random.value >= .18f) return;
-            var type = Random.value < .5f ? MapType.Mosswood : MapType.BoneCave;
+            var type = DroppableMapTypes[Random.Range(0, DroppableMapTypes.Length)];
             int tier = RollMapTier();
             GrantMapItem(type, tier);
             notice = "Löysit Karttaesineen: " + MapTypeName(type) + " T" + tier + "!"; noticeUntil = Elapsed + 6;
@@ -71,7 +77,7 @@ namespace BonkSurvivor
         public string MapInventorySummary()
         {
             var parts = new List<string>();
-            foreach (var type in new[] { MapType.Mosswood, MapType.BoneCave })
+            foreach (var type in DroppableMapTypes)
                 for (int tier = 1; tier <= 3; tier++)
                 {
                     int count = MapItemCount(type, tier);

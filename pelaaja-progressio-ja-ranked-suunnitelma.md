@@ -23,7 +23,9 @@ Mappi-tilan pelattava versio on nyt kokonaisuudessaan valmis alkuperäisen visio
 
 **Tunnettu avoin puute:** moninpelin karttasynkronointi (`SurvivorGameNetwork.cs`) ei tunne `MapType`/Tieriä — jos isäntä pelaa kiinteällä kartalla, kaverin kartta ei todennäköisesti synkkaa oikein. Tietoisesti jätetty korjaamatta, priorisoitu myöhemmäksi (päätös 2026-09-09).
 
-**Ei vielä tehty**: yhtenäinen WeaponStats-pipeline (ks. kohta 10.5, aloitettu Codella 2026-09-09, vaiheet 1–3 valmiit), aseiden visuaalinen arkkityyppipohja-työnjako Astralle (ks. kohta 10.6, aloitettu), fragmenttisysteemi (variantit lopuille 27 aseelle), affiksijärjestelmän laajennus lopuille 17 aseelle (13/30 tehty), sustain-resurssi/"Map Shard" pysyvälle Tier-avaukselle ilman RNG-droppia, leaderboardit, ranked, achievements, moninpelin karttasynkronointikorjaus, uudet Map Typet (Tuhkaerämaa/Jäätikkö/Suo), hideout (kohta 10.4), Crit-mekaniikan yleistäminen globaaliksi (ks. kohta 10.5, tietoisesti erotettu WeaponStats-refaktoroinnista).
+**Tuhkaerämaa — VALMIS ja pelattavissa (2026-09-09).** Astran assettipaketti (7 URP-materiaalia, 5 maamerkkiryhmää, muokattava prefab+mesh+C#-generointilähde, `AshWastesEnvironment.cs`/`SurvivorAshWastesMap.cs`/`AshWastesBuilder.cs`) kytketty MapType-enumiin ja MAPIT-tabiin samalla `BuildFixedMap`-reitillä kuin Mosswood/Luuluola aikanaan. Uusi `MapType.AshWastes` + kolmas nappi MAPIT-tabiin, drop-/tier-systeemi laajennettu kolmanteen tyyppiin (`MapInventory.cs`:n `DroppableMapTypes`-taulukko, ei uutta logiikkaa). Testattu Unity CLI:llä täysi sykli (valinta → run → 5 s taistelua 7 vihollista vastaan → poistuminen), 0 uutta konsolivirhettä, Selviytymistila/muut kartat koskematta. Ks. AGENTS.md:n Muutosloki ja kohta 9.
+
+**Ei vielä tehty**: yhtenäinen WeaponStats-pipeline (ks. kohta 10.5, aloitettu Codella 2026-09-09, vaiheet 1–3 valmiit), aseiden visuaalinen arkkityyppipohja-työnjako Astralle (ks. kohta 10.6, aloitettu), fragmenttisysteemi (variantit lopuille 27 aseelle), affiksijärjestelmän laajennus lopuille 17 aseelle (13/30 tehty), sustain-resurssi/"Map Shard" pysyvälle Tier-avaukselle ilman RNG-droppia, leaderboardit, ranked, achievements, moninpelin karttasynkronointikorjaus (ei tunne MapType/Tieriä millään kolmesta kiinteästä kartasta, ks. kohta 12), Jäätikkö/Suo-kartat, hideout (kohta 10.4), Crit-mekaniikan yleistäminen globaaliksi (ks. kohta 10.5, tietoisesti erotettu WeaponStats-refaktoroinnista).
 
 ## 0. Pelirakenne: kaksi erillistä tilaa (PÄÄTÖS)
 
@@ -93,7 +95,7 @@ Kaikki osat toteutettu ja committoitu: `CharacterShop.cs`, HAHMOT-tab keskitetty
 ## 9. Toteutusjärjestys — päivitetty tilanne
 
 1. ~~Account Level + per-hahmo Mastery~~ — TEHTY, committoitu (2026-09-09)
-2. ~~Map Type -pohja~~ — TEHTY, 2/4-6 karttaa (2026-09-09)
+2. ~~Map Type -pohja~~ — TEHTY, 3/4-6 karttaa (Mosswood, Luuluola, Tuhkaerämaa) (2026-09-09)
 3. ~~Tier-skaalaus~~ — TEHTY, inventaariopohjainen drop-systeemi (2026-09-09)
 4. ~~Per-hahmo ase-/taito-omistus + kauppa + HAHMOT-tab + omistuspohjainen loadout~~ — TEHTY, committoitu (2026-09-09)
 5. ~~Ase-/Tome-variantit (Sword/Bow/Chunkers-pilotti)~~ — TEHTY, committoitu (2026-09-09)
@@ -101,14 +103,15 @@ Kaikki osat toteutettu ja committoitu: `CharacterShop.cs`, HAHMOT-tab keskitetty
 7. ~~HAHMOT-tabin laajennus keskitetyksi hahmoprofiiliksi + oletusloadout~~ — TEHTY, committoitu, commit `182b547` (2026-09-09)
 8. ~~Ase-affiksien craftausjärjestelmä (7 aseen pilotti)~~ — TEHTY, committoitu, commit `44ee574` + Muutosloki `1fc7f1b` (2026-09-09)
 9. ~~Ase-affiksien laajennus 6 lisäaseelle (Revolver/Axe/Katana/Shotgun/Frostwalker/Black Hole, yht. 13/30)~~ — TEHTY, committoitu, commit `1669638` + Muutosloki `146c923` (2026-09-09)
+9c. ~~Tuhkaerämaa kytketty MapType-enumiin ja MAPIT-tabiin~~ — TEHTY, testattu 2026-09-09. Astran assettipaketti + `AshWastesEnvironment.cs`/`SurvivorAshWastesMap.cs`/`AshWastesBuilder.cs` kytketty `BuildFixedMap`-reittiin samalla tavalla kuin Mosswood/Luuluola. Ks. AGENTS.md:n Muutosloki.
 10. **KÄYNNISSÄ: Yhtenäinen WeaponStats-pipeline (ks. kohta 10.5)** — ehdotettu ja hyväksytty 2026-09-09. Vaihe 1 (kartoitus, 8 statin lista) ja vaihe 2 (`WeaponStats`-struct + arkkityyppi/`applicableStats`-taulukko kaikille 30 aseelle) valmiit. Vaihe 3 (`GetWeaponStats()`-laskentafunktio) valmis 2026-09-09 — testattu Play Modessa, käännös 0 virhettä. Tässä vaiheessa vahvistettiin tietoisesti: Crit pysyy paikallisena vahinkokertoimena (ei muuteta globaaliksi crit-mahdollisuudeksi tämän refaktoroinnin osana, ks. alempi "Crit yleiseksi" -kohta). Seuraavaksi vaihe 4: yhtenäinen ajastintaulukko.
 11. Ase-variantit laajemmin (loput 27 asetta) tai fragmenttisysteemi niiden avaamiseen; affiksijärjestelmän laajennus lopuille 17 aseelle — nyt WeaponStats-pipelinen päälle, ei enää bespoke-koodina per ase.
 12. Moninpelin karttasynkronointikorjaus (Map Type/Tier) — ennen ranked/leaderboardeja
 13. Unity Cloud Leaderboards
-14. Achievements, kausisysteemi, ghost-replay, daily-haasteet, lisää Map Typeja (Tuhkaerämaa/Jäätikkö/Suo), Map Shard -sustain-resurssi
+14. Achievements, kausisysteemi, ghost-replay, daily-haasteet, lisää Map Typeja (Jäätikkö/Suo), Map Shard -sustain-resurssi
 15. **"Hideout" — kävelytettävä 3D-tukikohta (ks. kohta 10.4)** — ehdotettu 2026-09-09, tarkoituksella myöhäisessä vaiheessa: rakennetaan vasta kun kohta 11 (loput variantit/fragmentit/affiksit) on täysin valmis, koska hideout on iso 3D/taidetyö esityskerroksena olemassa olevien järjestelmien päällä, ei uusi mekaniikka
 
-Rinnakkainen visuaalinen työ (ei kytköksissä yllä olevaan järjestykseen, ks. myös kohta 10.6): Astra aloitti kiinnityspisteiden pilotin (kattaa kaikki 9 pelattavaa hahmoa, 36 kiinnityspistettä) ja ensimmäiset pohjaperheet (Katana/Corrupted Sword-teräpohja, sauvapohja, neljän ampuma-aseen pohja, kelluvien esineiden kitti, jousi, raskas varsiase) 2026-09-09 — ks. kohta 10.6. Astra tekee myös 3D-hahmomalleja (9/20 valmis, seuraavana Pyromancer) ja uusia karttoja (Tuhkaerämaa ehdotettu) puuttuvien Map Typejen pohjaksi. Ensimmäinen "flagship"-ase (Kaksoiskajo, Sword/Kaksoisterä-teemainen) on tuotu peliin ja toimii visuaalisesti (`SwordVariantVisual.cs`), ei vielä committoitu — pientä hienosäätöä kesken. Toinen näyttävä ase (pääkallo/viikate-teemainen velhon sauva) on konseptivaiheessa Astralla.
+Rinnakkainen visuaalinen työ (ei kytköksissä yllä olevaan järjestykseen, ks. myös kohta 10.6): Astra aloitti kiinnityspisteiden pilotin (kattaa kaikki 9 pelattavaa hahmoa, 36 kiinnityspistettä) ja ensimmäiset pohjaperheet (Katana/Corrupted Sword-teräpohja, sauvapohja, neljän ampuma-aseen pohja, kelluvien esineiden kitti, jousi, raskas varsiase) 2026-09-09 — ks. kohta 10.6. Astra tekee myös 3D-hahmomalleja (9/20 valmis, seuraavana Pyromancer) ja uusia karttoja - Tuhkaerämaa valmis ja kytketty (ks. AGENTS.md 2026-09-09), seuraavaksi Jäätikkö/Suo puuttuvien Map Typejen pohjaksi. Ensimmäinen "flagship"-ase (Kaksoiskajo, Sword/Kaksoisterä-teemainen) on tuotu peliin ja toimii visuaalisesti (`SwordVariantVisual.cs`), ei vielä committoitu — pientä hienosäätöä kesken. Toinen näyttävä ase (pääkallo/viikate-teemainen velhon sauva) on konseptivaiheessa Astralla.
 
 ## 10. Ehdotuksia harkinnassa
 

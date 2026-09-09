@@ -7,10 +7,11 @@ namespace BonkSurvivor
     public sealed partial class SurvivorGame
     {
         // Map Type: Procedural (default, unlimited variety via ProceduralMapLayout) or a
-        // fixed, hand-modeled arena (Mosswood/BuildForestMap, Luuluola/BuildBoneCaveMap).
+        // fixed, hand-modeled arena (Mosswood/BuildForestMap, Luuluola/BuildBoneCaveMap,
+        // Tuhkaerämaa/BuildAshWastesMap - Astra's art-package delivery, README-Tuhkaeramaa.md).
         // selectedMapType is what the MAPIT tab shows/edits; activeMapType is locked in at
         // BeginMapRun() so switching tabs mid-run never changes the map underfoot.
-        public enum MapType { Procedural, Mosswood, BoneCave }
+        public enum MapType { Procedural, Mosswood, BoneCave, AshWastes }
         MapType selectedMapType = MapType.Procedural;
         int selectedMapTier = 1;
         MapType activeMapType = MapType.Procedural;
@@ -88,7 +89,9 @@ namespace BonkSurvivor
             proceduralMaterials.Clear(); forestObstacles.Clear();
             MapLayout=null; CurrentMapSeed=0;
             int materialStart=materials.Count;
-            if(type==MapType.BoneCave) BuildBoneCaveMap(); else BuildForestMap();
+            if(type==MapType.BoneCave) BuildBoneCaveMap();
+            else if(type==MapType.AshWastes) BuildAshWastesMap();
+            else BuildForestMap();
             for(int i=materialStart;i<materials.Count;i++) proceduralMaterials.Add(materials[i]);
         }
 
@@ -98,7 +101,7 @@ namespace BonkSurvivor
             GUI.Label(new Rect(240,204,800,44), "Kiinteät kartat kuluttavat yhden Karttaesineen PELAA-hetkellä - korkeampi Tier tekee vihollisista vaarallisempia. Bossien kaatamisesta on pieni mahdollisuus löytää niitä.", centerTextStyle);
             float y = 262;
             DrawMapTypeOption(MapType.Procedural, 1, y, "SATUNNAINEN (oletus, Tier 1, rajaton)", true); y += 56;
-            foreach (var type in new[] { MapType.Mosswood, MapType.BoneCave })
+            foreach (var type in new[] { MapType.Mosswood, MapType.BoneCave, MapType.AshWastes })
                 for (int tier = 1; tier <= 3; tier++) { DrawMapTypeOption(type, tier, y, null, false); y += 46; }
             y += 14;
             string selectedLabel = selectedMapType == MapType.Procedural ? "SATUNNAINEN" : MapTypeName(selectedMapType).ToUpperInvariant() + " T" + selectedMapTier;

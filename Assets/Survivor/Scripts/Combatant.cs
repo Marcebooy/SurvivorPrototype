@@ -38,12 +38,16 @@ namespace BonkSurvivor
             internal readonly List<ArsenalShot> Shots = new List<ArsenalShot>();
             internal readonly List<FlamePatch> Flames = new List<FlamePatch>();
             public readonly List<Transform> Rocks = new List<Transform>();
-            public readonly float[] WeaponTimers = new float[6];
             public LineRenderer AuraRing;
             public Transform AuraEffect;
             public float OrbitAngle, OrbitTick;
 
-            public readonly float[] AdvancedTimers = new float[21];
+            // Yhtenäinen ajastintaulukko (pelaaja-progressio-ja-ranked-suunnitelma.md, kohta 10.5) -
+            // yksi slotti per Weapon-enumin arvo (indeksi = (int)Weapon). Korvasi vaiheessa 5 kolme
+            // rinnakkaista mallia (attackTimer-skalaari, WeaponTimers[6], AdvancedTimers[21]).
+            // Sword/Bow/Lightning jakavat yhä tarkoituksella yhden slotin (Sword-indeksi) - ks.
+            // AttackWeapons/SharedAttackTimerAffixMultiplier.
+            public readonly float[] AttackTimerSlots = new float[30];
             internal readonly List<AdvancedShot> AdvancedShots = new List<AdvancedShot>();
             internal readonly List<AdvancedZone> AdvancedZones = new List<AdvancedZone>();
             internal readonly Dictionary<Enemy, Chill> Chilled = new Dictionary<Enemy, Chill>();

@@ -364,10 +364,11 @@ namespace BonkSurvivor
             Vector3 aim = (nearest.body.position - player.position).normalized;
             if (weaponLevels.TryGetValue(Weapon.Sword, out int sword))
             {
-                float reach = 4 * Size * AffixMultiplier(Weapon.Sword, AffixStat.Size);
+                var swordStats = GetWeaponStats(Weapon.Sword);
+                float reach = 4 * Size * swordStats.Size;
                 bool twinblade = ActiveVariant(Weapon.Sword) == 1;
                 float fullPower = damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1))
-                    * AffixMultiplier(Weapon.Sword, AffixStat.Damage) * AffixMultiplier(Weapon.Sword, AffixStat.Quantity);
+                    * swordStats.Damage * swordStats.Quantity;
                 if (twinblade) fullPower *= VariantQualityMultiplier(Weapon.Sword);
                 float mainPower = twinblade ? fullPower * .65f : fullPower;
                 if (best < reach * reach) characterVisual.Swing(aim);
@@ -384,6 +385,7 @@ namespace BonkSurvivor
             }
             if (weaponLevels.TryGetValue(Weapon.Bow, out int bow))
             {
+                var bowStats = GetWeaponStats(Weapon.Bow);
                 characterVisual.Swing(aim);
                 bool ricochet = ActiveVariant(Weapon.Bow) == 1;
                 if (ricochet)
@@ -393,14 +395,14 @@ namespace BonkSurvivor
                     var t = Shape("Ricochet arrow", PrimitiveType.Cube, player.position, new Vector3(.15f,.15f,.95f) * Size, boltMaterial, world);
                     t.rotation = Quaternion.LookRotation(aim);
                     float ricochetPower = damage * (1 + .25f * (bow - 1)) * 1.3f * VariantQualityMultiplier(Weapon.Bow)
-                        * AffixMultiplier(Weapon.Bow, AffixStat.Damage) * AffixMultiplier(Weapon.Bow, AffixStat.Crit);
-                    int ricochetChain = 1 + Quantity + AffixCountBonus(Weapon.Bow, AffixStat.Quantity, Quantity);
+                        * bowStats.Damage * bowStats.Crit;
+                    int ricochetChain = 1 + Quantity + Mathf.RoundToInt(Quantity * (bowStats.Quantity - 1));
                     bolts.Add(new Bolt { body = t, direction = aim, life = 1.6f, power = ricochetPower, chain = true, chainLeft = ricochetChain });
                 }
                 else
                 {
-                    int count = Quantity + AffixCountBonus(Weapon.Bow, AffixStat.Quantity, Quantity);
-                    float bowPower = damage * (1 + .25f * (bow - 1)) * AffixMultiplier(Weapon.Bow, AffixStat.Damage) * AffixMultiplier(Weapon.Bow, AffixStat.Crit);
+                    int count = Quantity + Mathf.RoundToInt(Quantity * (bowStats.Quantity - 1));
+                    float bowPower = damage * (1 + .25f * (bow - 1)) * bowStats.Damage * bowStats.Crit;
                     for (int i = 0; i < count; i++)
                     {
                         Vector3 direction = Quaternion.Euler(0, (i - (count - 1) / 2f) * 9, 0) * aim;
@@ -412,10 +414,11 @@ namespace BonkSurvivor
             }
             if (weaponLevels.TryGetValue(Weapon.Lightning, out int lightning))
             {
+                var lightningStats = GetWeaponStats(Weapon.Lightning);
                 var candidates = new List<Enemy>(enemies); Vector3 origin = player.position;
-                int chainCount = Quantity + AffixCountBonus(Weapon.Lightning, AffixStat.Quantity, Quantity)
-                    + AffixCountBonus(Weapon.Lightning, AffixStat.Bounces, Quantity);
-                float lightningPower = damage * 1.1f * AffixMultiplier(Weapon.Lightning, AffixStat.Damage);
+                int chainCount = Quantity + Mathf.RoundToInt(Quantity * (lightningStats.Quantity - 1))
+                    + Mathf.RoundToInt(Quantity * (lightningStats.Bounces - 1));
+                float lightningPower = damage * 1.1f * lightningStats.Damage;
                 for (int i = 0; i < chainCount + 1; i++)
                 {
                     Enemy target = null; float distance = (i == 0 ? 16 : 8); distance *= distance;

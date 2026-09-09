@@ -56,7 +56,7 @@ namespace BonkSurvivor
         Transform world, slash;
         Camera followCamera;
         Material enemyMaterial, eliteMaterial, xpMaterial, boltMaterial, healthMaterial;
-        float spawnTimer, attackTimer, invulnerability, slashTimer;
+        float spawnTimer, invulnerability, slashTimer;
         // Sword-variantin ("Kaksoisterä") viivästetty toinen isku ja Chunkers-variantin
         // ("Iskukivet") räjähdyssykli - katso WeaponVariants.cs. Nollataan ResetRunissa kuten
         // slashTimer, jotta ne eivät vuoda edellisen runin yli.
@@ -164,7 +164,7 @@ namespace BonkSurvivor
             System.Array.Clear(purchases, 0, purchases.Length);
             moveSpeed = 8; damage = 18; attackRate = 1.3f; pickupRadius = 3.5f; maxHealth = 100;
             Health = maxHealth; Level = 1; Coins = Kills = Experience = 0; Elapsed = 0;
-            ShopOpen = Finished = false; spawnTimer = attackTimer = invulnerability = slashTimer = 0;
+            ShopOpen = Finished = false; spawnTimer = invulnerability = slashTimer = 0;
             swordEchoTimer = chunkersBlastTimer = 0;
             player.position = Vector3.up; slash.gameObject.SetActive(false);
             ResetProgression(); ResetPottu(); player.position = MapSpawn + Vector3.up;
@@ -237,11 +237,14 @@ namespace BonkSurvivor
                     if (Health <= 0) { FinishRun(); return; }
                 }
             }
-            attackTimer -= dt;
-            // Sword ja Lightning jakavat tämän yhden ajastimen (AttackWeapons), joten niiden Cooldown-
-            // affiksi ei voi nopeuttaa vain yhtä asetta erikseen - se nopeuttaa koko jaettua sykettä,
-            // samoin kuin Cooldown Tome jo tekee. Bow ei ole Cooldown-poolissa, joten sen kerroin on aina 1.
-            if (attackTimer <= 0) { AttackWeapons(); attackTimer = 1 / (attackRate * SharedAttackTimerAffixMultiplier()); }
+            // Sword/Bow/Lightning jakavat yhä tarkoituksella yhden slotin (WeaponStats-pipeline,
+            // kohta 10.5 vaihe 5) - Sword-indeksi toimii jaetun syklin säilönä. Jaetun ajastimen
+            // korjaus (erilliset slotit, täsmällinen per-ase Cooldown) on omaksi, myöhemmin erikseen
+            // hyväksyttäväksi ja testattavaksi tehtäväksi jätetty muutos - tämä pysyy bittitäsmällisesti
+            // samana kuin ennen migraatiota, vain tallennettuna yhtenäiseen AttackTimerSlots-tauluun.
+            int sharedSlot = (int)Weapon.Sword;
+            weaponSlotTimers[sharedSlot] -= dt;
+            if (weaponSlotTimers[sharedSlot] <= 0) { AttackWeapons(); weaponSlotTimers[sharedSlot] = WeaponInterval(Weapon.Sword) / (attackRate * SharedAttackTimerAffixMultiplier()); }
             slashTimer -= dt;
             slash.gameObject.SetActive(slashTimer > 0);
             slash.position = new Vector3(player.position.x, .15f, player.position.z);
@@ -318,11 +321,12 @@ namespace BonkSurvivor
 
         void UpdateBolts(float dt)
         {
+            // Bolt-tyyppiä käyttää vain Bow, joten globaali ProjectileSpeed-kerroin on tässä
+            // turvallisesti myös Bow-affiksin ProjectileSpeed-kerroin.
+            float bowProjectileSpeed = GetWeaponStats(Weapon.Bow).ProjectileSpeed;
             for (int i = bolts.Count - 1; i >= 0; i--)
             {
-                // Bolt-tyyppiä käyttää vain Bow, joten globaali ProjectileSpeed-kerroin on tässä
-                // turvallisesti myös Bow-affiksin ProjectileSpeed-kerroin.
-                var b = bolts[i]; var start = b.body.position; var end = start + b.direction * (24 * ProjectileSpeed * AffixMultiplier(Weapon.Bow, AffixStat.ProjectileSpeed) * dt);
+                var b = bolts[i]; var start = b.body.position; var end = start + b.direction * (24 * ProjectileSpeed * bowProjectileSpeed * dt);
                 b.life -= dt; b.body.position = end;
                 foreach (var e in new List<Enemy>(enemies))
                 {
@@ -603,6 +607,5 @@ namespace BonkSurvivor
         void OnDestroy() { if (swipeMesh) Destroy(swipeMesh); foreach (var mesh in mapMeshes) if (mesh) Destroy(mesh); foreach (var m in materials) if (m) Destroy(m); }
     }
 }
-
 
 

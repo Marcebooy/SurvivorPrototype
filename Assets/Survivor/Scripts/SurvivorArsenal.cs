@@ -13,7 +13,6 @@ namespace BonkSurvivor
         List<ArsenalShot> shots => current.Shots;
         List<FlamePatch> flames => current.Flames;
         List<Transform> rocks => current.Rocks;
-        float[] weaponTimers => current.WeaponTimers;
         Material fireMat, boneMat, rockMat, auraMat;
         LineRenderer auraRing { get => current.AuraRing; set => current.AuraRing = value; }
         Transform auraEffect { get => current.AuraEffect; set => current.AuraEffect = value; }
@@ -40,7 +39,7 @@ namespace BonkSurvivor
             foreach(var r in rocks) if(r) Destroy(r.gameObject); rocks.Clear();
             if(auraRing) Destroy(auraRing.gameObject); auraRing=null;
             if(auraEffect) Destroy(auraEffect.gameObject); auraEffect=null;
-            System.Array.Clear(weaponTimers,0,weaponTimers.Length); orbitAngle=orbitTick=0; chunkersBlastTimer=0;
+            System.Array.Clear(weaponSlotTimers,0,weaponSlotTimers.Length); orbitAngle=orbitTick=0; chunkersBlastTimer=0;
             if(resetStats) { EffectDuration=ProjectileSpeed=1; starterPage=0; }
         }
 
@@ -65,14 +64,14 @@ namespace BonkSurvivor
             for(int i=0;i<6;i++)
             {
                 var w=(Weapon)(i+3); int level=WeaponLevel(w); if(level==0) continue;
-                weaponTimers[i]-=dt;
-                if(weaponTimers[i]<=0)
+                weaponSlotTimers[(int)w]-=dt;
+                if(weaponSlotTimers[(int)w]<=0)
                 {
                     CastArsenal(w,level);
-                    float interval=w==Weapon.Flamewalker ? .65f : w==Weapon.Aura ? .55f : w==Weapon.Firestaff ? 1.5f : w==Weapon.Shotgun ? 1.3f : .95f;
-                    // Näillä aseilla on oma weaponTimers[i]-ajastin (toisin kuin Sword/Lightning), joten
-                    // Cooldown-affiksi voi nopeuttaa juuri tätä asetta erikseen muihin vaikuttamatta.
-                    weaponTimers[i]=interval/(Mathf.Max(.1f,attackRate)*AffixMultiplier(w,AffixStat.Cooldown));
+                    // Näillä aseilla on oma slotti yhtenäisessä ajastintaulussa (toisin kuin
+                    // Sword/Bow/Lightning, jotka jakavat yhden - ks. AttackWeapons), joten Cooldown-
+                    // affiksi/-stat voi nopeuttaa juuri tätä asetta erikseen muihin vaikuttamatta.
+                    weaponSlotTimers[(int)w]=WeaponInterval(w)/(Mathf.Max(.1f,attackRate)*GetWeaponStats(w).Cooldown);
                 }
             }
             TickOrbits(dt); TickShots(dt); TickFlames(dt); TickAdvanced(dt);
@@ -80,13 +79,15 @@ namespace BonkSurvivor
 
         void CastArsenal(Weapon w,int level)
         {
-            EnsureArsenalMaterials(); float power=damage*(1+.25f*(level-1))*AffixMultiplier(w,AffixStat.Damage);
+            EnsureArsenalMaterials();
+            var stats=GetWeaponStats(w);
+            float power=damage*(1+.25f*(level-1))*stats.Damage;
             if(w==Weapon.Flamewalker)
             {
                 if(flames.Count>=80) { Destroy(flames[0].body.gameObject); flames.RemoveAt(0); }
-                float radius=1.4f*Size*AffixMultiplier(w,AffixStat.Size);
+                float radius=1.4f*Size*stats.Size;
                 var t=Shape("Flame trail",PrimitiveType.Cylinder,new Vector3(player.position.x,.09f,player.position.z),new Vector3(radius*2,.055f,radius*2),fireMat,world);
-                flames.Add(new FlamePatch {body=t,life=(2.5f+.3f*level)*EffectDuration*AffixMultiplier(w,AffixStat.Duration),power=power*.32f,radius=radius}); return;
+                flames.Add(new FlamePatch {body=t,life=(2.5f+.3f*level)*EffectDuration*stats.Duration,power=power*.32f,radius=radius}); return;
             }
             if(w==Weapon.Aura)
             {
@@ -102,8 +103,8 @@ namespace BonkSurvivor
             var target=Nearest(player.position,w==Weapon.Shotgun ? 10 : 23); if(target==null) return;
             var aim=(target.body.position-player.position).normalized;
             int baseCount=w==Weapon.Shotgun ? 5+Quantity-1 : Quantity;
-            int count=baseCount+AffixCountBonus(w,AffixStat.Quantity,baseCount);
-            float affixSize=AffixMultiplier(w,AffixStat.Size);
+            int count=baseCount+Mathf.RoundToInt(baseCount*(stats.Quantity-1));
+            float affixSize=stats.Size;
             for(int i=0;i<count && shots.Count<180;i++)
             {
                 var direction=Quaternion.Euler(0,(i-(count-1)*.5f)*(w==Weapon.Shotgun ? 7 : 10),0)*aim;
@@ -123,11 +124,11 @@ namespace BonkSurvivor
                     var trail=Instantiate(fireImpactEffect,body.position,Quaternion.identity,body);
                     trail.transform.localScale=Vector3.one*ImpactBaseScale(Weapon.Firestaff)*Size;
                 }
-                float speed=(w==Weapon.Firestaff ? 14 : w==Weapon.Bone ? 18 : 27)*ProjectileSpeed*AffixMultiplier(w,AffixStat.ProjectileSpeed);
+                float speed=(w==Weapon.Firestaff ? 14 : w==Weapon.Bone ? 18 : 27)*ProjectileSpeed*stats.ProjectileSpeed;
                 int baseBounces=1+level/2;
                 shots.Add(new ArsenalShot { body=body,kind=w,direction=direction,speed=speed,
                     life=w==Weapon.Shotgun ? 9/speed : 2.5f, power=power*(w==Weapon.Firestaff ? 1.4f : w==Weapon.Shotgun ? .42f : .85f),
-                    radius=(w==Weapon.Firestaff ? 2.5f*Size : .35f*Size)*affixSize,bounces=baseBounces+AffixCountBonus(w,AffixStat.Bounces,baseBounces) });
+                    radius=(w==Weapon.Firestaff ? 2.5f*Size : .35f*Size)*affixSize,bounces=baseBounces+Mathf.RoundToInt(baseBounces*(stats.Bounces-1)) });
             }
         }
 
@@ -142,11 +143,12 @@ namespace BonkSurvivor
             int level=WeaponLevel(Weapon.Chunkers);
             if(level>0)
             {
-                float chunkersSize=AffixMultiplier(Weapon.Chunkers,AffixStat.Size);
+                var chunkersStats=GetWeaponStats(Weapon.Chunkers);
+                float chunkersSize=chunkersStats.Size;
                 int baseOrbitCount=Quantity+1;
-                int count=Mathf.Min(8,baseOrbitCount+AffixCountBonus(Weapon.Chunkers,AffixStat.Quantity,baseOrbitCount));
+                int count=Mathf.Min(8,baseOrbitCount+Mathf.RoundToInt(baseOrbitCount*(chunkersStats.Quantity-1)));
                 while(rocks.Count<count) rocks.Add(Shape("Orbiting potato rock",PrimitiveType.Cube,player.position,Vector3.one*.65f*Size*chunkersSize,rockMat,world));
-                orbitAngle+=dt*2.7f*ProjectileSpeed*AffixMultiplier(Weapon.Chunkers,AffixStat.ProjectileSpeed);
+                orbitAngle+=dt*2.7f*ProjectileSpeed*chunkersStats.ProjectileSpeed;
                 for(int i=0;i<rocks.Count;i++)
                 {
                     float a=orbitAngle+i*Mathf.PI*2/rocks.Count;
@@ -161,12 +163,12 @@ namespace BonkSurvivor
                     chunkersBlastTimer -= dt;
                     if (chunkersBlastTimer <= 0)
                     {
-                        chunkersBlastTimer = 1.1f / (Mathf.Max(.1f, attackRate) * AffixMultiplier(Weapon.Chunkers, AffixStat.Cooldown));
+                        chunkersBlastTimer = 1.1f / (Mathf.Max(.1f, attackRate) * chunkersStats.Cooldown);
                         var target = Nearest(player.position, 9 * Size);
                         if (target != null)
                         {
                             SpawnImpact(target.body.position, Weapon.Chunkers, Size * 1.3f);
-                            AreaHit(target.body.position, 1.4f * Size * chunkersSize, damage * .9f * (1 + .25f * (level - 1)) * VariantQualityMultiplier(Weapon.Chunkers) * AffixMultiplier(Weapon.Chunkers, AffixStat.Damage));
+                            AreaHit(target.body.position, 1.4f * Size * chunkersSize, damage * .9f * (1 + .25f * (level - 1)) * VariantQualityMultiplier(Weapon.Chunkers) * chunkersStats.Damage);
                         }
                     }
                 }
@@ -175,11 +177,11 @@ namespace BonkSurvivor
                     orbitTick-=dt;
                     if(orbitTick<=0)
                     {
-                        orbitTick=.28f/(Mathf.Max(.1f,attackRate)*AffixMultiplier(Weapon.Chunkers,AffixStat.Cooldown));
+                        orbitTick=.28f/(Mathf.Max(.1f,attackRate)*chunkersStats.Cooldown);
                         for(int i=enemies.Count-1;i>=0;i--)
                         {
                             var e=enemies[i]; foreach(var rock in rocks)
-                            { if((e.body.position-rock.position).sqrMagnitude<Mathf.Pow(.9f*Size*chunkersSize,2)) {Hit(e,damage*.7f*(1+.25f*(level-1))*AffixMultiplier(Weapon.Chunkers,AffixStat.Damage));break;} }
+                            { if((e.body.position-rock.position).sqrMagnitude<Mathf.Pow(.9f*Size*chunkersSize,2)) {Hit(e,damage*.7f*(1+.25f*(level-1))*chunkersStats.Damage);break;} }
                         }
                     }
                 }

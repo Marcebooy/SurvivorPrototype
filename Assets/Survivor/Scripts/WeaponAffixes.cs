@@ -66,13 +66,11 @@ namespace BonkSurvivor
         float AffixMultiplier(Weapon w, AffixStat stat) =>
             activeMapType == MapType.Procedural ? 1f : AffixMultiplierFor(SelectedCharacter, w, stat);
 
-        // Quantity/Bounces-affiksit vaikuttavat kokonaislukuisiin ammus-/ketjumääriin (ei jatkuvaan
-        // kertoimeen kuten Damage/Size), joten pyöristetään erikseen jokaisen aseen omaan lukumäärään.
-        int AffixCountBonus(Weapon w, AffixStat stat, int baseCount) =>
-            Mathf.RoundToInt(baseCount * (AffixMultiplier(w, stat) - 1));
-
-        // Sword ja Lightning jakavat SurvivorGamen yhden attackTimerin (ei per-ase ajastinta), joten
-        // niiden Cooldown-affiksi nopeuttaa koko jaettua sykettä sen ajan kun ase on weaponLevelsissa.
+        // Sword ja Lightning jakavat yhä (WeaponStats-pipeline, kohta 10.5 vaihe 5 - tarkoituksella,
+        // ks. AttackWeapons) yhden ajastinslotin, joten niiden Cooldown-affiksi nopeuttaa koko
+        // jaettua sykettä sen ajan kun ase on weaponLevelsissa. Jaetun ajastimen korjaus (erilliset
+        // slotit, täsmällinen per-ase Cooldown) on omaksi, myöhemmin erikseen hyväksyttäväksi ja
+        // testattavaksi tehtäväksi jätetty muutos - ei osa tätä refaktorointia.
         float SharedAttackTimerAffixMultiplier()
         {
             float mult = 1;

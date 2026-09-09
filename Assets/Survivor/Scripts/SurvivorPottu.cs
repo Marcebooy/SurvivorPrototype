@@ -84,7 +84,7 @@ namespace BonkSurvivor
             else if(character==PlayerCharacter.Hunter) weaponLevels[Weapon.Bow]=1;
             else if(character==PlayerCharacter.Ninja) weaponLevels[Weapon.Katana]=1;
             else if(character==PlayerCharacter.Paladin) weaponLevels[Weapon.Aura]=1;
-            if(character!=PlayerCharacter.Pottu)
+            if(character!=PlayerCharacter.Pottu && !awaitingLoadoutChoice)
             {
                 Selecting=false;
                 notice="Etsi arkkuja ja pyhäkkö. Portaali avautuu 90 sekunnissa."; noticeUntil=Elapsed+7;

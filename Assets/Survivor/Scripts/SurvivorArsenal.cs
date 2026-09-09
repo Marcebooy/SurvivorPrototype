@@ -40,7 +40,7 @@ namespace BonkSurvivor
             foreach(var r in rocks) if(r) Destroy(r.gameObject); rocks.Clear();
             if(auraRing) Destroy(auraRing.gameObject); auraRing=null;
             if(auraEffect) Destroy(auraEffect.gameObject); auraEffect=null;
-            System.Array.Clear(weaponTimers,0,weaponTimers.Length); orbitAngle=orbitTick=0;
+            System.Array.Clear(weaponTimers,0,weaponTimers.Length); orbitAngle=orbitTick=0; chunkersBlastTimer=0;
             if(resetStats) { EffectDuration=ProjectileSpeed=1; starterPage=0; }
         }
 
@@ -146,14 +146,34 @@ namespace BonkSurvivor
                     rocks[i].position=player.position+new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*2.5f*Size;
                     rocks[i].localScale=Vector3.one*.65f*Size; rocks[i].Rotate(45*dt,70*dt,35*dt);
                 }
-                orbitTick-=dt;
-                if(orbitTick<=0)
+                // Iskukivet-variantti: jatkuvan kosketusvahingon sijaan kivet iskevät ajoittain
+                // räjähtävän aluevahingon lähimpään viholliseen (painottaa Cooldownia/Sizea
+                // Quantitya enemmän) - ks. WeaponVariants.cs.
+                if (ActiveVariant(Weapon.Chunkers) == 1)
                 {
-                    orbitTick=.28f/Mathf.Max(.1f,attackRate);
-                    for(int i=enemies.Count-1;i>=0;i--)
+                    chunkersBlastTimer -= dt;
+                    if (chunkersBlastTimer <= 0)
                     {
-                        var e=enemies[i]; foreach(var rock in rocks)
-                        { if((e.body.position-rock.position).sqrMagnitude<Mathf.Pow(.9f*Size,2)) {Hit(e,damage*.7f*(1+.25f*(level-1)));break;} }
+                        chunkersBlastTimer = 1.1f / Mathf.Max(.1f, attackRate);
+                        var target = Nearest(player.position, 9 * Size);
+                        if (target != null)
+                        {
+                            SpawnImpact(target.body.position, Weapon.Chunkers, Size * 1.3f);
+                            AreaHit(target.body.position, 1.4f * Size, damage * .9f * (1 + .25f * (level - 1)));
+                        }
+                    }
+                }
+                else
+                {
+                    orbitTick-=dt;
+                    if(orbitTick<=0)
+                    {
+                        orbitTick=.28f/Mathf.Max(.1f,attackRate);
+                        for(int i=enemies.Count-1;i>=0;i--)
+                        {
+                            var e=enemies[i]; foreach(var rock in rocks)
+                            { if((e.body.position-rock.position).sqrMagnitude<Mathf.Pow(.9f*Size,2)) {Hit(e,damage*.7f*(1+.25f*(level-1)));break;} }
+                        }
                     }
                 }
             }
@@ -214,18 +234,24 @@ namespace BonkSurvivor
 
         void DrawStarterPages()
         {
-            GUI.Label(new Rect(90,90,1100,50),"POTUN ASEKAAPPI  /  "+(starterPage+1)+" / " + ((TotalWeaponCount+2)/3),titleStyle);
-            GUI.Label(new Rect(90,150,1100,55),"Valitse yksi aloitusase. Kaikki 30 asetta löytyvät myös tasopäivityksistä ja arkuista.",textStyle);
+            var allowed = new List<int>();
+            for (int w = 0; w < TotalWeaponCount; w++) if (!mapLoadoutActive || mapLoadout.Contains(WeaponUpgradeId(w))) allowed.Add(w);
+            int pageCount = Mathf.Max(1, (allowed.Count+2)/3);
+            starterPage = ((starterPage % pageCount) + pageCount) % pageCount;
+            GUI.Label(new Rect(90,90,1100,50),"POTUN ASEKAAPPI  /  "+(starterPage+1)+" / " + pageCount,titleStyle);
+            GUI.Label(new Rect(90,150,1100,55), mapLoadoutActive ? "Valitse yksi aloitusase Mappi-tilan loadoutistasi." : "Valitse yksi aloitusase. Kaikki 30 asetta löytyvät myös tasopäivityksistä ja arkuista.",textStyle);
             for(int i=0;i<3;i++)
             {
-                int weapon=starterPage*3+i, id=WeaponUpgradeId(weapon);
+                int slot = starterPage*3+i;
+                if (slot >= allowed.Count) continue;
+                int weapon=allowed[slot], id=WeaponUpgradeId(weapon);
                 GUI.Box(new Rect(90+i*370,230,350,250),GUIContent.none);
                 GUI.Label(new Rect(110+i*370,250,310,40),UpgradeNames[id],textStyle);
                 GUI.Label(new Rect(110+i*370,305,310,110),UpgradeDetails[id],textStyle);
                 if(GUI.Button(new Rect(110+i*370,428,310,42),"Aloita tällä",buttonStyle)) {SelectStarter(weapon);break;}
             }
-            if(GUI.Button(new Rect(90,494,220,38),"← Edelliset",buttonStyle)) starterPage=(starterPage+(TotalWeaponCount+2)/3-1)%((TotalWeaponCount+2)/3);
-            if(GUI.Button(new Rect(980,494,220,38),"Seuraavat →",buttonStyle)) starterPage=(starterPage+1)%((TotalWeaponCount+2)/3);
+            if(GUI.Button(new Rect(90,494,220,38),"← Edelliset",buttonStyle)) starterPage=(starterPage+pageCount-1)%pageCount;
+            if(GUI.Button(new Rect(980,494,220,38),"Seuraavat →",buttonStyle)) starterPage=(starterPage+1)%pageCount;
             DrawLegacy(90,550);
         }
     }

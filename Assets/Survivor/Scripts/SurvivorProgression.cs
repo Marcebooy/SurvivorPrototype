@@ -35,6 +35,18 @@ namespace BonkSurvivor
         bool rewardPaid;
         bool newRecord;
         string interactionHint = "";
+        // Map-mode loadout (interim version - see DrawLoadoutSelect): the player freely picks up
+        // to MaxWeaponKinds weapons and MaxTomeKinds Tomes from the full existing roster, since
+        // the weapon/Tome variant + fragment unlock system this is meant to gate against doesn't
+        // exist yet. mapLoadout stores UpgradeNames ids (weapons via WeaponUpgradeId + Tome ids
+        // directly); loadoutWeapons/loadoutTomes are the in-progress staging sets on the picker
+        // screen, cleared and copied into mapLoadout on confirm.
+        bool awaitingLoadoutChoice;
+        bool mapLoadoutActive;
+        readonly HashSet<int> mapLoadout = new HashSet<int>();
+        readonly HashSet<int> loadoutWeapons = new HashSet<int>();
+        readonly HashSet<int> loadoutTomes = new HashSet<int>();
+        static readonly int[] TomeIds = { 3, 4, 5, 6, 7, 8, 9, 16, 17 };
         const string SaveKey = "BonkSurvivor.Prototype.v1.";
         sealed class Landmark { public Transform body; public int kind; public bool used; }
         sealed class Flash { public Transform body; public float life; }
@@ -70,16 +82,62 @@ namespace BonkSurvivor
             Size = 1; Quantity = 1; CritChance = Armor = 0;
             Area = 1; areaStarted = 0; curse = 1; boss = null; bossKills = 0; bossAttackTimer = 3; bossDefeatedAt = -1; bossTimerExpired = false;
             EarnedSilver = 0; rewardPaid = false; accountXpPaidThisRun = false; BossDefeated = false; PendingChoices = 0; Selecting = true; awaitingCharacterChoice = true;
-            BeginMapRun();
-            CreateLandmarks();
+            mapLoadoutActive = false; mapLoadout.Clear(); loadoutWeapons.Clear(); loadoutTomes.Clear();
+            // Loadout picker only applies to a real Map-mode run (a fixed Mosswood/Luuluola map,
+            // not Survival's always-procedural map) - gates BeginMapRun()/CreateLandmarks() until
+            // the player confirms or skips (see DrawLoadoutSelect/ConfirmLoadout/SkipLoadout).
+            awaitingLoadoutChoice = selectedMapType != MapType.Procedural;
+            if (!awaitingLoadoutChoice) { BeginMapRun(); CreateLandmarks(); }
         }
 
         public bool SelectStarter(int index)
         {
             if (!Selecting || index < 0 || index >= TotalWeaponCount) return false;
+            if (mapLoadoutActive && !mapLoadout.Contains(WeaponUpgradeId(index))) return false;
             weaponLevels[(Weapon)index] = 1; Selecting = false;
             notice = "Etsi arkkuja ja pyhäkkö. Portaali avautuu 90 sekunnissa."; noticeUntil = Elapsed + 7;
             return true;
+        }
+
+        void ToggleLoadoutWeapon(int upgradeId)
+        {
+            if (loadoutWeapons.Contains(upgradeId)) loadoutWeapons.Remove(upgradeId);
+            else if (loadoutWeapons.Count < MaxWeaponKinds) loadoutWeapons.Add(upgradeId);
+        }
+
+        void ToggleLoadoutTome(int id)
+        {
+            if (loadoutTomes.Contains(id)) loadoutTomes.Remove(id);
+            else if (loadoutTomes.Count < MaxTomeKinds) loadoutTomes.Add(id);
+        }
+
+        void ConfirmLoadout()
+        {
+            mapLoadout.Clear();
+            foreach (var id in loadoutWeapons) mapLoadout.Add(id);
+            foreach (var id in loadoutTomes) mapLoadout.Add(id);
+            mapLoadoutActive = mapLoadout.Count > 0; // an empty confirm behaves like Skip - never soft-lock the run on an empty pool
+            awaitingLoadoutChoice = false;
+            FinishLoadoutSetup();
+        }
+
+        void SkipLoadout()
+        {
+            mapLoadoutActive = false; mapLoadout.Clear();
+            awaitingLoadoutChoice = false;
+            FinishLoadoutSetup();
+        }
+
+        // Character selection deferred finishing Selecting=false for non-Pottu characters until
+        // the loadout screen resolves (see SelectCharacter in SurvivorPottu.cs) - do it here.
+        void FinishLoadoutSetup()
+        {
+            BeginMapRun(); CreateLandmarks();
+            if (SelectedCharacter != PlayerCharacter.Pottu)
+            {
+                Selecting = false;
+                notice = "Etsi arkkuja ja pyhäkkö. Portaali avautuu 90 sekunnissa."; noticeUntil = Elapsed + 7;
+            }
         }
 
         void CreateLandmarks()
@@ -117,6 +175,13 @@ namespace BonkSurvivor
             var pool = new List<int>();
             for (int i = 0; i < UpgradeNames.Length; i++)
             {
+                // Restrict to the chosen Map-mode loadout, but never block leveling up something
+                // already owned (e.g. a character's fixed starting weapon picked outside the pool).
+                if (mapLoadoutActive && !mapLoadout.Contains(i))
+                {
+                    bool owned = IsTomeId(i) ? tomeLevels.ContainsKey(i) : weaponLevels.ContainsKey(IdToWeapon(i));
+                    if (!owned) continue;
+                }
                 if (i == 5 && Quantity >= 6) continue;
                 if (i == 7 && CritChance >= .699f) continue;
                 if (IsTomeId(i)) { if (!tomeLevels.ContainsKey(i) && tomeLevels.Count >= MaxTomeKinds) continue; }
@@ -288,19 +353,34 @@ namespace BonkSurvivor
             if (weaponLevels.TryGetValue(Weapon.Sword, out int sword))
             {
                 float reach = 4 * Size;
+                bool twinblade = ActiveVariant(Weapon.Sword) == 1;
+                float fullPower = damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1));
+                float mainPower = twinblade ? fullPower * .65f : fullPower;
                 if (best < reach * reach) characterVisual.Swing(aim);
                 for (int i = enemies.Count - 1; i >= 0; i--)
                 {
                     var e = enemies[i]; var delta = e.body.position - player.position;
                     if (delta.sqrMagnitude < reach * reach && Vector3.Dot(aim, delta.normalized) > -.25f)
-                    { Hit(e, damage * (1 + .25f * (sword - 1)) * (1 + .3f * (Quantity - 1))); SpawnImpact(e.body.position, Weapon.Sword, Size); }
+                    { Hit(e, mainPower); SpawnImpact(e.body.position, Weapon.Sword, Size); }
                 }
                 if (best < reach * reach) { slashTimer = .16f; slash.rotation = Quaternion.LookRotation(aim); }
+                // Kaksoisterä-variantti: toinen, pienempi isku laukeaa hetken päästä samaan suuntaan
+                // sen sijaan että koko vahinko tulisi yhdellä leveämmällä sivalluksella - ks. AttackWeapons/SwordEchoStrike.
+                if (twinblade && best < reach * reach) { swordEchoTimer = .12f; swordEchoAim = aim; swordEchoPower = fullPower * .55f; }
             }
             if (weaponLevels.TryGetValue(Weapon.Bow, out int bow))
             {
                 characterVisual.Swing(aim);
-                for (int i = 0; i < Quantity; i++)
+                bool ricochet = ActiveVariant(Weapon.Bow) == 1;
+                if (ricochet)
+                {
+                    // Kimmokaari-variantti: yksi vahvempi nuoli joka kimpoaa lähimpään uuteen viholliseen
+                    // Quantity+1 kertaa suoran läpäisevän ammusrivistön sijaan - ks. UpdateBolts.
+                    var t = Shape("Ricochet arrow", PrimitiveType.Cube, player.position, new Vector3(.15f,.15f,.95f) * Size, boltMaterial, world);
+                    t.rotation = Quaternion.LookRotation(aim);
+                    bolts.Add(new Bolt { body = t, direction = aim, life = 1.6f, power = damage * (1 + .25f * (bow - 1)) * 1.3f, chain = true, chainLeft = 1 + Quantity });
+                }
+                else for (int i = 0; i < Quantity; i++)
                 {
                     Vector3 direction = Quaternion.Euler(0, (i - (Quantity - 1) / 2f) * 9, 0) * aim;
                     var t = Shape("Piercing arrow", PrimitiveType.Cube, player.position, new Vector3(.13f,.13f,.85f) * Size, boltMaterial, world);
@@ -340,6 +420,7 @@ namespace BonkSurvivor
             if (Selecting)
             {
                 if (awaitingCharacterChoice) DrawCharacterSelect();
+                else if (awaitingLoadoutChoice) DrawLoadoutSelect();
                 else if (SelectedCharacter == PlayerCharacter.Pottu) DrawStarterPages();
                 return;
             }
@@ -355,6 +436,63 @@ namespace BonkSurvivor
                 { if (Selecting) SelectStarter(i); else ChooseUpgrade(i); break; }
             }
             if (Selecting) DrawLegacy(90, 540);
+        }
+
+        // Interim Map-mode loadout picker: free choice from the whole existing roster (no
+        // weapon/Tome variant or fragment unlock system exists yet to gate this against). Only
+        // shown for a real fixed-map run (awaitingLoadoutChoice, set in ResetProgression); Survival
+        // never sees this screen and keeps its always-full random pool.
+        void DrawLoadoutSelect()
+        {
+            var ownedWeapons = new List<int>();
+            var ownedTomes = new List<int>();
+            foreach (var id in OwnedUpgradesFor(SelectedCharacter)) { if (IsTomeId(id)) ownedTomes.Add(id); else ownedWeapons.Add(id); }
+            ownedWeapons.Sort(); ownedTomes.Sort();
+
+            GUI.Label(new Rect(40,50,1200,40), "MAPPI-TILAN LOADOUT", titleStyle);
+            GUI.Label(new Rect(40,92,1200,40), "Väliaikainen versio: valitse vapaasti enintään 5 asetta ja 5 Tomea " + CharacterRosterName(SelectedCharacter) + "n omistamista. Osta lisää HAHMOT-tabista päävalikossa.", textStyle);
+            GUI.Label(new Rect(40,140,600,26), "ASEET  (" + loadoutWeapons.Count + "/" + MaxWeaponKinds + ")", textStyle);
+            const int cols = 6; const float bw = 195, bh = 34, gx = 8, gy = 6, x0 = 40; const float y0 = 168;
+            // variantRowH varaa tilan aseen vierestä avattavalle muunnostoggle-napille (ei omaa
+            // loadout-paikkaa - sama upgradeId, vain käytöslippu activeVariantByCharacterissa).
+            const float variantRowH = 20; const float rowPitch = bh + variantRowH + gy;
+            for (int i = 0; i < ownedWeapons.Count; i++)
+            {
+                int col = i % cols, row = i / cols;
+                int upgradeId = ownedWeapons[i];
+                var weapon = IdToWeapon(upgradeId);
+                bool selected = loadoutWeapons.Contains(upgradeId);
+                float bx = x0+col*(bw+gx), by = y0+row*rowPitch;
+                GUI.color = selected ? new Color(.3f,.85f,1) : Color.white;
+                if (GUI.Button(new Rect(bx, by, bw, bh), WeaponLabel(weapon), cardTextStyle)) ToggleLoadoutWeapon(upgradeId);
+                if (IsVariantUnlocked(weapon, 1))
+                {
+                    bool variantOn = ActiveVariantFor(SelectedCharacter, weapon) == 1;
+                    GUI.color = variantOn ? new Color(1f,.75f,.25f) : new Color(.55f,.55f,.55f);
+                    if (GUI.Button(new Rect(bx, by+bh+2, bw, variantRowH-2), VariantName(weapon,1) + (variantOn ? " (PÄÄLLÄ)" : ""), cardTextStyle))
+                        SetActiveVariant(SelectedCharacter, weapon, variantOn ? 0 : 1);
+                }
+                GUI.color = Color.white;
+            }
+            GUI.color = Color.white;
+            int weaponRows = Mathf.Max(1, Mathf.CeilToInt(ownedWeapons.Count / (float)cols));
+            float tomesY = y0 + weaponRows*rowPitch + 18;
+            GUI.Label(new Rect(40,tomesY,600,26), "TOMET  (" + loadoutTomes.Count + "/" + MaxTomeKinds + ")", textStyle);
+            const int tcols = 3; const float tbw = 390, tbh = 34;
+            for (int i = 0; i < ownedTomes.Count; i++)
+            {
+                int col = i % tcols, row = i / tcols;
+                int id = ownedTomes[i];
+                bool selected = loadoutTomes.Contains(id);
+                GUI.color = selected ? new Color(.3f,.85f,1) : Color.white;
+                if (GUI.Button(new Rect(x0+col*(tbw+gx), tomesY+30+row*(tbh+gy), tbw, tbh), UpgradeNames[id], cardTextStyle)) ToggleLoadoutTome(id);
+            }
+            GUI.color = Color.white;
+            int tomeRows = Mathf.Max(1, Mathf.CeilToInt(ownedTomes.Count / (float)tcols));
+            float buttonY = tomesY + 30 + tomeRows*(tbh+gy) + 14;
+            bool hasSelection = loadoutWeapons.Count > 0 || loadoutTomes.Count > 0;
+            if (GUI.Button(new Rect(x0,buttonY,360,44), hasSelection ? "VAHVISTA VALINTA" : "VAHVISTA (valitse jotain ensin)", buttonStyle) && hasSelection) ConfirmLoadout();
+            if (GUI.Button(new Rect(x0+390,buttonY,360,44), "OHITA (käytä koko omistetusta poolista)", buttonStyle)) SkipLoadout();
         }
 
         void DrawLegacy(float x, float y)

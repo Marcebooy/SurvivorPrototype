@@ -57,19 +57,25 @@ namespace BonkSurvivor
         Camera followCamera;
         Material enemyMaterial, eliteMaterial, xpMaterial, boltMaterial, healthMaterial;
         float spawnTimer, attackTimer, invulnerability, slashTimer;
+        // Sword-variantin ("Kaksoisterä") viivästetty toinen isku ja Chunkers-variantin
+        // ("Iskukivet") räjähdyssykli - katso WeaponVariants.cs. Nollataan ResetRunissa kuten
+        // slashTimer, jotta ne eivät vuoda edellisen runin yli.
+        float swordEchoTimer, chunkersBlastTimer;
+        Vector3 swordEchoAim; float swordEchoPower;
         string notice = "Selviä viisi minuuttia!";
         float noticeUntil = 5f;
         GUIStyle titleStyle, textStyle, buttonStyle, centerTitleStyle, centerTextStyle, centerButtonStyle, hudNameStyle, cardTextStyle, badgeStyle, cardNameStyle;
-        enum MenuScreen { Home, Multiplayer, Maps, Leaderboards, Settings }
+        enum MenuScreen { Home, Characters, Multiplayer, Maps, Leaderboards, Settings }
         MenuScreen menuScreen = MenuScreen.Home;
         int fpsCap = 60;
         float masterVolume = 1f;
         string joinCodeInputField = "";
         internal sealed class Enemy { public Transform body; public float health, speed; public bool elite; public Animator animator; }
         sealed class Drop { public Transform body; public int value; public bool isHealth; }
-        sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); }
+        // chain/chainLeft: Bow-variantin ("Kimmokaari") kimmoke-ammus, ks. WeaponVariants.cs + AttackWeapons.
+        sealed class Bolt { public Transform body; public Vector3 direction; public float life, power; public HashSet<Enemy> hit = new HashSet<Enemy>(); public bool chain; public int chainLeft; }
 
-        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadSettings(); BuildWorld(); }
+        void Start() { LoadHighscore(); LoadAccountProgression(); LoadMapInventory(); LoadCharacterShop(); LoadWeaponVariants(); LoadSettings(); BuildWorld(); }
 
         void LoadSettings()
         {
@@ -159,6 +165,7 @@ namespace BonkSurvivor
             moveSpeed = 8; damage = 18; attackRate = 1.3f; pickupRadius = 3.5f; maxHealth = 100;
             Health = maxHealth; Level = 1; Coins = Kills = Experience = 0; Elapsed = 0;
             ShopOpen = Finished = false; spawnTimer = attackTimer = invulnerability = slashTimer = 0;
+            swordEchoTimer = chunkersBlastTimer = 0;
             player.position = Vector3.up; slash.gameObject.SetActive(false);
             ResetProgression(); ResetPottu(); player.position = MapSpawn + Vector3.up;
             notice = "Valitse aloitusase"; noticeUntil = 5; UpdateCamera(true);
@@ -236,6 +243,7 @@ namespace BonkSurvivor
             slash.gameObject.SetActive(slashTimer > 0);
             slash.position = new Vector3(player.position.x, .15f, player.position.z);
             slash.localScale = new Vector3(8 * Size, .025f, 8 * Size) * (1 - Mathf.Clamp01(slashTimer / .16f) * .3f);
+            if (swordEchoTimer > 0) { swordEchoTimer -= dt; if (swordEchoTimer <= 0) SwordEchoStrike(); }
             TickArsenal(dt); UpdateBolts(dt);
             for (int i = drops.Count - 1; i >= 0; i--)
             {
@@ -316,10 +324,33 @@ namespace BonkSurvivor
                     var segment = end - start;
                     float t = Mathf.Clamp01(Vector3.Dot(e.body.position - start, segment) / Mathf.Max(.0001f, segment.sqrMagnitude));
                     if (!b.hit.Contains(e) && (e.body.position - (start + segment * t)).sqrMagnitude < (e.elite ? 1.2f : .7f) * Size * Size)
-                    { b.hit.Add(e); Hit(e, b.power); SpawnImpact(e.body.position, Weapon.Bow, Size); }
+                    {
+                        b.hit.Add(e); Hit(e, b.power); SpawnImpact(e.body.position, Weapon.Bow, Size);
+                        // Kimmokaari (Bow-variantti): yksi ammus kimpoaa lähimpään uuteen kohteeseen
+                        // usean suoran ammuksen sijaan - ks. WeaponVariants.cs.
+                        if (b.chain && b.chainLeft > 0)
+                        {
+                            var next = Nearest(e.body.position, 14, b.hit);
+                            if (next != null) { b.direction = (next.body.position - e.body.position).normalized; b.body.position = e.body.position; b.chainLeft--; b.life = Mathf.Max(b.life, .6f); }
+                        }
+                    }
                 }
                 if (b.life <= 0) { Destroy(b.body.gameObject); bolts.RemoveAt(i); }
             }
+        }
+
+        // Sword-variantin ("Kaksoisterä") toinen isku, laukaistu viiveellä AttackWeapons-metodista.
+        // Sama kartioseula kuin peruskiskaisussa, mutta ajoitettu erikseen - ks. WeaponVariants.cs.
+        void SwordEchoStrike()
+        {
+            float reach = 4 * Size; bool hitAny = false;
+            for (int i = enemies.Count - 1; i >= 0; i--)
+            {
+                var e = enemies[i]; var delta = e.body.position - player.position;
+                if (delta.sqrMagnitude < reach * reach && Vector3.Dot(swordEchoAim, delta.normalized) > -.25f)
+                { Hit(e, swordEchoPower); SpawnImpact(e.body.position, Weapon.Sword, Size); hitAny = true; }
+            }
+            if (hitAny) { slashTimer = .16f; slash.rotation = Quaternion.LookRotation(swordEchoAim); }
         }
 
         void Hit(Enemy e, float amount)
@@ -328,7 +359,7 @@ namespace BonkSurvivor
             if (IsNetworkHost) BroadcastDamageNumber(e.body.position + Vector3.up * 1.25f, amount, critical);
             if (e.health > 0) { e.body.position = MoveOnMap(e.body.position, (e.body.position - player.position).normalized * .6f, e == boss ? 1.3f : .65f); return; }
             AdvancedKill(e);
-            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); }
+            if (e == boss) { boss = null; BossDefeated = true; bossDefeatedAt = Elapsed; bossKills++; BeginMapTransition(); TryDropMapItem(); TryDropWeaponVariant(); }
             int value = e.elite ? 5 : 1;
             // Merge nearby drops when the arena is crowded, preserving all XP and coins.
             if (drops.Count >= 250) drops[0].value += value;
@@ -473,6 +504,7 @@ namespace BonkSurvivor
             DrawMenuTabs();
             switch (menuScreen)
             {
+                case MenuScreen.Characters: DrawCharacterTab(); break;
                 case MenuScreen.Multiplayer: DrawMultiplayerPanel(); break;
                 case MenuScreen.Maps: DrawMapTypeTab(); break;
                 case MenuScreen.Leaderboards: DrawMenuPlaceholder("TULOSTAULUT"); break;
@@ -486,6 +518,7 @@ namespace BonkSurvivor
             (MenuScreen screen, string label)[] tabs =
             {
                 (MenuScreen.Home, "KOTI"),
+                (MenuScreen.Characters, "HAHMOT"),
                 (MenuScreen.Multiplayer, "MONINPELI"),
                 (MenuScreen.Maps, "MAPIT"),
                 (MenuScreen.Leaderboards, "TULOSTAULUT"),
